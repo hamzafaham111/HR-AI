@@ -1,0 +1,116 @@
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import Layout from './components/layout/Layout';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import Home from './pages/Home';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import Dashboard from './pages/Dashboard';
+// Analysis page removed - functionality moved to resume bank
+import Jobs from './pages/Jobs';
+import CreateJob from './pages/CreateJob';
+import JobDetail from './pages/JobDetail';
+import ResumeBank from './pages/ResumeBank';
+import AddResume from './pages/AddResume';
+import EditResume from './pages/EditResume';
+import SearchCandidates from './pages/SearchCandidates';
+import Settings from './pages/Settings';
+import './styles/App.css';
+
+function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          
+          {/* Protected routes with sidebar */}
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <Layout showSidebar={true}>
+                <Dashboard />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          
+          {/* Analysis route removed - functionality moved to resume bank */}
+          
+          <Route path="/jobs" element={
+            <ProtectedRoute>
+              <Layout showSidebar={true}>
+                <Jobs />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/jobs/create" element={
+            <ProtectedRoute>
+              <Layout showSidebar={true}>
+                <CreateJob />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/jobs/:id" element={
+            <ProtectedRoute>
+              <Layout showSidebar={true}>
+                <JobDetail />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/resume-bank" element={
+            <ProtectedRoute>
+              <Layout showSidebar={true}>
+                <ResumeBank />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/resume-bank/add" element={
+            <ProtectedRoute>
+              <Layout showSidebar={true}>
+                <AddResume />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/resume-bank/:id/edit" element={
+            <ProtectedRoute>
+              <Layout showSidebar={true}>
+                <EditResume />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/resume-bank/search-candidates/:jobId" element={
+            <ProtectedRoute>
+              <Layout showSidebar={true}>
+                <SearchCandidates />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/settings" element={
+            <ProtectedRoute>
+              <Layout showSidebar={true}>
+                <Settings />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          
+          {/* Redirect any unknown routes to home */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
+  );
+}
+
+export default App; 

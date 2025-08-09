@@ -1,0 +1,592 @@
+{"time": "2025-08-03 07:03:36", "level": "ERROR", "name": "app.api.dashboard", "function": "calculate_dashboard_statistics", "line": 244, "message": "Failed to calculate statistics: 'Expertise' object is not subscriptable"}
+{"time": "2025-08-03 07:03:36", "level": "ERROR", "name": "app.api.dashboard", "function": "get_dashboard_overview", "line": 57, "message": "Failed to get dashboard overview: 'Expertise' object is not subscriptable"}
+{"time": "2025-08-03 07:03:36", "level": "ERROR", "name": "app.api.dashboard", "function": "calculate_dashboard_statistics", "line": 244, "message": "Failed to calculate statistics: 'Expertise' object is not subscriptable"}
+{"time": "2025-08-03 07:03:36", "level": "ERROR", "name": "app.api.dashboard", "function": "get_dashboard_overview", "line": 57, "message": "Failed to get dashboard overview: 'Expertise' object is not subscriptable"}
+{"time": "2025-08-03 07:03:41", "level": "ERROR", "name": "app.api.dashboard", "function": "calculate_dashboard_statistics", "line": 244, "message": "Failed to calculate statistics: 'Expertise' object is not subscriptable"}
+{"time": "2025-08-03 07:03:41", "level": "ERROR", "name": "app.api.dashboard", "function": "get_dashboard_overview", "line": 57, "message": "Failed to get dashboard overview: 'Expertise' object is not subscriptable"}
+{"time": "2025-08-03 07:03:41", "level": "ERROR", "name": "app.api.dashboard", "function": "calculate_dashboard_statistics", "line": 244, "message": "Failed to calculate statistics: 'Expertise' object is not subscriptable"}
+{"time": "2025-08-03 07:03:41", "level": "ERROR", "name": "app.api.dashboard", "function": "get_dashboard_overview", "line": 57, "message": "Failed to get dashboard overview: 'Expertise' object is not subscriptable"}
+{"time": "2025-08-03 07:03:57", "level": "ERROR", "name": "app.api.dashboard", "function": "calculate_dashboard_statistics", "line": 244, "message": "Failed to calculate statistics: 'Expertise' object is not subscriptable"}
+{"time": "2025-08-03 07:03:57", "level": "ERROR", "name": "app.api.dashboard", "function": "get_dashboard_overview", "line": 57, "message": "Failed to get dashboard overview: 'Expertise' object is not subscriptable"}
+{"time": "2025-08-03 07:03:57", "level": "ERROR", "name": "app.api.dashboard", "function": "calculate_dashboard_statistics", "line": 244, "message": "Failed to calculate statistics: 'Expertise' object is not subscriptable"}
+{"time": "2025-08-03 07:03:57", "level": "ERROR", "name": "app.api.dashboard", "function": "get_dashboard_overview", "line": 57, "message": "Failed to get dashboard overview: 'Expertise' object is not subscriptable"}
+{"time": "2025-08-03 07:03:59", "level": "ERROR", "name": "app.api.dashboard", "function": "calculate_dashboard_statistics", "line": 244, "message": "Failed to calculate statistics: 'Expertise' object is not subscriptable"}
+{"time": "2025-08-03 07:03:59", "level": "ERROR", "name": "app.api.dashboard", "function": "get_dashboard_overview", "line": 57, "message": "Failed to get dashboard overview: 'Expertise' object is not subscriptable"}
+{"time": "2025-08-03 07:10:03", "level": "ERROR", "name": "app.services.qdrant_service", "function": "get_collection_stats", "line": 215, "message": "Failed to get collection stats: [Errno 61] Connection refused"}
+{"time": "2025-08-03 07:10:03", "level": "ERROR", "name": "app.services.qdrant_service", "function": "get_collection_stats", "line": 215, "message": "Failed to get collection stats: [Errno 61] Connection refused"}
+{"time": "2025-08-03 07:10:12", "level": "ERROR", "name": "app.services.qdrant_service", "function": "get_collection_stats", "line": 215, "message": "Failed to get collection stats: [Errno 61] Connection refused"}
+{"time": "2025-08-03 07:10:12", "level": "ERROR", "name": "app.services.qdrant_service", "function": "get_collection_stats", "line": 215, "message": "Failed to get collection stats: [Errno 61] Connection refused"}
+{"time": "2025-08-03 07:10:48", "level": "ERROR", "name": "app.services.qdrant_service", "function": "get_collection_stats", "line": 215, "message": "Failed to get collection stats: [Errno 61] Connection refused"}
+{"time": "2025-08-03 07:10:48", "level": "ERROR", "name": "app.services.qdrant_service", "function": "get_collection_stats", "line": 215, "message": "Failed to get collection stats: [Errno 61] Connection refused"}
+{"time": "2025-08-03 08:47:31", "level": "ERROR", "name": "app.services.qdrant_service", "function": "store_resume_embedding", "line": 101, "message": "Failed to store resume embedding: Unexpected Response: 400 (Bad Request)
+Raw response content:
+b'{"status":{"error":"Format error in JSON body: value test_analysis_id is not a valid point ID, valid values are either an unsigned integer or a UUID"},"time":0.0}'"}
+{"time": "2025-08-03 09:11:26", "level": "ERROR", "name": "app.services.resume_bank_service", "function": "add_resume_with_existing_analysis", "line": 535, "message": "Failed to add resume with existing analysis: name 'uuid' is not defined"}
+{"time": "2025-08-03 09:12:08", "level": "ERROR", "name": "app.services.qdrant_service", "function": "init_collection", "line": 65, "message": "Failed to initialize Qdrant collection: Unexpected Response: 409 (Conflict)
+Raw response content:
+b'{"status":{"error":"Wrong input: Collection `resumes` already exists!"},"time":0.030396762}'"}
+{"time": "2025-08-03 09:36:33", "level": "ERROR", "name": "app.repositories.resume_bank_repository", "function": "get_resume_bank_stats", "line": 205, "message": "Failed to get resume bank stats: type object 'datetime.datetime' has no attribute 'timedelta'"}
+{"time": "2025-08-03 09:37:27", "level": "ERROR", "name": "app.repositories.resume_bank_repository", "function": "get_resume_bank_stats", "line": 205, "message": "Failed to get resume bank stats: type object 'datetime.datetime' has no attribute 'timedelta'"}
+{"time": "2025-08-03 09:37:27", "level": "ERROR", "name": "app.repositories.resume_bank_repository", "function": "get_resume_bank_stats", "line": 205, "message": "Failed to get resume bank stats: type object 'datetime.datetime' has no attribute 'timedelta'"}
+{"time": "2025-08-03 09:39:17", "level": "ERROR", "name": "app.repositories.resume_bank_repository", "function": "get_all_resumes", "line": 104, "message": "Failed to get resumes: Query.order_by() being called on a Query which already has LIMIT or OFFSET applied.  Call order_by() before limit() or offset() are applied."}
+{"time": "2025-08-03 09:44:36", "level": "ERROR", "name": "app.repositories.resume_bank_repository", "function": "get_all_resumes", "line": 104, "message": "Failed to get resumes: Query.order_by() being called on a Query which already has LIMIT or OFFSET applied.  Call order_by() before limit() or offset() are applied."}
+{"time": "2025-08-03 09:44:36", "level": "ERROR", "name": "app.repositories.resume_bank_repository", "function": "get_all_resumes", "line": 104, "message": "Failed to get resumes: Query.order_by() being called on a Query which already has LIMIT or OFFSET applied.  Call order_by() before limit() or offset() are applied."}
+{"time": "2025-08-03 09:47:30", "level": "ERROR", "name": "app.repositories.resume_bank_repository", "function": "get_all_resumes", "line": 104, "message": "Failed to get resumes: Query.order_by() being called on a Query which already has LIMIT or OFFSET applied.  Call order_by() before limit() or offset() are applied."}
+{"time": "2025-08-03 09:51:56", "level": "ERROR", "name": "app.repositories.resume_bank_repository", "function": "get_all_resumes", "line": 104, "message": "Failed to get resumes: Query.order_by() being called on a Query which already has LIMIT or OFFSET applied.  Call order_by() before limit() or offset() are applied."}
+{"time": "2025-08-03 09:52:33", "level": "ERROR", "name": "app.repositories.resume_bank_repository", "function": "get_all_resumes", "line": 104, "message": "Failed to get resumes: Query.order_by() being called on a Query which already has LIMIT or OFFSET applied.  Call order_by() before limit() or offset() are applied."}
+{"time": "2025-08-03 09:52:33", "level": "ERROR", "name": "app.repositories.resume_bank_repository", "function": "get_all_resumes", "line": 104, "message": "Failed to get resumes: Query.order_by() being called on a Query which already has LIMIT or OFFSET applied.  Call order_by() before limit() or offset() are applied."}
+{"time": "2025-08-03 09:56:52", "level": "ERROR", "name": "app.api.resume_bank", "function": "get_resume_bank", "line": 362, "message": "Failed to get resume bank: 1 validation error for ResumeBankEntry
+years_experience
+  Input should be a valid integer, unable to parse string as an integer [type=int_parsing, input_value='', input_type=str]
+    For further information visit https://errors.pydantic.dev/2.11/v/int_parsing"}
+{"time": "2025-08-03 10:47:07", "level": "ERROR", "name": "__main__", "function": "create_sample_data", "line": 82, "message": "Error creating sample data: 'JobRepository' object has no attribute 'create'"}
+{"time": "2025-08-03 10:51:30", "level": "ERROR", "name": "app.api.jobs", "function": "create_job_posting", "line": 56, "message": "Failed to create job posting: "JobPostingCreate" object has no field "id""}
+{"time": "2025-08-03 10:51:43", "level": "ERROR", "name": "app.api.jobs", "function": "create_job_posting", "line": 56, "message": "Failed to create job posting: "JobPostingCreate" object has no field "id""}
+{"time": "2025-08-03 10:54:21", "level": "ERROR", "name": "app.api.jobs", "function": "create_job_posting", "line": 56, "message": "Failed to create job posting: "JobPostingCreate" object has no field "id""}
+{"time": "2025-08-03 10:55:07", "level": "ERROR", "name": "app.api.jobs", "function": "create_job_posting", "line": 56, "message": "Failed to create job posting: "JobPostingCreate" object has no field "id""}
+{"time": "2025-08-03 10:55:59", "level": "ERROR", "name": "app.api.jobs", "function": "create_job_posting", "line": 56, "message": "Failed to create job posting: "JobPostingCreate" object has no field "id""}
+{"time": "2025-08-03 10:56:18", "level": "ERROR", "name": "app.api.jobs", "function": "create_job_posting", "line": 56, "message": "Failed to create job posting: "JobPostingCreate" object has no field "id""}
+{"time": "2025-08-03 10:59:13", "level": "ERROR", "name": "app.api.jobs", "function": "create_job_posting", "line": 56, "message": "Failed to create job posting: "JobPostingCreate" object has no field "id""}
+{"time": "2025-08-03 11:00:02", "level": "ERROR", "name": "app.api.jobs", "function": "create_job_posting", "line": 56, "message": "Failed to create job posting: "JobPostingCreate" object has no field "id""}
+{"time": "2025-08-03 11:01:02", "level": "ERROR", "name": "app.repositories.job_repository", "function": "create_job_posting", "line": 51, "message": "Failed to create job posting: (builtins.TypeError) Object of type JobRequirement is not JSON serializable
+[SQL: INSERT INTO job_postings (id, title, company, location, job_type, experience_level, description, salary_range, requirements, responsibilities, benefits, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]
+[parameters: [{'description': 'Test description', 'company': 'Test Corp', 'requirements': [JobRequirement(skill='Python', level='advanced', is_required=True, weight ... (248 characters truncated) ... fit'], 'job_type': <JobType.FULL_TIME: 'full_time'>, 'experience_level': <ExperienceLevel.SENIOR: 'senior'>, 'status': 'active', 'salary_range': None}]]"}
+{"time": "2025-08-03 11:02:14", "level": "ERROR", "name": "app.api.jobs", "function": "create_job_posting", "line": 56, "message": "Failed to create job posting: "JobPostingCreate" object has no field "id""}
+{"time": "2025-08-03 11:02:55", "level": "ERROR", "name": "app.api.jobs", "function": "create_job_posting", "line": 56, "message": "Failed to create job posting: "JobPostingCreate" object has no field "id""}
+{"time": "2025-08-03 12:50:42", "level": "ERROR", "name": "app.services.openai_service", "function": "_call_openai_api", "line": 126, "message": "OpenAI API call failed: Request timed out."}
+{"time": "2025-08-03 12:50:42", "level": "ERROR", "name": "app.services.openai_service", "function": "analyze_resume", "line": 55, "message": "OpenAI API error: Request timed out."}
+{"time": "2025-08-03 12:50:59", "level": "ERROR", "name": "app.services.openai_service", "function": "generate_embedding", "line": 257, "message": "Failed to generate embedding: Request timed out."}
+{"time": "2025-08-03 23:19:15", "level": "ERROR", "name": "app.services.openai_service", "function": "_call_openai_api", "line": 126, "message": "OpenAI API call failed: Error code: 401 - {'error': {'message': 'Incorrect API key provided: your-ope*******-key. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_api_key'}}"}
+{"time": "2025-08-03 23:19:15", "level": "ERROR", "name": "app.api.jobs", "function": "parse_job_text_with_ai", "line": 598, "message": "Error parsing job text with AI: Error code: 401 - {'error': {'message': 'Incorrect API key provided: your-ope*******-key. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_api_key'}}"}
+{"time": "2025-08-04 00:08:09", "level": "ERROR", "name": "app.services.resume_bank_service", "function": "add_resume_to_bank", "line": 104, "message": "Failed to add resume to bank: 'ResumeBankEntryCreate' object has no attribute 'status'"}
+{"time": "2025-08-04 00:08:09", "level": "ERROR", "name": "app.api.resume_bank", "function": "upload_resume_to_bank", "line": 136, "message": "Failed to upload resume to bank: 'ResumeBankEntryCreate' object has no attribute 'status'"}
+{"time": "2025-08-04 00:08:20", "level": "ERROR", "name": "app.services.resume_bank_service", "function": "add_resume_to_bank", "line": 104, "message": "Failed to add resume to bank: 'ResumeBankEntryCreate' object has no attribute 'status'"}
+{"time": "2025-08-04 00:08:20", "level": "ERROR", "name": "app.api.resume_bank", "function": "upload_resume_to_bank", "line": 136, "message": "Failed to upload resume to bank: 'ResumeBankEntryCreate' object has no attribute 'status'"}
+{"time": "2025-08-04 00:10:41", "level": "ERROR", "name": "app.services.resume_bank_service", "function": "add_resume_to_bank", "line": 113, "message": "Failed to add resume to bank: (builtins.TypeError) Object of type Expertise is not JSON serializable
+[SQL: INSERT INTO resume_analyses (id, filename, raw_text, summary, expertise_areas, strong_zones, overall_assessment, status, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING created_at]
+[parameters: [{'filename': 'Hamza Faham Resume. (1).pdf', 'summary': 'WORK EXPERIENCE \uf1ad Futurenostics – islamabad, Pakistan City: islamabad | Country: Pakistan ... (4468 characters truncated) ... strated work experience and skills', evidence='Resume contains professional experience', impact='Medium')], 'status': 'completed', 'updated_at': None}]]"}
+{"time": "2025-08-04 00:10:41", "level": "ERROR", "name": "app.api.resume_bank", "function": "upload_resume_to_bank", "line": 158, "message": "Failed to upload resume to bank: (builtins.TypeError) Object of type Expertise is not JSON serializable
+[SQL: INSERT INTO resume_analyses (id, filename, raw_text, summary, expertise_areas, strong_zones, overall_assessment, status, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING created_at]
+[parameters: [{'filename': 'Hamza Faham Resume. (1).pdf', 'summary': 'WORK EXPERIENCE \uf1ad Futurenostics – islamabad, Pakistan City: islamabad | Country: Pakistan ... (4468 characters truncated) ... strated work experience and skills', evidence='Resume contains professional experience', impact='Medium')], 'status': 'completed', 'updated_at': None}]]"}
+{"time": "2025-08-04 00:10:56", "level": "ERROR", "name": "app.services.resume_bank_service", "function": "add_resume_to_bank", "line": 113, "message": "Failed to add resume to bank: (builtins.TypeError) Object of type Expertise is not JSON serializable
+[SQL: INSERT INTO resume_analyses (id, filename, raw_text, summary, expertise_areas, strong_zones, overall_assessment, status, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING created_at]
+[parameters: [{'filename': 'Hamza Faham Resume. (1).pdf', 'summary': 'WORK EXPERIENCE \uf1ad Futurenostics – islamabad, Pakistan City: islamabad | Country: Pakistan ... (4468 characters truncated) ... strated work experience and skills', evidence='Resume contains professional experience', impact='Medium')], 'status': 'completed', 'updated_at': None}]]"}
+{"time": "2025-08-04 00:10:56", "level": "ERROR", "name": "app.api.resume_bank", "function": "upload_resume_to_bank", "line": 158, "message": "Failed to upload resume to bank: (builtins.TypeError) Object of type Expertise is not JSON serializable
+[SQL: INSERT INTO resume_analyses (id, filename, raw_text, summary, expertise_areas, strong_zones, overall_assessment, status, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING created_at]
+[parameters: [{'filename': 'Hamza Faham Resume. (1).pdf', 'summary': 'WORK EXPERIENCE \uf1ad Futurenostics – islamabad, Pakistan City: islamabad | Country: Pakistan ... (4468 characters truncated) ... strated work experience and skills', evidence='Resume contains professional experience', impact='Medium')], 'status': 'completed', 'updated_at': None}]]"}
+{"time": "2025-08-04 00:28:04", "level": "ERROR", "name": "app.api.resume_bank", "function": "delete_resume_from_bank", "line": 741, "message": "Failed to delete resume fde86fdd-6cc5-4098-b935-3accf797b783: name 'resume_bank_service' is not defined"}
+{"time": "2025-08-04 00:30:35", "level": "ERROR", "name": "app.api.resume_bank", "function": "delete_resume_from_bank", "line": 741, "message": "Failed to delete resume ab7a5d7c-ed23-4b8e-8941-7b649c487f2b: name 'resume_bank_service' is not defined"}
+{"time": "2025-08-04 00:34:56", "level": "ERROR", "name": "app.api.resume_bank", "function": "search_candidates_for_job", "line": 634, "message": "Failed to search candidates for job: name 'resume_bank_service' is not defined"}
+{"time": "2025-08-04 00:34:56", "level": "ERROR", "name": "app.api.resume_bank", "function": "search_candidates_for_job", "line": 634, "message": "Failed to search candidates for job: name 'resume_bank_service' is not defined"}
+{"time": "2025-08-04 01:09:48", "level": "ERROR", "name": "__main__", "function": "create_sample_data", "line": 82, "message": "Error creating sample data: 'JobPostingCreate' object has no attribute 'status'"}
+{"time": "2025-08-04 01:11:06", "level": "ERROR", "name": "__main__", "function": "create_sample_data", "line": 81, "message": "Error creating sample data: (builtins.TypeError) Object of type JobRequirement is not JSON serializable
+[SQL: INSERT INTO job_postings (id, title, company, location, job_type, experience_level, description, salary_range, requirements, responsibilities, benefits, status, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING created_at]
+[parameters: [{'requirements': [JobRequirement(skill='Python', level='advanced', is_required=True, weight=1.0), JobRequirement(skill='React', level='intermediate',  ... (541 characters truncated) ... ', 'Mentor junior developers', 'Collaborate with cross-functional teams'], 'experience_level': <ExperienceLevel.SENIOR: 'senior'>, 'updated_at': None}]]"}
+{"time": "2025-08-04 01:11:34", "level": "ERROR", "name": "__main__", "function": "create_sample_data", "line": 81, "message": "Error creating sample data: 1 validation error for ResumeBankEntryCreate
+resume_analysis_id
+  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type"}
+{"time": "2025-08-04 01:12:36", "level": "ERROR", "name": "app.api.jobs", "function": "get_job_postings", "line": 129, "message": "Failed to get job postings: 1 validation error for JobPosting
+updated_date
+  Input should be a valid datetime [type=datetime_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.11/v/datetime_type"}
+{"time": "2025-08-04 01:16:35", "level": "ERROR", "name": "app.api.jobs", "function": "get_job_dashboard", "line": 490, "message": "Failed to get job dashboard: (sqlite3.OperationalError) no such column: job_applications.notes
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT job_applications.id AS job_applications_id, job_applications.job_id AS job_applications_job_id, job_applications.resume_analysis_id AS job_applications_resume_analysis_id, job_applications.candidate_name AS job_applications_candidate_name, job_applications.candidate_email AS job_applications_candidate_email, job_applications.status AS job_applications_status, job_applications.notes AS job_applications_notes, job_applications.compatibility_score AS job_applications_compatibility_score, job_applications.applied_date AS job_applications_applied_date, job_applications.updated_at AS job_applications_updated_at 
+FROM job_applications) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)"}
+{"time": "2025-08-04 07:18:18", "level": "ERROR", "name": "app.services.qdrant_service", "function": "init_collection", "line": 65, "message": "Failed to initialize Qdrant collection: timed out"}
+{"time": "2025-08-04 08:28:18", "level": "ERROR", "name": "app.services.qdrant_service", "function": "init_collection", "line": 65, "message": "Failed to initialize Qdrant collection: timed out"}
+{"time": "2025-08-04 08:28:33", "level": "ERROR", "name": "app.services.qdrant_service", "function": "init_collection", "line": 65, "message": "Failed to initialize Qdrant collection: timed out"}
+{"time": "2025-08-04 08:28:48", "level": "ERROR", "name": "app.services.qdrant_service", "function": "init_collection", "line": 65, "message": "Failed to initialize Qdrant collection: timed out"}
+{"time": "2025-08-04 08:28:49", "level": "ERROR", "name": "app.api.jobs", "function": "get_job_dashboard", "line": 505, "message": "Failed to get job dashboard: (sqlite3.OperationalError) no such column: job_applications.notes
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT job_applications.id AS job_applications_id, job_applications.job_id AS job_applications_job_id, job_applications.resume_analysis_id AS job_applications_resume_analysis_id, job_applications.candidate_name AS job_applications_candidate_name, job_applications.candidate_email AS job_applications_candidate_email, job_applications.status AS job_applications_status, job_applications.notes AS job_applications_notes, job_applications.compatibility_score AS job_applications_compatibility_score, job_applications.applied_date AS job_applications_applied_date, job_applications.updated_at AS job_applications_updated_at 
+FROM job_applications) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)"}
+{"time": "2025-08-04 08:31:54", "level": "ERROR", "name": "app.api.jobs", "function": "analyze_compatibility_background", "line": 617, "message": "Failed to analyze compatibility: 'ResumeRepository' object has no attribute 'get_by_id'"}
+{"time": "2025-08-04 08:32:54", "level": "ERROR", "name": "app.api.resume_bank", "function": "search_candidates_for_job", "line": 634, "message": "Failed to search candidates for job: cannot import name 'job_postings' from 'app.api.jobs' (/Users/macbookpro/Desktop/myWork/personal/AI/first/backend/app/api/jobs.py)"}
+{"time": "2025-08-04 08:32:54", "level": "ERROR", "name": "app.api.resume_bank", "function": "search_candidates_for_job", "line": 634, "message": "Failed to search candidates for job: cannot import name 'job_postings' from 'app.api.jobs' (/Users/macbookpro/Desktop/myWork/personal/AI/first/backend/app/api/jobs.py)"}
+{"time": "2025-08-04 08:34:52", "level": "ERROR", "name": "app.services.resume_bank_service", "function": "search_candidates_for_job", "line": 224, "message": "Failed to search candidates for job: 'ResumeBankService' object has no attribute 'resume_bank'"}
+{"time": "2025-08-04 08:47:48", "level": "ERROR", "name": "app.api.resume_bank", "function": "get_resume_from_bank", "line": 692, "message": "Failed to get resume 6e61474f-70f9-4fec-8dec-fb8764fb5773: name 'resume_bank_service' is not defined"}
+{"time": "2025-08-04 13:21:01", "level": "ERROR", "name": "app.utils.pdf_processor", "function": "_extract_text_from_pdf", "line": 207, "message": "All PDF text extraction methods failed"}
+2025-08-04T17:13:41.823647-0300 | ERROR | app.api.resume_bank:search_candidates_for_job:829 | Failed to search candidates for job 0874d605-5c74-4e76-a5f1-e1ef308ee969: 'created_date' is an invalid keyword argument for JobPosting
+2025-08-04T17:13:41.847795-0300 | ERROR | app.api.resume_bank:search_candidates_for_job:829 | Failed to search candidates for job 0874d605-5c74-4e76-a5f1-e1ef308ee969: 'created_date' is an invalid keyword argument for JobPosting
+2025-08-04T17:13:41.857775-0300 | ERROR | app.api.resume_bank:search_candidates_for_job:829 | Failed to search candidates for job 0874d605-5c74-4e76-a5f1-e1ef308ee969: 'created_date' is an invalid keyword argument for JobPosting
+2025-08-04T17:13:41.911557-0300 | ERROR | app.api.resume_bank:search_candidates_for_job:829 | Failed to search candidates for job 0874d605-5c74-4e76-a5f1-e1ef308ee969: 'created_date' is an invalid keyword argument for JobPosting
+2025-08-04T17:16:16.272024-0300 | ERROR | app.services.compatibility_service:analyze_compatibility:134 | Failed to analyze compatibility: 'dict' object has no attribute 'weight'
+2025-08-04T17:16:25.019126-0300 | ERROR | app.services.compatibility_service:analyze_compatibility:134 | Failed to analyze compatibility: 'dict' object has no attribute 'weight'
+2025-08-04T17:17:25.545456-0300 | ERROR | app.services.compatibility_service:analyze_compatibility:133 | Failed to analyze compatibility: 'dict' object has no attribute 'weight'
+2025-08-04T17:17:38.057422-0300 | ERROR | app.services.compatibility_service:analyze_compatibility:133 | Failed to analyze compatibility: 'dict' object has no attribute 'weight'
+2025-08-04T17:18:32.097943-0300 | ERROR | app.api.resume_bank:search_candidates_for_job:841 | Failed to search candidates for job 0874d605-5c74-4e76-a5f1-e1ef308ee969: cannot import name 'JobPosting' from 'app.models.job' (/Users/macbookpro/Desktop/myWork/personal/AI/first/backend/app/models/job.py)
+2025-08-04T17:18:41.403547-0300 | ERROR | app.api.resume_bank:search_candidates_for_job:841 | Failed to search candidates for job 0874d605-5c74-4e76-a5f1-e1ef308ee969: cannot import name 'JobPosting' from 'app.models.job' (/Users/macbookpro/Desktop/myWork/personal/AI/first/backend/app/models/job.py)
+2025-08-04T17:19:40.985193-0300 | ERROR | app.services.compatibility_service:analyze_compatibility:133 | Failed to analyze compatibility: 'JobRequirement' object has no attribute 'is_required'
+2025-08-04T17:19:48.929723-0300 | ERROR | app.services.compatibility_service:analyze_compatibility:133 | Failed to analyze compatibility: 'JobRequirement' object has no attribute 'is_required'
+2025-08-04T17:26:26.069179-0300 | ERROR | app.services.resume_bank_service:add_resume_to_bank:156 | Failed to add resume to bank: (sqlite3.IntegrityError) NOT NULL constraint failed: resume_bank_entries.candidate_email
+[SQL: INSERT INTO resume_bank_entries (id, filename, candidate_name, candidate_email, candidate_phone, candidate_location, years_experience, current_role, desired_role, salary_expectation, availability, tags, notes, resume_analysis_id, status, last_contact_date, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]
+[parameters: ('8f51e29b-974a-482f-a274-ddd7444590b6', 'Hamza Faham Cv.pdf', 'Hamza Faham', None, None, None, None, None, None, None, None, '[]', '', '4e875e4e-7416-4c66-a6fa-610d6e945756', <ResumeStatus.ACTIVE: 'active'>, None, '2025-08-04 20:26:26.068442', '2025-08-04 20:26:26.068452')]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-08-04T17:26:26.069696-0300 | ERROR | app.api.resume_bank:upload_resume_to_bank:239 | Failed to upload resume to bank: (sqlite3.IntegrityError) NOT NULL constraint failed: resume_bank_entries.candidate_email
+[SQL: INSERT INTO resume_bank_entries (id, filename, candidate_name, candidate_email, candidate_phone, candidate_location, years_experience, current_role, desired_role, salary_expectation, availability, tags, notes, resume_analysis_id, status, last_contact_date, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]
+[parameters: ('8f51e29b-974a-482f-a274-ddd7444590b6', 'Hamza Faham Cv.pdf', 'Hamza Faham', None, None, None, None, None, None, None, None, '[]', '', '4e875e4e-7416-4c66-a6fa-610d6e945756', <ResumeStatus.ACTIVE: 'active'>, None, '2025-08-04 20:26:26.068442', '2025-08-04 20:26:26.068452')]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-08-04T17:28:58.851119-0300 | ERROR | app.services.resume_bank_service:add_resume_to_bank:156 | Failed to add resume to bank: (sqlite3.IntegrityError) NOT NULL constraint failed: resume_bank_entries.candidate_email
+[SQL: INSERT INTO resume_bank_entries (id, filename, candidate_name, candidate_email, candidate_phone, candidate_location, years_experience, current_role, desired_role, salary_expectation, availability, tags, notes, resume_analysis_id, status, last_contact_date, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]
+[parameters: ('354491dc-9f1b-4afb-be2d-dcd9c19424d0', 'Hamza Faham Cv.pdf', 'Hamza Faham', None, None, None, None, None, None, None, None, '[]', '', '90619e25-4608-424e-a73b-59035b042da1', <ResumeStatus.ACTIVE: 'active'>, None, '2025-08-04 20:28:58.850611', '2025-08-04 20:28:58.850616')]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-08-04T17:28:58.851746-0300 | ERROR | app.api.resume_bank:upload_resume_to_bank:239 | Failed to upload resume to bank: (sqlite3.IntegrityError) NOT NULL constraint failed: resume_bank_entries.candidate_email
+[SQL: INSERT INTO resume_bank_entries (id, filename, candidate_name, candidate_email, candidate_phone, candidate_location, years_experience, current_role, desired_role, salary_expectation, availability, tags, notes, resume_analysis_id, status, last_contact_date, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]
+[parameters: ('354491dc-9f1b-4afb-be2d-dcd9c19424d0', 'Hamza Faham Cv.pdf', 'Hamza Faham', None, None, None, None, None, None, None, None, '[]', '', '90619e25-4608-424e-a73b-59035b042da1', <ResumeStatus.ACTIVE: 'active'>, None, '2025-08-04 20:28:58.850611', '2025-08-04 20:28:58.850616')]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-08-04T17:29:18.752066-0300 | ERROR | app.services.resume_bank_service:add_resume_to_bank:156 | Failed to add resume to bank: 1 validation error for ResumeBankEntryCreate
+candidate_location
+  Input should be a valid string [type=string_type, input_value={'city': 'Islamabad', 'country': 'Pakistan'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type
+2025-08-04T17:29:18.752841-0300 | ERROR | app.api.resume_bank:upload_resume_to_bank:239 | Failed to upload resume to bank: 1 validation error for ResumeBankEntryCreate
+candidate_location
+  Input should be a valid string [type=string_type, input_value={'city': 'Islamabad', 'country': 'Pakistan'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type
+2025-08-04T17:33:12.487291-0300 | ERROR | app.services.resume_bank_service:add_resume_to_bank:167 | Failed to add resume to bank: (sqlite3.IntegrityError) NOT NULL constraint failed: resume_bank_entries.candidate_email
+[SQL: INSERT INTO resume_bank_entries (id, filename, candidate_name, candidate_email, candidate_phone, candidate_location, years_experience, current_role, desired_role, salary_expectation, availability, tags, notes, resume_analysis_id, status, last_contact_date, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]
+[parameters: ('95c40ac3-b178-424d-b008-74219de9ad99', 'Hamza Faham Cv.pdf', 'Hamza Faham', None, None, None, None, None, None, None, None, '[]', '', 'fa29afc5-eb11-4f7c-874f-a308566e1909', <ResumeStatus.ACTIVE: 'active'>, None, '2025-08-04 20:33:12.486615', '2025-08-04 20:33:12.486623')]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-08-04T17:33:12.487710-0300 | ERROR | app.api.resume_bank:upload_resume_to_bank:239 | Failed to upload resume to bank: (sqlite3.IntegrityError) NOT NULL constraint failed: resume_bank_entries.candidate_email
+[SQL: INSERT INTO resume_bank_entries (id, filename, candidate_name, candidate_email, candidate_phone, candidate_location, years_experience, current_role, desired_role, salary_expectation, availability, tags, notes, resume_analysis_id, status, last_contact_date, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]
+[parameters: ('95c40ac3-b178-424d-b008-74219de9ad99', 'Hamza Faham Cv.pdf', 'Hamza Faham', None, None, None, None, None, None, None, None, '[]', '', 'fa29afc5-eb11-4f7c-874f-a308566e1909', <ResumeStatus.ACTIVE: 'active'>, None, '2025-08-04 20:33:12.486615', '2025-08-04 20:33:12.486623')]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-08-04T17:36:54.184487-0300 | ERROR | app.services.resume_bank_service:search_resumes:347 | Failed to search resumes: (sqlite3.OperationalError) no such table: resume_bank_entries
+[SQL: SELECT resume_bank_entries.id AS resume_bank_entries_id, resume_bank_entries.filename AS resume_bank_entries_filename, resume_bank_entries.candidate_name AS resume_bank_entries_candidate_name, resume_bank_entries.candidate_email AS resume_bank_entries_candidate_email, resume_bank_entries.candidate_phone AS resume_bank_entries_candidate_phone, resume_bank_entries.candidate_location AS resume_bank_entries_candidate_location, resume_bank_entries.years_experience AS resume_bank_entries_years_experience, resume_bank_entries.current_role AS resume_bank_entries_current_role, resume_bank_entries.desired_role AS resume_bank_entries_desired_role, resume_bank_entries.salary_expectation AS resume_bank_entries_salary_expectation, resume_bank_entries.availability AS resume_bank_entries_availability, resume_bank_entries.tags AS resume_bank_entries_tags, resume_bank_entries.notes AS resume_bank_entries_notes, resume_bank_entries.resume_analysis_id AS resume_bank_entries_resume_analysis_id, resume_bank_entries.status AS resume_bank_entries_status, resume_bank_entries.last_contact_date AS resume_bank_entries_last_contact_date, resume_bank_entries.created_at AS resume_bank_entries_created_at, resume_bank_entries.updated_at AS resume_bank_entries_updated_at 
+FROM resume_bank_entries]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-04T17:37:19.626012-0300 | ERROR | app.services.resume_bank_service:search_resumes:347 | Failed to search resumes: (sqlite3.OperationalError) no such table: resume_bank_entries
+[SQL: SELECT resume_bank_entries.id AS resume_bank_entries_id, resume_bank_entries.filename AS resume_bank_entries_filename, resume_bank_entries.candidate_name AS resume_bank_entries_candidate_name, resume_bank_entries.candidate_email AS resume_bank_entries_candidate_email, resume_bank_entries.candidate_phone AS resume_bank_entries_candidate_phone, resume_bank_entries.candidate_location AS resume_bank_entries_candidate_location, resume_bank_entries.years_experience AS resume_bank_entries_years_experience, resume_bank_entries.current_role AS resume_bank_entries_current_role, resume_bank_entries.desired_role AS resume_bank_entries_desired_role, resume_bank_entries.salary_expectation AS resume_bank_entries_salary_expectation, resume_bank_entries.availability AS resume_bank_entries_availability, resume_bank_entries.tags AS resume_bank_entries_tags, resume_bank_entries.notes AS resume_bank_entries_notes, resume_bank_entries.resume_analysis_id AS resume_bank_entries_resume_analysis_id, resume_bank_entries.status AS resume_bank_entries_status, resume_bank_entries.last_contact_date AS resume_bank_entries_last_contact_date, resume_bank_entries.created_at AS resume_bank_entries_created_at, resume_bank_entries.updated_at AS resume_bank_entries_updated_at 
+FROM resume_bank_entries]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-04T17:37:37.631640-0300 | ERROR | app.services.resume_bank_service:search_resumes:347 | Failed to search resumes: (sqlite3.OperationalError) no such table: resume_bank_entries
+[SQL: SELECT resume_bank_entries.id AS resume_bank_entries_id, resume_bank_entries.filename AS resume_bank_entries_filename, resume_bank_entries.candidate_name AS resume_bank_entries_candidate_name, resume_bank_entries.candidate_email AS resume_bank_entries_candidate_email, resume_bank_entries.candidate_phone AS resume_bank_entries_candidate_phone, resume_bank_entries.candidate_location AS resume_bank_entries_candidate_location, resume_bank_entries.years_experience AS resume_bank_entries_years_experience, resume_bank_entries.current_role AS resume_bank_entries_current_role, resume_bank_entries.desired_role AS resume_bank_entries_desired_role, resume_bank_entries.salary_expectation AS resume_bank_entries_salary_expectation, resume_bank_entries.availability AS resume_bank_entries_availability, resume_bank_entries.tags AS resume_bank_entries_tags, resume_bank_entries.notes AS resume_bank_entries_notes, resume_bank_entries.resume_analysis_id AS resume_bank_entries_resume_analysis_id, resume_bank_entries.status AS resume_bank_entries_status, resume_bank_entries.last_contact_date AS resume_bank_entries_last_contact_date, resume_bank_entries.created_at AS resume_bank_entries_created_at, resume_bank_entries.updated_at AS resume_bank_entries_updated_at 
+FROM resume_bank_entries]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-04T17:38:02.296104-0300 | ERROR | app.services.resume_bank_service:search_resumes:347 | Failed to search resumes: (sqlite3.OperationalError) no such table: resume_bank_entries
+[SQL: SELECT resume_bank_entries.id AS resume_bank_entries_id, resume_bank_entries.filename AS resume_bank_entries_filename, resume_bank_entries.candidate_name AS resume_bank_entries_candidate_name, resume_bank_entries.candidate_email AS resume_bank_entries_candidate_email, resume_bank_entries.candidate_phone AS resume_bank_entries_candidate_phone, resume_bank_entries.candidate_location AS resume_bank_entries_candidate_location, resume_bank_entries.years_experience AS resume_bank_entries_years_experience, resume_bank_entries.current_role AS resume_bank_entries_current_role, resume_bank_entries.desired_role AS resume_bank_entries_desired_role, resume_bank_entries.salary_expectation AS resume_bank_entries_salary_expectation, resume_bank_entries.availability AS resume_bank_entries_availability, resume_bank_entries.tags AS resume_bank_entries_tags, resume_bank_entries.notes AS resume_bank_entries_notes, resume_bank_entries.resume_analysis_id AS resume_bank_entries_resume_analysis_id, resume_bank_entries.status AS resume_bank_entries_status, resume_bank_entries.last_contact_date AS resume_bank_entries_last_contact_date, resume_bank_entries.created_at AS resume_bank_entries_created_at, resume_bank_entries.updated_at AS resume_bank_entries_updated_at 
+FROM resume_bank_entries]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-04T17:39:59.365757-0300 | ERROR | app.services.resume_bank_service:search_resumes:347 | Failed to search resumes: (sqlite3.OperationalError) no such table: resume_bank_entries
+[SQL: SELECT resume_bank_entries.id AS resume_bank_entries_id, resume_bank_entries.filename AS resume_bank_entries_filename, resume_bank_entries.candidate_name AS resume_bank_entries_candidate_name, resume_bank_entries.candidate_email AS resume_bank_entries_candidate_email, resume_bank_entries.candidate_phone AS resume_bank_entries_candidate_phone, resume_bank_entries.candidate_location AS resume_bank_entries_candidate_location, resume_bank_entries.years_experience AS resume_bank_entries_years_experience, resume_bank_entries.current_role AS resume_bank_entries_current_role, resume_bank_entries.desired_role AS resume_bank_entries_desired_role, resume_bank_entries.salary_expectation AS resume_bank_entries_salary_expectation, resume_bank_entries.availability AS resume_bank_entries_availability, resume_bank_entries.tags AS resume_bank_entries_tags, resume_bank_entries.notes AS resume_bank_entries_notes, resume_bank_entries.resume_analysis_id AS resume_bank_entries_resume_analysis_id, resume_bank_entries.status AS resume_bank_entries_status, resume_bank_entries.last_contact_date AS resume_bank_entries_last_contact_date, resume_bank_entries.created_at AS resume_bank_entries_created_at, resume_bank_entries.updated_at AS resume_bank_entries_updated_at 
+FROM resume_bank_entries]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-05T06:44:37.091081-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T06:45:44.708450-0300 | ERROR | app.services.job_parser_service:_call_openai_api:136 | OpenAI API call failed for job parsing: Error code: 401 - {'error': {'message': 'Incorrect API key provided: your-ope*******-key. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_api_key'}}
+2025-08-05T06:45:44.709144-0300 | ERROR | app.services.job_parser_service:parse_job_text:50 | Job parsing API error: Error code: 401 - {'error': {'message': 'Incorrect API key provided: your-ope*******-key. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_api_key'}}
+2025-08-05T06:45:53.745652-0300 | ERROR | app.api.jobs:create_job_posting:143 | Failed to create job posting: PyObjectId.validate() takes 2 positional arguments but 3 were given
+2025-08-05T06:46:07.621486-0300 | ERROR | app.api.jobs:create_job_posting:143 | Failed to create job posting: PyObjectId.validate() takes 2 positional arguments but 3 were given
+2025-08-05T06:46:12.715373-0300 | ERROR | app.api.resume_bank:get_resume_bank_stats:509 | Failed to get resume bank stats: 2 validation errors for ResumeBankStats
+active_resumes
+  Field required [type=missing, input_value={'total_resumes': 0, 'sta...e_processing_time': 0.0}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+shortlisted_resumes
+  Field required [type=missing, input_value={'total_resumes': 0, 'sta...e_processing_time': 0.0}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+2025-08-05T06:46:13.731236-0300 | ERROR | app.api.resume_bank:get_resume_bank_stats:509 | Failed to get resume bank stats: 2 validation errors for ResumeBankStats
+active_resumes
+  Field required [type=missing, input_value={'total_resumes': 0, 'sta...e_processing_time': 0.0}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+shortlisted_resumes
+  Field required [type=missing, input_value={'total_resumes': 0, 'sta...e_processing_time': 0.0}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+2025-08-05T06:46:26.014992-0300 | ERROR | app.services.openai_service:_call_openai_api:126 | OpenAI API call failed: Error code: 401 - {'error': {'message': 'Incorrect API key provided: your-ope*******-key. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_api_key'}}
+2025-08-05T06:46:26.015245-0300 | ERROR | app.utils.ai_extractor:extract_candidate_info:59 | AI extraction failed: Error code: 401 - {'error': {'message': 'Incorrect API key provided: your-ope*******-key. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_api_key'}}
+2025-08-05T06:46:26.816535-0300 | ERROR | app.api.resume_bank:upload_resume_to_bank:287 | Failed to upload resume to bank: PyObjectId.validate() takes 2 positional arguments but 3 were given
+2025-08-05T06:46:38.604544-0300 | ERROR | app.services.openai_service:_call_openai_api:126 | OpenAI API call failed: Error code: 401 - {'error': {'message': 'Incorrect API key provided: your-ope*******-key. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_api_key'}}
+2025-08-05T06:46:38.604940-0300 | ERROR | app.utils.ai_extractor:extract_candidate_info:59 | AI extraction failed: Error code: 401 - {'error': {'message': 'Incorrect API key provided: your-ope*******-key. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_api_key'}}
+2025-08-05T06:46:39.334796-0300 | ERROR | app.api.resume_bank:upload_resume_to_bank:287 | Failed to upload resume to bank: PyObjectId.validate() takes 2 positional arguments but 3 were given
+2025-08-05T06:47:07.761734-0300 | ERROR | app.services.openai_service:_call_openai_api:126 | OpenAI API call failed: Error code: 401 - {'error': {'message': 'Incorrect API key provided: your-ope*******-key. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_api_key'}}
+2025-08-05T06:47:07.762349-0300 | ERROR | app.utils.ai_extractor:extract_candidate_info:59 | AI extraction failed: Error code: 401 - {'error': {'message': 'Incorrect API key provided: your-ope*******-key. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_api_key'}}
+2025-08-05T06:47:08.494574-0300 | ERROR | app.api.resume_bank:upload_resume_to_bank:287 | Failed to upload resume to bank: PyObjectId.validate() takes 2 positional arguments but 3 were given
+2025-08-05T06:47:10.513136-0300 | ERROR | app.api.resume_bank:get_resume_from_bank:952 | Failed to get resume upload: name 'db' is not defined
+2025-08-05T06:47:58.986624-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T06:50:25.704614-0300 | ERROR | app.services.openai_service:_call_openai_api:126 | OpenAI API call failed: Error code: 401 - {'error': {'message': 'Incorrect API key provided: your-ope*******-key. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_api_key'}}
+2025-08-05T06:50:25.705004-0300 | ERROR | app.utils.ai_extractor:extract_candidate_info:59 | AI extraction failed: Error code: 401 - {'error': {'message': 'Incorrect API key provided: your-ope*******-key. You can find your API key at https://platform.openai.com/account/api-keys.', 'type': 'invalid_request_error', 'param': None, 'code': 'invalid_api_key'}}
+2025-08-05T06:50:26.495841-0300 | ERROR | app.api.resume_bank:upload_resume_to_bank:287 | Failed to upload resume to bank: PyObjectId.validate() takes 2 positional arguments but 3 were given
+2025-08-05T07:00:42.397054-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T07:00:53.622523-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T07:04:30.646708-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T07:07:39.606449-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T07:49:10.081436-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: Unexpected Response: 404 (Not Found)
+Raw response content:
+b'{"status":{"error":"Not found: Collection `resumes` doesn\'t exist!"},"time":0.000037216}'
+2025-08-05T07:49:13.010766-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: Unexpected Response: 404 (Not Found)
+Raw response content:
+b'{"status":{"error":"Not found: Collection `resumes` doesn\'t exist!"},"time":0.000016864}'
+2025-08-05T07:49:19.734535-0300 | ERROR | app.api.jobs:delete_job_posting:359 | Failed to delete job posting 6891d2d1af36bbd3f4eef818: name 'JobRepository' is not defined
+2025-08-05T07:49:24.786961-0300 | ERROR | app.api.jobs:delete_job_posting:359 | Failed to delete job posting 6891d2dfaf36bbd3f4eef819: name 'JobRepository' is not defined
+2025-08-05T07:49:37.602503-0300 | ERROR | app.api.resume_bank:get_resume_bank_stats:509 | Failed to get resume bank stats: 2 validation errors for ResumeBankStats
+active_resumes
+  Field required [type=missing, input_value={'total_resumes': 0, 'sta...e_processing_time': 0.0}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+shortlisted_resumes
+  Field required [type=missing, input_value={'total_resumes': 0, 'sta...e_processing_time': 0.0}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+2025-08-05T07:49:38.584980-0300 | ERROR | app.api.resume_bank:get_resume_bank_stats:509 | Failed to get resume bank stats: 2 validation errors for ResumeBankStats
+active_resumes
+  Field required [type=missing, input_value={'total_resumes': 0, 'sta...e_processing_time': 0.0}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+shortlisted_resumes
+  Field required [type=missing, input_value={'total_resumes': 0, 'sta...e_processing_time': 0.0}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+2025-08-05T07:49:56.889652-0300 | ERROR | app.api.resume_bank:upload_resume_to_bank:287 | Failed to upload resume to bank: 1 validation error for ResumeBankEntry
+resume_analysis
+  Field required [type=missing, input_value={'id': '6891e1d497c9d47bc... 5, 10, 49, 56, 348759)}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+2025-08-05T07:55:22.326513-0300 | ERROR | app.api.jobs:delete_job_posting:360 | Failed to delete job posting 6891e305564064e6d68388fe: MotorCollection object is not callable. If you meant to call the 'query' method on a MotorCollection object it is failing because no such method exists.
+2025-08-05T07:55:25.284377-0300 | ERROR | app.api.jobs:delete_job_posting:360 | Failed to delete job posting 6891d2dfaf36bbd3f4eef819: MotorCollection object is not callable. If you meant to call the 'query' method on a MotorCollection object it is failing because no such method exists.
+2025-08-05T07:55:28.518660-0300 | ERROR | app.api.jobs:delete_job_posting:360 | Failed to delete job posting 6891d2d1af36bbd3f4eef818: MotorCollection object is not callable. If you meant to call the 'query' method on a MotorCollection object it is failing because no such method exists.
+2025-08-05T08:15:24.398647-0300 | ERROR | app.api.resume_bank:search_candidates_for_job:916 | Failed to search candidates for job 6891e7bc14b366244be8686c: name 'db' is not defined
+2025-08-05T08:15:24.409240-0300 | ERROR | app.api.resume_bank:search_candidates_for_job:916 | Failed to search candidates for job 6891e7bc14b366244be8686c: name 'db' is not defined
+2025-08-05T08:15:24.917665-0300 | ERROR | app.api.resume_bank:search_candidates_for_job:916 | Failed to search candidates for job 6891e7bc14b366244be8686c: name 'db' is not defined
+2025-08-05T08:15:25.403738-0300 | ERROR | app.api.resume_bank:search_candidates_for_job:916 | Failed to search candidates for job 6891e7bc14b366244be8686c: name 'db' is not defined
+2025-08-05T08:15:32.295110-0300 | ERROR | app.api.resume_bank:get_resume_bank:482 | Failed to get resume bank: 1 validation error for ResumeBankEntry
+resume_analysis
+  Field required [type=missing, input_value={'id': '6891e1d497c9d47bc... 5, 10, 49, 56, 348000)}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+2025-08-05T08:15:32.779335-0300 | ERROR | app.api.resume_bank:get_resume_bank:482 | Failed to get resume bank: 1 validation error for ResumeBankEntry
+resume_analysis
+  Field required [type=missing, input_value={'id': '6891e1d497c9d47bc... 5, 10, 49, 56, 348000)}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+2025-08-05T08:15:35.201430-0300 | ERROR | app.api.resume_bank:get_resume_bank_stats:509 | Failed to get resume bank stats: 2 validation errors for ResumeBankStats
+active_resumes
+  Field required [type=missing, input_value={'total_resumes': 1, 'sta...e_processing_time': 0.0}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+shortlisted_resumes
+  Field required [type=missing, input_value={'total_resumes': 1, 'sta...e_processing_time': 0.0}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+2025-08-05T08:15:36.159117-0300 | ERROR | app.api.resume_bank:get_resume_bank_stats:509 | Failed to get resume bank stats: 2 validation errors for ResumeBankStats
+active_resumes
+  Field required [type=missing, input_value={'total_resumes': 1, 'sta...e_processing_time': 0.0}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+shortlisted_resumes
+  Field required [type=missing, input_value={'total_resumes': 1, 'sta...e_processing_time': 0.0}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+2025-08-05T08:15:59.433947-0300 | ERROR | app.api.resume_bank:upload_resume_to_bank:287 | Failed to upload resume to bank: 1 validation error for ResumeBankEntry
+resume_analysis
+  Field required [type=missing, input_value={'id': '6891e7ee14b366244... 5, 11, 15, 58, 952829)}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+2025-08-05T08:33:45.169048-0300 | ERROR | app.api.resume_bank:delete_resume_from_bank:1088 | Failed to delete resume 6891eaa6de0803591a69c655: name 'db' is not defined
+2025-08-05T08:33:50.269736-0300 | ERROR | app.api.resume_bank:delete_resume_from_bank:1088 | Failed to delete resume 6891e7ee14b366244be8686e: name 'db' is not defined
+2025-08-05T08:37:59.932439-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T08:42:47.027157-0300 | ERROR | app.api.resume_bank:search_candidates_for_job:960 | Failed to search candidates for job 6891ee1b580833ef7d9a8f41: name 'db' is not defined
+2025-08-05T08:42:47.038617-0300 | ERROR | app.api.resume_bank:search_candidates_for_job:960 | Failed to search candidates for job 6891ee1b580833ef7d9a8f41: name 'db' is not defined
+2025-08-05T08:42:47.519378-0300 | ERROR | app.api.resume_bank:search_candidates_for_job:960 | Failed to search candidates for job 6891ee1b580833ef7d9a8f41: name 'db' is not defined
+2025-08-05T08:42:48.002773-0300 | ERROR | app.api.resume_bank:search_candidates_for_job:960 | Failed to search candidates for job 6891ee1b580833ef7d9a8f41: name 'db' is not defined
+2025-08-05T08:43:07.114836-0300 | ERROR | app.api.resume_bank:upload_resume_to_bank:324 | Failed to upload resume to bank: 1 validation error for ResumeAnalysisDocument
+education_level
+  Input should be a valid string [type=string_type, input_value=None, input_type=NoneType]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type
+2025-08-05T08:43:32.436014-0300 | ERROR | app.services.qdrant_service:store_resume_embedding:109 | Failed to store resume embedding: [Errno 61] Connection refused
+2025-08-05T08:43:46.357592-0300 | ERROR | app.api.resume_bank:search_candidates_for_job:960 | Failed to search candidates for job 6891ee1b580833ef7d9a8f41: name 'db' is not defined
+2025-08-05T08:43:46.375365-0300 | ERROR | app.api.resume_bank:search_candidates_for_job:960 | Failed to search candidates for job 6891ee1b580833ef7d9a8f41: name 'db' is not defined
+2025-08-05T08:43:46.846692-0300 | ERROR | app.api.resume_bank:search_candidates_for_job:960 | Failed to search candidates for job 6891ee1b580833ef7d9a8f41: name 'db' is not defined
+2025-08-05T08:43:47.331941-0300 | ERROR | app.api.resume_bank:search_candidates_for_job:960 | Failed to search candidates for job 6891ee1b580833ef7d9a8f41: name 'db' is not defined
+2025-08-05T08:48:35.702544-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T08:49:42.200904-0300 | ERROR | app.api.resume_bank:search_candidates_for_job:1002 | Failed to search candidates for job 6891ee1b580833ef7d9a8f41: 1 validation error for JobPosting
+id
+  Input should be a valid string [type=string_type, input_value=ObjectId('6891ee1b580833ef7d9a8f41'), input_type=ObjectId]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type
+2025-08-05T08:49:42.689097-0300 | ERROR | app.api.resume_bank:search_candidates_for_job:1002 | Failed to search candidates for job 6891ee1b580833ef7d9a8f41: 1 validation error for JobPosting
+id
+  Input should be a valid string [type=string_type, input_value=ObjectId('6891ee1b580833ef7d9a8f41'), input_type=ObjectId]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type
+2025-08-05T08:49:43.172818-0300 | ERROR | app.api.resume_bank:search_candidates_for_job:1002 | Failed to search candidates for job 6891ee1b580833ef7d9a8f41: 1 validation error for JobPosting
+id
+  Input should be a valid string [type=string_type, input_value=ObjectId('6891ee1b580833ef7d9a8f41'), input_type=ObjectId]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type
+2025-08-05T08:49:43.676566-0300 | ERROR | app.api.resume_bank:search_candidates_for_job:1002 | Failed to search candidates for job 6891ee1b580833ef7d9a8f41: 1 validation error for JobPosting
+id
+  Input should be a valid string [type=string_type, input_value=ObjectId('6891ee1b580833ef7d9a8f41'), input_type=ObjectId]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type
+2025-08-05T08:53:36.499410-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T08:54:20.592234-0300 | ERROR | app.api.resume_bank:search_candidates_for_job:1002 | Failed to search candidates for job 6891ee1b580833ef7d9a8f41: 2 validation errors for CompatibilityScore
+role_match
+  Field required [type=missing, input_value={'overall_score': 0.0, 's..., 'location_match': 0.0}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+match_confidence
+  Field required [type=missing, input_value={'overall_score': 0.0, 's..., 'location_match': 0.0}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+2025-08-05T08:54:21.563103-0300 | ERROR | app.api.resume_bank:search_candidates_for_job:1002 | Failed to search candidates for job 6891ee1b580833ef7d9a8f41: 2 validation errors for CompatibilityScore
+role_match
+  Field required [type=missing, input_value={'overall_score': 0.0, 's..., 'location_match': 0.0}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+match_confidence
+  Field required [type=missing, input_value={'overall_score': 0.0, 's..., 'location_match': 0.0}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+2025-08-05T08:54:22.521926-0300 | ERROR | app.api.resume_bank:search_candidates_for_job:1002 | Failed to search candidates for job 6891ee1b580833ef7d9a8f41: 2 validation errors for CompatibilityScore
+role_match
+  Field required [type=missing, input_value={'overall_score': 0.0, 's..., 'location_match': 0.0}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+match_confidence
+  Field required [type=missing, input_value={'overall_score': 0.0, 's..., 'location_match': 0.0}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+2025-08-05T08:54:23.485931-0300 | ERROR | app.api.resume_bank:search_candidates_for_job:1002 | Failed to search candidates for job 6891ee1b580833ef7d9a8f41: 2 validation errors for CompatibilityScore
+role_match
+  Field required [type=missing, input_value={'overall_score': 0.0, 's..., 'location_match': 0.0}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+match_confidence
+  Field required [type=missing, input_value={'overall_score': 0.0, 's..., 'location_match': 0.0}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+2025-08-05T08:58:52.015862-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T08:58:56.857015-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T08:59:00.281994-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T09:03:26.776485-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T09:03:53.274151-0300 | ERROR | app.repositories.mongodb_repository:get_resume_bank_entry_by_id:142 | Error getting resume bank entry undefined: 'undefined' is not a valid ObjectId, it must be a 12-byte input or a 24-character hex string
+2025-08-05T09:03:53.288165-0300 | ERROR | app.repositories.mongodb_repository:get_resume_bank_entry_by_id:142 | Error getting resume bank entry undefined: 'undefined' is not a valid ObjectId, it must be a 12-byte input or a 24-character hex string
+2025-08-05T09:04:03.767662-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T09:04:07.620367-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T09:04:22.077181-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T09:04:25.980402-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T09:06:28.735931-0300 | ERROR | app.services.qdrant_service:store_resume_embedding:109 | Failed to store resume embedding: [Errno 61] Connection refused
+2025-08-05T10:00:24.744776-0300 | ERROR | app.repositories.mongodb_repository:get_job_posting_by_id:53 | Error getting job posting 6891f24cad7e8d44f4f00a8b: cluster0-shard-00-00.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms),cluster0-shard-00-02.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms),cluster0-shard-00-01.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms), Timeout: 30s, Topology Description: <TopologyDescription id: 6891f3085680f4da199d1be8, topology_type: ReplicaSetNoPrimary, servers: [<ServerDescription ('cluster0-shard-00-00.w7msp.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('cluster0-shard-00-00.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>, <ServerDescription ('cluster0-shard-00-01.w7msp.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('cluster0-shard-00-01.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>, <ServerDescription ('cluster0-shard-00-02.w7msp.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('cluster0-shard-00-02.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>]>
+2025-08-05T10:00:28.263905-0300 | ERROR | app.repositories.mongodb_repository:get_job_posting_by_id:53 | Error getting job posting 6891f24cad7e8d44f4f00a8b: cluster0-shard-00-00.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms),cluster0-shard-00-02.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms),cluster0-shard-00-01.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms), Timeout: 30s, Topology Description: <TopologyDescription id: 6891f3085680f4da199d1be8, topology_type: ReplicaSetNoPrimary, servers: [<ServerDescription ('cluster0-shard-00-00.w7msp.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('cluster0-shard-00-00.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>, <ServerDescription ('cluster0-shard-00-01.w7msp.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('cluster0-shard-00-01.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>, <ServerDescription ('cluster0-shard-00-02.w7msp.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('cluster0-shard-00-02.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>]>
+2025-08-05T10:00:32.273679-0300 | ERROR | app.repositories.mongodb_repository:get_job_posting_by_id:53 | Error getting job posting 6891f24cad7e8d44f4f00a8b: cluster0-shard-00-00.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms),cluster0-shard-00-02.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms),cluster0-shard-00-01.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms), Timeout: 30s, Topology Description: <TopologyDescription id: 6891f3085680f4da199d1be8, topology_type: ReplicaSetNoPrimary, servers: [<ServerDescription ('cluster0-shard-00-00.w7msp.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('cluster0-shard-00-00.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>, <ServerDescription ('cluster0-shard-00-01.w7msp.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('cluster0-shard-00-01.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>, <ServerDescription ('cluster0-shard-00-02.w7msp.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('cluster0-shard-00-02.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>]>
+2025-08-05T10:00:59.770977-0300 | ERROR | app.api.jobs:get_job_postings:197 | Failed to get job postings: cluster0-shard-00-00.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms),cluster0-shard-00-02.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms),cluster0-shard-00-01.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms), Timeout: 30s, Topology Description: <TopologyDescription id: 6891f3085680f4da199d1be8, topology_type: ReplicaSetNoPrimary, servers: [<ServerDescription ('cluster0-shard-00-00.w7msp.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('cluster0-shard-00-00.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>, <ServerDescription ('cluster0-shard-00-01.w7msp.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('cluster0-shard-00-01.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>, <ServerDescription ('cluster0-shard-00-02.w7msp.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('cluster0-shard-00-02.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>]>
+2025-08-05T10:01:16.704966-0300 | ERROR | app.api.resume_bank:get_resume_bank:523 | Failed to get resume bank: cluster0-shard-00-00.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms),cluster0-shard-00-02.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms),cluster0-shard-00-01.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms), Timeout: 30s, Topology Description: <TopologyDescription id: 6891f3085680f4da199d1be8, topology_type: ReplicaSetNoPrimary, servers: [<ServerDescription ('cluster0-shard-00-00.w7msp.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('cluster0-shard-00-00.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>, <ServerDescription ('cluster0-shard-00-01.w7msp.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('cluster0-shard-00-01.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>, <ServerDescription ('cluster0-shard-00-02.w7msp.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('cluster0-shard-00-02.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>]>
+2025-08-05T10:01:16.706248-0300 | ERROR | app.api.resume_bank:get_resume_bank_stats:553 | Failed to get resume bank stats: cluster0-shard-00-00.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms),cluster0-shard-00-02.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms),cluster0-shard-00-01.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms), Timeout: 30s, Topology Description: <TopologyDescription id: 6891f3085680f4da199d1be8, topology_type: ReplicaSetNoPrimary, servers: [<ServerDescription ('cluster0-shard-00-00.w7msp.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('cluster0-shard-00-00.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>, <ServerDescription ('cluster0-shard-00-01.w7msp.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('cluster0-shard-00-01.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>, <ServerDescription ('cluster0-shard-00-02.w7msp.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('cluster0-shard-00-02.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>]>
+2025-08-05T10:01:19.721634-0300 | ERROR | app.api.jobs:get_job_postings:197 | Failed to get job postings: cluster0-shard-00-00.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms),cluster0-shard-00-02.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms),cluster0-shard-00-01.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms), Timeout: 30s, Topology Description: <TopologyDescription id: 6891f3085680f4da199d1be8, topology_type: ReplicaSetNoPrimary, servers: [<ServerDescription ('cluster0-shard-00-00.w7msp.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('cluster0-shard-00-00.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>, <ServerDescription ('cluster0-shard-00-01.w7msp.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('cluster0-shard-00-01.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>, <ServerDescription ('cluster0-shard-00-02.w7msp.mongodb.net', 27017) server_type: Unknown, rtt: None, error=AutoReconnect('cluster0-shard-00-02.w7msp.mongodb.net:27017: [Errno 8] nodename nor servname provided, or not known (configured timeouts: socketTimeoutMS: 20000.0ms, connectTimeoutMS: 20000.0ms)')>]>
+2025-08-05T10:02:07.935822-0300 | ERROR | app.core.database:connect_to_mongo:38 | Failed to connect to MongoDB: The resolution lifetime expired after 21.606 seconds: Server Do53:198.18.0.1@53 answered The DNS operation timed out.; Server Do53:198.18.0.1@53 answered The DNS operation timed out.; Server Do53:198.18.0.1@53 answered The DNS operation timed out.; Server Do53:198.18.0.1@53 answered The DNS operation timed out.; Server Do53:198.18.0.1@53 answered The DNS operation timed out.; Server Do53:198.18.0.1@53 answered The DNS operation timed out.; Server Do53:198.18.0.1@53 answered The DNS operation timed out.; Server Do53:198.18.0.1@53 answered The DNS operation timed out.; Server Do53:198.18.0.1@53 answered The DNS operation timed out.; Server Do53:198.18.0.1@53 answered The DNS operation timed out.
+2025-08-05T10:02:07.936413-0300 | ERROR | main:lifespan:33 | Failed to initialize MongoDB: The resolution lifetime expired after 21.606 seconds: Server Do53:198.18.0.1@53 answered The DNS operation timed out.; Server Do53:198.18.0.1@53 answered The DNS operation timed out.; Server Do53:198.18.0.1@53 answered The DNS operation timed out.; Server Do53:198.18.0.1@53 answered The DNS operation timed out.; Server Do53:198.18.0.1@53 answered The DNS operation timed out.; Server Do53:198.18.0.1@53 answered The DNS operation timed out.; Server Do53:198.18.0.1@53 answered The DNS operation timed out.; Server Do53:198.18.0.1@53 answered The DNS operation timed out.; Server Do53:198.18.0.1@53 answered The DNS operation timed out.; Server Do53:198.18.0.1@53 answered The DNS operation timed out.
+2025-08-05T10:03:21.166633-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T10:04:20.397859-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T10:04:24.074683-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T10:45:19.277328-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T10:45:20.307101-0300 | ERROR | app.api.dashboard:get_dashboard_overview:70 | Failed to get dashboard overview: 'resume_bank'
+2025-08-05T10:45:20.310677-0300 | ERROR | app.api.dashboard:get_all_analyses:118 | Failed to get analyses: 'resume_bank'
+2025-08-05T11:07:43.632823-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T11:09:06.081900-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T11:11:15.928717-0300 | ERROR | app.services.qdrant_service:store_resume_embedding:109 | Failed to store resume embedding: [Errno 61] Connection refused
+2025-08-05T11:14:44.533292-0300 | ERROR | app.services.qdrant_service:store_resume_embedding:109 | Failed to store resume embedding: [Errno 61] Connection refused
+2025-08-05T11:15:19.674206-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T11:15:22.935487-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T11:15:48.219577-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T11:15:52.340379-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T11:17:23.652257-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T11:17:36.487129-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T11:17:47.540894-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T11:17:59.940774-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T11:18:24.901744-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T11:18:45.171035-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T11:21:24.714287-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T11:21:31.489570-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T11:21:44.774419-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T11:22:38.007939-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T11:23:38.477838-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T11:24:38.222455-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T11:24:44.369185-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T11:30:06.424962-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T11:30:12.976285-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T11:31:28.276087-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T11:35:47.559978-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T11:35:53.071205-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T11:35:58.810939-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T11:36:05.145030-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T11:43:55.534898-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T11:44:02.689665-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T11:44:08.864814-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T11:44:14.955062-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T11:44:26.409172-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T11:44:32.213657-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T11:44:38.581875-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T11:44:44.915897-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T11:46:29.319581-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T11:46:34.942620-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T11:52:02.720873-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T11:52:08.288908-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T11:52:13.861793-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T11:52:20.039645-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T13:07:26.388582-0300 | ERROR | app.services.qdrant_service:store_resume_embedding:109 | Failed to store resume embedding: [Errno 61] Connection refused
+2025-08-05T13:08:03.683707-0300 | ERROR | app.services.qdrant_service:store_resume_embedding:109 | Failed to store resume embedding: [Errno 61] Connection refused
+2025-08-05T13:08:31.632785-0300 | ERROR | app.services.qdrant_service:store_resume_embedding:109 | Failed to store resume embedding: [Errno 61] Connection refused
+2025-08-05T13:08:51.686753-0300 | ERROR | app.services.qdrant_service:store_resume_embedding:109 | Failed to store resume embedding: [Errno 61] Connection refused
+2025-08-05T13:12:36.377496-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T13:12:41.866842-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T13:13:19.855856-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T13:13:52.892716-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T13:13:58.435210-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T13:17:36.213810-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T13:17:41.836802-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T13:45:36.306137-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T13:47:22.298184-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T13:52:28.786705-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T13:53:39.868867-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T14:01:30.200951-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T14:02:50.075695-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T14:05:09.863083-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T14:08:00.370682-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T14:08:37.941959-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T14:17:29.383090-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T14:17:59.609528-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T14:20:29.028006-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T14:20:48.727695-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T14:24:28.036055-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T14:32:11.048331-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T14:33:47.500981-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T14:35:40.416779-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T14:39:46.740882-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T14:40:14.956543-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T14:40:26.306363-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T14:41:50.202119-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T15:00:21.240149-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T15:00:37.405003-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T15:00:57.995980-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T15:02:40.749031-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T15:03:37.796528-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T15:03:44.406000-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T16:38:01.471023-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T16:38:09.418076-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T16:38:44.361028-0300 | ERROR | app.services.qdrant_service:store_resume_embedding:109 | Failed to store resume embedding: [Errno 61] Connection refused
+2025-08-05T16:39:00.405744-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T16:39:07.382285-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T17:00:50.747590-0300 | ERROR | app.api.resume_bank:upload_resume_to_bank:262 | Failed to upload resume to bank: 1 validation error for ResumeBankEntryDocument
+candidate_location
+  Input should be a valid string [type=string_type, input_value={'city': 'Islamabad', 'country': 'Pakistan'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type
+2025-08-05T17:01:12.966428-0300 | ERROR | app.services.qdrant_service:store_resume_embedding:109 | Failed to store resume embedding: [Errno 61] Connection refused
+2025-08-05T17:01:15.038782-0300 | ERROR | app.api.resume_bank:get_resume_bank:356 | Failed to get resume bank: 1 validation error for ResumeBankEntryDocument
+candidate_location
+  Input should be a valid string [type=string_type, input_value={'city': 'Islamabad', 'country': 'Pakistan'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type
+2025-08-05T17:01:16.066926-0300 | ERROR | app.api.resume_bank:get_resume_bank:356 | Failed to get resume bank: 1 validation error for ResumeBankEntryDocument
+candidate_location
+  Input should be a valid string [type=string_type, input_value={'city': 'Islamabad', 'country': 'Pakistan'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type
+2025-08-05T17:01:24.180253-0300 | ERROR | app.api.resume_bank:get_resume_bank:356 | Failed to get resume bank: 1 validation error for ResumeBankEntryDocument
+candidate_location
+  Input should be a valid string [type=string_type, input_value={'city': 'Islamabad', 'country': 'Pakistan'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type
+2025-08-05T17:01:25.518157-0300 | ERROR | app.api.resume_bank:get_resume_bank:356 | Failed to get resume bank: 1 validation error for ResumeBankEntryDocument
+candidate_location
+  Input should be a valid string [type=string_type, input_value={'city': 'Islamabad', 'country': 'Pakistan'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type
+2025-08-05T17:01:35.279581-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T17:01:37.848691-0300 | ERROR | app.api.resume_bank:get_resume_bank:356 | Failed to get resume bank: 1 validation error for ResumeBankEntryDocument
+candidate_location
+  Input should be a valid string [type=string_type, input_value={'city': 'Islamabad', 'country': 'Pakistan'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type
+2025-08-05T17:01:38.865304-0300 | ERROR | app.api.resume_bank:get_resume_bank:356 | Failed to get resume bank: 1 validation error for ResumeBankEntryDocument
+candidate_location
+  Input should be a valid string [type=string_type, input_value={'city': 'Islamabad', 'country': 'Pakistan'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type
+2025-08-05T17:01:41.533642-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T17:01:42.189233-0300 | ERROR | app.api.resume_bank:get_resume_bank:356 | Failed to get resume bank: 1 validation error for ResumeBankEntryDocument
+candidate_location
+  Input should be a valid string [type=string_type, input_value={'city': 'Islamabad', 'country': 'Pakistan'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type
+2025-08-05T17:01:43.203147-0300 | ERROR | app.api.resume_bank:get_resume_bank:356 | Failed to get resume bank: 1 validation error for ResumeBankEntryDocument
+candidate_location
+  Input should be a valid string [type=string_type, input_value={'city': 'Islamabad', 'country': 'Pakistan'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type
+2025-08-05T17:02:55.890987-0300 | ERROR | app.api.resume_bank:get_resume_bank:356 | Failed to get resume bank: 1 validation error for ResumeBankEntryDocument
+candidate_location
+  Input should be a valid string [type=string_type, input_value={'city': 'Islamabad', 'country': 'Pakistan'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type
+2025-08-05T17:02:56.959028-0300 | ERROR | app.api.resume_bank:get_resume_bank:356 | Failed to get resume bank: 1 validation error for ResumeBankEntryDocument
+candidate_location
+  Input should be a valid string [type=string_type, input_value={'city': 'Islamabad', 'country': 'Pakistan'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type
+2025-08-05T17:05:13.491638-0300 | ERROR | app.api.resume_bank:get_resume_bank:356 | Failed to get resume bank: 1 validation error for ResumeBankEntryDocument
+candidate_location
+  Input should be a valid string [type=string_type, input_value={'city': 'Islamabad', 'country': 'Pakistan'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type
+2025-08-05T17:06:06.435254-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T17:06:23.566110-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T17:06:41.059682-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T17:06:59.656730-0300 | ERROR | app.api.resume_bank:get_resume_bank:359 | Failed to get resume bank: 1 validation error for ResumeBankEntryDocument
+candidate_location
+  Input should be a valid string [type=string_type, input_value={'city': 'Islamabad', 'country': 'Pakistan'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type
+2025-08-05T17:07:25.319921-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T17:07:38.703480-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T17:07:55.714807-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T17:07:59.704016-0300 | ERROR | app.api.resume_bank:get_resume_bank:359 | Failed to get resume bank: 1 validation error for ResumeBankEntryDocument
+candidate_location
+  Input should be a valid string [type=string_type, input_value={'city': 'Islamabad', 'country': 'Pakistan'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type
+2025-08-05T17:08:24.869079-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T17:08:34.727477-0300 | ERROR | app.api.resume_bank:get_resume_bank:362 | Failed to get resume bank: 1 validation error for ResumeBankEntryDocument
+candidate_location
+  Input should be a valid string [type=string_type, input_value={'city': 'Islamabad', 'country': 'Pakistan'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type
+2025-08-05T17:09:07.523964-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T17:09:10.857691-0300 | ERROR | app.api.resume_bank:get_resume_bank:369 | Failed to get resume bank: 1 validation error for ResumeBankEntryDocument
+candidate_location
+  Input should be a valid string [type=string_type, input_value={'city': 'Islamabad', 'country': 'Pakistan'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type
+2025-08-05T17:09:27.548796-0300 | ERROR | app.api.resume_bank:get_resume_bank:369 | Failed to get resume bank: 1 validation error for ResumeBankEntryDocument
+candidate_location
+  Input should be a valid string [type=string_type, input_value={'city': 'Islamabad', 'country': 'Pakistan'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type
+2025-08-05T17:09:28.691622-0300 | ERROR | app.api.resume_bank:get_resume_bank:369 | Failed to get resume bank: 1 validation error for ResumeBankEntryDocument
+candidate_location
+  Input should be a valid string [type=string_type, input_value={'city': 'Islamabad', 'country': 'Pakistan'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type
+2025-08-05T17:09:50.418109-0300 | ERROR | app.services.qdrant_service:store_resume_embedding:109 | Failed to store resume embedding: [Errno 61] Connection refused
+2025-08-05T17:09:52.759917-0300 | ERROR | app.api.resume_bank:get_resume_bank:369 | Failed to get resume bank: 1 validation error for ResumeBankEntryDocument
+candidate_location
+  Input should be a valid string [type=string_type, input_value={'city': 'Islamabad', 'country': 'Pakistan'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type
+2025-08-05T17:09:53.992413-0300 | ERROR | app.api.resume_bank:get_resume_bank:369 | Failed to get resume bank: 1 validation error for ResumeBankEntryDocument
+candidate_location
+  Input should be a valid string [type=string_type, input_value={'city': 'Islamabad', 'country': 'Pakistan'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type
+2025-08-05T17:10:31.988934-0300 | ERROR | app.api.resume_bank:get_resume_bank:369 | Failed to get resume bank: 1 validation error for ResumeBankEntryDocument
+candidate_location
+  Input should be a valid string [type=string_type, input_value={'city': 'Islamabad', 'country': 'Pakistan'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type
+2025-08-05T17:11:06.847789-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T17:12:33.440186-0300 | ERROR | app.api.resume_bank:get_resume_bank:370 | Failed to get resume bank: 1 validation error for ResumeBankEntryDocument
+candidate_location
+  Input should be a valid string [type=string_type, input_value={'city': 'Islamabad', 'country': 'Pakistan'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type
+2025-08-05T17:12:59.754641-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T17:14:05.904126-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T17:14:56.994097-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T17:15:31.300407-0300 | ERROR | app.api.resume_bank:get_resume_bank:382 | Failed to get resume bank: 1 validation error for ResumeBankEntryDocument
+candidate_location
+  Input should be a valid string [type=string_type, input_value={'city': 'Islamabad', 'country': 'Pakistan'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/string_type
+2025-08-05T17:16:03.629224-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T17:16:37.062719-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T17:17:59.600289-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T17:18:59.366802-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T17:19:10.266599-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T17:19:20.022302-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T17:19:35.275258-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T17:19:51.584861-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T17:20:06.316421-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T17:20:19.207921-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T18:02:29.445562-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T18:02:36.085776-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T18:03:08.579037-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T18:03:17.704262-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-05T18:03:23.982803-0300 | ERROR | app.api.resume_bank:search_candidates_for_job:924 | Failed to search candidates for job 689263c3e47b1127a3e0dc34: 1 validation error for ResumeBankEntryDocument
+user_id
+  Field required [type=missing, input_value={'_id': ObjectId('68922c9..., 5, 16, 8, 49, 858000)}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+2025-08-05T18:03:25.712488-0300 | ERROR | app.api.resume_bank:search_candidates_for_job:924 | Failed to search candidates for job 689263c3e47b1127a3e0dc34: 1 validation error for ResumeBankEntryDocument
+user_id
+  Field required [type=missing, input_value={'_id': ObjectId('68922c9..., 5, 16, 8, 49, 858000)}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+2025-08-05T18:03:26.720062-0300 | ERROR | app.api.resume_bank:search_candidates_for_job:924 | Failed to search candidates for job 689263c3e47b1127a3e0dc34: 1 validation error for ResumeBankEntryDocument
+user_id
+  Field required [type=missing, input_value={'_id': ObjectId('68922c9..., 5, 16, 8, 49, 858000)}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+2025-08-05T18:03:27.731596-0300 | ERROR | app.api.resume_bank:search_candidates_for_job:924 | Failed to search candidates for job 689263c3e47b1127a3e0dc34: 1 validation error for ResumeBankEntryDocument
+user_id
+  Field required [type=missing, input_value={'_id': ObjectId('68922c9..., 5, 16, 8, 49, 858000)}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+2025-08-05T18:04:33.226403-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-05T18:05:00.374017-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-07T18:06:32.051233-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-09T09:48:27.005865-0300 | ERROR | app.services.qdrant_service:init_collection:65 | Failed to initialize Qdrant collection: [Errno 61] Connection refused
+2025-08-09T09:51:23.323011-0300 | ERROR | app.services.qdrant_service:store_resume_embedding:109 | Failed to store resume embedding: [Errno 61] Connection refused
+2025-08-09T09:57:38.666985-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-09T09:57:44.648003-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-09T09:57:58.338095-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
+2025-08-09T09:58:04.364461-0300 | ERROR | app.services.qdrant_service:get_collection_stats:223 | Failed to get collection stats: [Errno 61] Connection refused
