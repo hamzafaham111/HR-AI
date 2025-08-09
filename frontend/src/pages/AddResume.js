@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Toast from '../components/ui/Toast';
 import { authenticatedFetch } from '../utils/api';
+import { API_ENDPOINTS } from '../config/api';
 
 const AddResume = () => {
   const navigate = useNavigate();
@@ -79,7 +80,7 @@ const AddResume = () => {
       const token = localStorage.getItem('accessToken');
       console.log('Token for upload (handleUploadOnly):', token ? 'Token exists' : 'No token found');
       
-      const response = await fetch('http://localhost:8000/api/v1/resume-bank/upload', {
+      const response = await fetch(API_ENDPOINTS.RESUME_BANK.UPLOAD, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -144,7 +145,7 @@ const AddResume = () => {
       const token = localStorage.getItem('accessToken');
       console.log('Token for upload (handleSubmitWithInfo):', token ? 'Token exists' : 'No token found');
       
-      const response = await fetch('http://localhost:8000/api/v1/resume-bank/upload', {
+      const response = await fetch(API_ENDPOINTS.RESUME_BANK.UPLOAD, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

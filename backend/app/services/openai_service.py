@@ -1,8 +1,34 @@
 """
-OpenAI service for text processing and embeddings.
+OpenAI Service for AI-Powered Text Processing
 
-This module provides integration with OpenAI's GPT models for text processing
-and generating embeddings for vector search.
+This module integrates with OpenAI's API to provide AI capabilities for:
+1. Extracting structured data from unstructured resume text
+2. Generating vector embeddings for semantic search
+3. Processing natural language for candidate matching
+
+KEY AI CONCEPTS EXPLAINED:
+========================
+
+1. **Large Language Models (LLMs)**:
+   - GPT models are trained on vast amounts of text
+   - They understand context and can extract information intelligently
+   - Think of them as very smart text processors that "understand" content
+
+2. **Embeddings**:
+   - Convert text into numerical vectors (arrays of numbers)
+   - Similar texts get similar vectors
+   - Enables mathematical comparison of text meaning
+   - Example: "Python developer" and "Software engineer" would have similar vectors
+
+3. **Prompt Engineering**:
+   - The art of writing instructions for AI models
+   - Clear, specific prompts get better results
+   - Like giving detailed instructions to a very capable assistant
+
+4. **Vector Search**:
+   - Store embeddings in a vector database (Qdrant)
+   - Find similar content by comparing vector distances
+   - Enables "semantic search" - search by meaning, not just keywords
 """
 
 import json
@@ -11,27 +37,51 @@ from typing import Dict, List, Optional
 from openai import AsyncOpenAI
 from loguru import logger
 
-# Resume analysis models removed - using simplified functionality
+# Import configuration settings
 from ..core.config import settings
 
 
 class OpenAIService:
     """
-    Service for interacting with OpenAI API for text processing and embeddings.
+    Service for interacting with OpenAI API for AI-powered text processing.
     
-    This service handles the communication with OpenAI's GPT models to process
-    text content and generate embeddings for vector search.
+    WHAT THIS SERVICE DOES:
+    ======================
+    1. **Text Analysis**: Extract structured information from resume text
+    2. **Embeddings Generation**: Convert text to numerical vectors for search
+    3. **Smart Parsing**: Use AI to understand and categorize content
+    
+    REAL-WORLD ANALOGY:
+    ==================
+    Think of this service like a super-smart administrative assistant who can:
+    - Read a resume and extract key information (name, skills, experience)
+    - Understand the "meaning" of job descriptions and resumes
+    - Compare different resumes to find the best matches for a job
+    
+    TECHNICAL IMPLEMENTATION:
+    ========================
+    - Uses OpenAI's GPT models for text understanding
+    - Generates 1536-dimensional vectors for semantic similarity
+    - Handles API errors gracefully with fallback mechanisms
     """
     
     def __init__(self):
-        """Initialize the OpenAI service with API configuration."""
+        """
+        Initialize the OpenAI service with API configuration.
+        
+        Sets up the async client and model parameters.
+        Think of this like configuring your connection to a smart AI assistant.
+        """
+        # Create async client for OpenAI API calls
         self.client = AsyncOpenAI(
-            api_key=settings.openai_api_key,
-            base_url=settings.openai_api_base
+            api_key=settings.openai_api_key,      # Your API key for authentication
+            base_url=settings.openai_api_base     # API endpoint (can be customized)
         )
-        self.model = settings.openai_model
-        self.max_tokens = settings.max_tokens
-        self.temperature = settings.temperature
+        
+        # Model configuration
+        self.model = settings.openai_model           # Usually "gpt-3.5-turbo" or "gpt-4"
+        self.max_tokens = settings.max_tokens        # Maximum response length
+        self.temperature = settings.temperature      # Creativity level (0.0 = focused, 1.0 = creative)
         
     async def extract_candidate_info(self, resume_text: str) -> Dict[str, any]:
         """

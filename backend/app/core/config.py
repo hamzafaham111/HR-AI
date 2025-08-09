@@ -19,14 +19,15 @@ class Settings(BaseSettings):
     """
     
     # Application settings
-    app_name: str = "AI Resume Analysis API"
+    app_name: str = "HR API"
     app_version: str = "1.0.0"
     debug: bool = False
+    environment: str = "development"
     
-    # OpenAI API configuration
-    openai_api_key: str = "your-openai-api-key"
+    # OpenAI API configuration (REQUIRED)
+    openai_api_key: str  # Must be provided via OPENAI_API_KEY env var
     openai_api_base: str = "https://api.openai.com/v1"
-    openai_model: str = "gpt-4o-mini"
+    openai_model: str = "gpt-3.5-turbo"
     
     # Qdrant vector database configuration
     qdrant_host: str = "localhost"
@@ -44,11 +45,12 @@ class Settings(BaseSettings):
     temperature: float = 0.3
     analysis_timeout: int = 60  # seconds
     
-    # Security settings
-    secret_key: str = "your-secret-key-change-in-production"
-    refresh_secret_key: str = "your-refresh-secret-key-here"
+    # Security settings (REQUIRED)
+    secret_key: str  # Must be provided via SECRET_KEY env var
+    refresh_secret_key: Optional[str] = None  # Optional, will use SECRET_KEY if not provided
     algorithm: str = "HS256"
-    access_token_expire_minutes: int = 30
+    access_token_expire_minutes: int = 15
+    refresh_token_expire_days: int = 7
     
     # Logging settings
     log_level: str = "INFO"

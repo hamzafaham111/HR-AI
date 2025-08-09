@@ -1,32 +1,54 @@
 """
-Resume bank API routes.
+Resume Bank API Module
 
-This module contains FastAPI routes for:
-- Managing resumes in the resume bank
-- Searching and filtering candidates
-- Finding best matches for job postings
-- Resume bank statistics and analytics
+This module handles all resume-related operations for the AI Resume Management System.
+
+WHAT THIS MODULE DOES:
+======================
+1. **File Upload**: Handle PDF resume uploads from users
+2. **AI Processing**: Extract candidate information using OpenAI
+3. **Search & Matching**: Find candidates that match job requirements
+4. **Statistics**: Provide resume bank analytics
+
+KEY CONCEPTS FOR REACT DEVELOPERS:
+==================================
+- **FastAPI Routers**: Like Express Router for organizing endpoints
+- **File Handling**: Similar to multer in Node.js for file uploads
+- **Async Operations**: Database and AI calls are non-blocking
+- **Type Validation**: Pydantic models ensure data integrity
+
+REAL-WORLD ANALOGY:
+==================
+Think of this module like a smart HR assistant that can:
+- Receive and process resumes automatically
+- Extract key information from each resume
+- Find the best candidates for any job opening
+- Keep statistics on the talent pool
 """
 
 from fastapi import APIRouter, HTTPException, Query, UploadFile, File, Form, Depends
 from typing import List, Optional
 from datetime import datetime
-from bson import ObjectId
+from bson import ObjectId  # MongoDB's unique identifier
 
+# Import data models (like TypeScript interfaces)
 from app.models.resume_bank import (
     ResumeBankEntry, ResumeSearchFilters, CandidateMatch, ResumeBankStats,
     ResumeBankResponse, CandidateSearchResponse, ResumeBankEntryCreate,
     ResumeBankEntryUpdate, ResumeStatus, ResumeSource
 )
-from app.core.database import get_database
-from app.repositories.mongodb_repository import MongoDBRepository
-from app.models.mongodb_models import COLLECTIONS
-from app.services.openai_service import openai_service
-from app.utils.pdf_processor import PDFProcessor
-from app.core.logger import logger
-from app.api.auth import get_current_user
-from app.models.mongodb_models import UserDocument
 
+# Import core services
+from app.core.database import get_database              # Database connection
+from app.repositories.mongodb_repository import MongoDBRepository  # Database operations
+from app.models.mongodb_models import COLLECTIONS       # Collection names
+from app.services.openai_service import openai_service  # AI processing
+from app.utils.pdf_processor import PDFProcessor        # PDF text extraction
+from app.core.logger import logger                      # Logging utility
+from app.api.auth import get_current_user              # Authentication
+from app.models.mongodb_models import UserDocument      # User data model
+
+# Create router instance (like Express Router)
 router = APIRouter()
 
 

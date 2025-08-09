@@ -1,10 +1,27 @@
+"""
+Authentication API Module
+
+This module handles all authentication-related functionality including:
+- User registration and login
+- JWT token creation and validation
+- Password hashing and verification
+- User profile management
+- Token refresh mechanisms
+
+Key Concepts for React Developers:
+- FastAPI decorators (@router.post) are like Express.js route handlers
+- async/await works the same as in JavaScript
+- Pydantic models are like TypeScript interfaces for data validation
+- Dependencies (Depends()) are like middleware functions
+"""
+
 from datetime import datetime, timedelta
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-import jwt
-import bcrypt
-from bson import ObjectId
+import jwt  # JSON Web Tokens for secure authentication
+import bcrypt  # For password hashing (like bcrypt in Node.js)
+from bson import ObjectId  # MongoDB's unique identifier type
 
 from app.core.config import settings
 from app.core.database import get_database
@@ -17,35 +34,57 @@ from app.models.mongodb_models import UserDocument, COLLECTIONS
 from app.utils.email_service import send_password_reset_email, send_welcome_email
 from loguru import logger
 
+# Create FastAPI router - like Express Router
 router = APIRouter()
+# Security scheme for JWT token extraction from Authorization header
 security = HTTPBearer()
 
-# JWT Configuration
-SECRET_KEY = settings.secret_key
-REFRESH_SECRET_KEY = settings.refresh_secret_key or "your-refresh-secret-key-here"
-ALGORITHM = settings.algorithm
-ACCESS_TOKEN_EXPIRE_MINUTES = 15  # Shorter access token for security
-REFRESH_TOKEN_EXPIRE_DAYS = 7     # Longer refresh token
+# JWT Configuration - These are the "secrets" used to sign tokens
+SECRET_KEY = settings.secret_key  # Used for access tokens
+REFRESH_SECRET_KEY = settings.refresh_secret_key or "your-refresh-secret-key-here"  # Used for refresh tokens
+ALGORITHM = settings.algorithm  # Encryption algorithm (usually HS256)
+ACCESS_TOKEN_EXPIRE_MINUTES = 15  # Short-lived for security (like session timeout)
+REFRESH_TOKEN_EXPIRE_DAYS = 7     # Longer-lived for convenience
 
-# JWT Configuration
-SECRET_KEY = settings.secret_key
-REFRESH_SECRET_KEY = settings.refresh_secret_key or "your-refresh-secret-key-here"
-ALGORITHM = settings.algorithm
-ACCESS_TOKEN_EXPIRE_MINUTES = 15  # Shorter access token for security
-REFRESH_TOKEN_EXPIRE_DAYS = 7     # Longer refresh token
+# JWT Token Creation Functions
+# These functions create JWT tokens that contain user information and expiration time
 
-# JWT Token Functions
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
-    to_encode = data.copy()
+    """
+    Create an access token for API authentication.
+    
+    Similar to creating a session token, but stateless.
+    The token contains user ID and expiration time.
+    
+    Args:
+        data: Dictionary containing user information (usually {"sub": user_id})
+        expires_delta: Custom expiration time (optional)
+    
+    Returns:
+        String: JWT token that can be sent to frontend
+    """
+    to_encode = data.copy()  # Copy data to avoid modifying original
+    
+    # Set expiration time
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
         expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    
+    # Add expiration and token type to payload
     to_encode.update({"exp": expire, "type": "access"})
+    
+    # Create and return JWT token (like signing a cookie but more secure)
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
 def create_refresh_token(data: dict, expires_delta: Optional[timedelta] = None):
+    """
+    Create a refresh token for renewing access tokens.
+    
+    Think of this like a "remember me" token that lasts longer
+    and can be used to get new access tokens without re-login.
+    """
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.utcnow() + expires_delta

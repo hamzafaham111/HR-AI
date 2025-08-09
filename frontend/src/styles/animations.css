@@ -1,0 +1,97 @@
+/* Smooth Animations for Mobile Sidebar */
+
+/* Custom easing curves for better animation feel */
+.sidebar-slide-enter {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+
+.sidebar-slide-enter-active {
+  transform: translateX(0);
+  opacity: 1;
+  transition: transform 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              opacity 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.sidebar-slide-exit {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.sidebar-slide-exit-active {
+  transform: translateX(-100%);
+  opacity: 0;
+  transition: transform 300ms cubic-bezier(0.55, 0.055, 0.675, 0.19),
+              opacity 300ms cubic-bezier(0.55, 0.055, 0.675, 0.19);
+}
+
+/* Overlay fade animations */
+.overlay-fade-enter {
+  opacity: 0;
+}
+
+.overlay-fade-enter-active {
+  opacity: 1;
+  transition: opacity 300ms ease-in-out;
+}
+
+.overlay-fade-exit {
+  opacity: 1;
+}
+
+.overlay-fade-exit-active {
+  opacity: 0;
+  transition: opacity 300ms ease-in-out;
+}
+
+/* Button hover and focus animations */
+.mobile-menu-button {
+  transition: all 200ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.mobile-menu-button:hover {
+  transform: scale(1.05);
+}
+
+.mobile-menu-button:active {
+  transform: scale(0.95);
+}
+
+/* Smooth scrolling for mobile sidebar content */
+.sidebar-content {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Add a subtle bounce effect when sidebar opens fully */
+@keyframes slideInBounce {
+  0% {
+    transform: translateX(-100%);
+  }
+  60% {
+    transform: translateX(2%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.sidebar-bounce-enter {
+  animation: slideInBounce 400ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Prevent body scroll when sidebar is open on mobile */
+.sidebar-open {
+  overflow: hidden;
+}
+
+/* Add a subtle shadow animation */
+.sidebar-shadow {
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+  transition: box-shadow 300ms ease-in-out;
+}
+
+.sidebar-shadow-active {
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1),
+              0 20px 48px rgba(0, 0, 0, 0.1);
+}

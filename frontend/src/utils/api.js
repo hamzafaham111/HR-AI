@@ -1,4 +1,5 @@
 import { API_CONFIG, HTTP_METHODS, HTTP_STATUS } from '../constants/api';
+import { API_ENDPOINTS } from '../config/api';
 
 class ApiError extends Error {
   constructor(message, status, data = null) {
@@ -131,7 +132,7 @@ export const authenticatedFetch = async (url, options = {}) => {
     if (refreshToken) {
       try {
         // Try to refresh the token
-        const refreshResponse = await fetch('http://localhost:8000/api/v1/auth/refresh', {
+        const refreshResponse = await fetch(API_ENDPOINTS.AUTH.REFRESH, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

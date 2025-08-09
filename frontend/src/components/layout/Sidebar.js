@@ -48,13 +48,13 @@ const Sidebar = ({ setSidebarOpen }) => {
   return (
     <div className="flex flex-col h-full">
       {/* Logo Section */}
-      <div className="p-6 border-b border-gray-200 flex-shrink-0">
+      <div className="p-6 border-gray-200 flex-shrink-0">
         <Link to="/" className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
             <Home className="w-5 h-5 text-white" />
           </div>
           <span className="text-lg font-bold text-gray-900">
-            AI Resume Management
+            HR & AI
           </span>
         </Link>
       </div>

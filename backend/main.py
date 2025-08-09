@@ -61,8 +61,8 @@ load_dotenv()
 
 # Create FastAPI application instance
 app = FastAPI(
-    title="AI Resume Management API",
-    description="A production-ready AI-powered resume management system for storing and matching resumes with job opportunities.",
+    title="HR API",
+    description="A production-ready HR management system for storing and matching resumes with job opportunities.",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search, Filter, Users, Eye, Edit, Trash2, Plus, BarChart3, MapPin, Calendar, Star } from 'lucide-react';
 import ConfirmationModal from '../components/ui/ConfirmationModal';
 import { authenticatedFetch } from '../utils/api';
+import { API_ENDPOINTS } from '../config/api';
 
 const ResumeBank = () => {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ const ResumeBank = () => {
 
   const fetchResumeBank = async () => {
     try {
-      const response = await authenticatedFetch('http://localhost:8000/api/v1/resume-bank/');
+      const response = await authenticatedFetch(API_ENDPOINTS.RESUME_BANK.LIST);
       if (response.ok) {
         const data = await response.json();
         setResumes(data);
@@ -45,7 +46,7 @@ const ResumeBank = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await authenticatedFetch('http://localhost:8000/api/v1/resume-bank/stats');
+      const response = await authenticatedFetch(API_ENDPOINTS.RESUME_BANK.STATS);
       if (response.ok) {
         const data = await response.json();
         setStats(data);
@@ -75,7 +76,7 @@ const ResumeBank = () => {
     const { resumeId } = deleteModal;
     
     try {
-      const response = await authenticatedFetch(`http://localhost:8000/api/v1/resume-bank/${resumeId}`, {
+      const response = await authenticatedFetch(API_ENDPOINTS.RESUME_BANK.DELETE(resumeId), {
         method: 'DELETE',
       });
 
