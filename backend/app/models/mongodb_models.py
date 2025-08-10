@@ -10,6 +10,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field, validator
 from bson import ObjectId
 import uuid
+from enum import Enum
 
 
 class PyObjectId(ObjectId):
@@ -153,10 +154,91 @@ class UserDocument(BaseModel):
     }
 
 
+class ProcessStatus(str, Enum):
+    """Enum for hiring process status."""
+    ACTIVE = "active"
+    PAUSED = "paused"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+    COMING_SOON = "coming_soon"
+
+
+class CandidateStageStatus(str, Enum):
+    """Enum for candidate status within a stage."""
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    PASSED = "passed"
+    REJECTED = "rejected"
+    WITHDRAWN = "withdrawn"
+    CALL_PENDING = "call_pending"
+    INTERVIEWED = "interviewed"
+    FEEDBACK_PENDING = "feedback_pending"
+    ACCEPTED = "accepted"
+    HIRED = "hired"
+
+
+class ProcessStage(BaseModel):
+    """Individual stage in a hiring process."""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), description="Unique stage ID")
+    name: str = Field(..., description="Stage name (e.g., 'Phone Screen', 'Technical Interview')")
+    description: Optional[str] = Field(None, description="Stage description")
+    order: int = Field(..., description="Order of this stage in the process")
+    is_final: bool = Field(default=False, description="Whether this is a final stage (hired/rejected)")
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class ProcessCandidate(BaseModel):
+    """Candidate assigned to a hiring process."""
+    resume_bank_entry_id: PyObjectId = Field(..., description="Reference to resume bank entry")
+    current_stage_id: str = Field(..., description="Current stage ID")
+    status: CandidateStageStatus = Field(default=CandidateStageStatus.PENDING, description="Current status")
+    notes: Optional[str] = Field(None, description="HR notes about this candidate")
+    stage_history: List[Dict[str, Any]] = Field(default_factory=list, description="History of stage movements")
+    assigned_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class HiringProcessDocument(BaseModel):
+    """MongoDB document for hiring processes."""
+    id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias="_id")
+    user_id: PyObjectId = Field(..., description="ID of the HR user who created this process")
+    
+    # Process Details
+    process_name: str = Field(..., description="Name/title of the hiring process")
+    company_name: str = Field(..., description="Company name for this position")
+    position_title: str = Field(..., description="Job position title")
+    department: Optional[str] = Field(None, description="Department")
+    location: Optional[str] = Field(None, description="Job location")
+    
+    # Process Configuration
+    description: Optional[str] = Field(None, description="Process description")
+    status: ProcessStatus = Field(default=ProcessStatus.ACTIVE, description="Process status")
+    priority: str = Field(default="medium", description="Process priority (low, medium, high, urgent)")
+    target_hires: Optional[int] = Field(None, description="Target number of hires")
+    deadline: Optional[datetime] = Field(None, description="Process deadline")
+    
+    # Pipeline Stages
+    stages: List[ProcessStage] = Field(default_factory=list, description="Hiring pipeline stages")
+    
+    # Candidates
+    candidates: List[ProcessCandidate] = Field(default_factory=list, description="Candidates in this process")
+    
+    # Metadata
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    
+    model_config = {
+        "populate_by_name": True,
+        "arbitrary_types_allowed": True,
+        "json_encoders": {ObjectId: str}
+    }
+
+
 # Collection names
 COLLECTIONS = {
     "job_postings": "job_postings",
     "resume_analyses": "resume_analyses", 
     "resume_bank_entries": "resume_bank_entries",
-    "users": "users"
+    "users": "users",
+    "hiring_processes": "hiring_processes"
 } 

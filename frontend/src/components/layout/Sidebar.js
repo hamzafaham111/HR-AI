@@ -6,7 +6,8 @@ import {
   Users, 
   Settings,
   LogOut,
-  Home
+  Home,
+  GitBranch
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -33,6 +34,11 @@ const Sidebar = ({ setSidebarOpen }) => {
       name: 'Resume Bank',
       path: '/resume-bank',
       icon: Users
+    },
+    {
+      name: 'Hiring Processes',
+      path: '/hiring-processes',
+      icon: GitBranch
     },
     {
       name: 'Settings',

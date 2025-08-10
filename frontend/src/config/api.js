@@ -61,6 +61,18 @@ export const API_ENDPOINTS = {
   DASHBOARD: {
     OVERVIEW: `${API_URL}/dashboard/overview`,
     STATS: `${API_URL}/dashboard/stats`,
+  },
+  
+  // Hiring Processes
+  HIRING_PROCESSES: {
+    LIST: `${API_URL}/hiring-processes/`,
+    CREATE: `${API_URL}/hiring-processes/`,
+    DETAIL: (id) => `${API_URL}/hiring-processes/${id}`,
+    UPDATE: (id) => `${API_URL}/hiring-processes/${id}`,
+    DELETE: (id) => `${API_URL}/hiring-processes/${id}`,
+    STATS: `${API_URL}/hiring-processes/stats`,
+    ADD_CANDIDATE: (id) => `${API_URL}/hiring-processes/${id}/candidates`,
+    MOVE_CANDIDATE: (processId, candidateId) => `${API_URL}/hiring-processes/${processId}/candidates/${candidateId}/move`
   }
 };
 

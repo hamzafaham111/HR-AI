@@ -17,6 +17,9 @@ import AddResume from './pages/AddResume';
 import EditResume from './pages/EditResume';
 import SearchCandidates from './pages/SearchCandidates';
 import Settings from './pages/Settings';
+import HiringProcesses from './pages/HiringProcesses';
+import CreateHiringProcess from './pages/CreateHiringProcess';
+import HiringProcessDetail from './pages/HiringProcessDetail';
 import './styles/App.css';
 
 function App() {
@@ -101,6 +104,30 @@ function App() {
             <ProtectedRoute>
               <Layout showSidebar={true}>
                 <Settings />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/hiring-processes" element={
+            <ProtectedRoute>
+              <Layout showSidebar={true}>
+                <HiringProcesses />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/hiring-processes/create" element={
+            <ProtectedRoute>
+              <Layout showSidebar={true}>
+                <CreateHiringProcess />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/hiring-processes/:id" element={
+            <ProtectedRoute>
+              <Layout showSidebar={true}>
+                <HiringProcessDetail />
               </Layout>
             </ProtectedRoute>
           } />

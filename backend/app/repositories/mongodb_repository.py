@@ -17,6 +17,9 @@ from app.models.mongodb_models import (
     ResumeAnalysisDocument,
     ResumeBankEntryDocument,
     UserDocument,
+    HiringProcessDocument,
+    ProcessStatus,
+    CandidateStageStatus,
     COLLECTIONS
 )
 
@@ -30,6 +33,7 @@ class MongoDBRepository:
         self.resume_analyses = database[COLLECTIONS["resume_analyses"]]
         self.resume_bank_entries = database[COLLECTIONS["resume_bank_entries"]]
         self.users = database[COLLECTIONS["users"]]
+        self.hiring_processes = database[COLLECTIONS["hiring_processes"]]
     
     # Job Posting operations
     async def create_job_posting(self, job_data: Dict[str, Any]) -> JobPostingDocument:
@@ -308,4 +312,310 @@ class MongoDBRepository:
         user_data = await self.users.find_one({"username": username})
         if user_data:
             return UserDocument(**user_data)
-        return None 
+        return None
+    
+    # Hiring Process operations
+    async def create_hiring_process(self, process_data: Dict[str, Any]) -> HiringProcessDocument:
+        """Create a new hiring process."""
+        process_data["created_at"] = datetime.utcnow()
+        process_data["updated_at"] = datetime.utcnow()
+        
+        result = await self.hiring_processes.insert_one(process_data)
+        process_data["_id"] = result.inserted_id
+        
+        return HiringProcessDocument(**process_data)
+    
+    async def get_hiring_process_by_id(self, process_id: str, user_id: str) -> Optional[HiringProcessDocument]:
+        """Get a hiring process by ID for a specific user."""
+        try:
+            process_object_id = ObjectId(process_id)
+            user_object_id = ObjectId(user_id)
+        except Exception:
+            return None
+        
+        process_data = await self.hiring_processes.find_one({
+            "_id": process_object_id,
+            "user_id": user_object_id
+        })
+        
+        if process_data:
+            return HiringProcessDocument(**process_data)
+        return None
+    
+    async def get_hiring_processes_by_user(
+        self,
+        user_id: str,
+        status: Optional[ProcessStatus] = None,
+        search: Optional[str] = None,
+        limit: int = 20,
+        offset: int = 0
+    ) -> List[HiringProcessDocument]:
+        """Get hiring processes for a user with optional filtering."""
+        try:
+            user_object_id = ObjectId(user_id)
+        except Exception:
+            logger.error(f"Invalid user_id format: {user_id}")
+            return []
+        
+        # Build query - using $or to handle both ObjectId and string formats
+        query = {"$or": [
+            {"user_id": user_object_id},
+            {"user_id": user_id}
+        ]}
+        
+        # Add status filter
+        if status:
+            query["status"] = status
+        
+        # Add search filter
+        if search:
+            search_regex = {"$regex": search, "$options": "i"}
+            query["$or"] = [
+                {"process_name": search_regex},
+                {"company_name": search_regex},
+                {"position_title": search_regex}
+            ]
+        
+        cursor = self.hiring_processes.find(query).sort("created_at", -1).skip(offset).limit(limit)
+        processes = []
+        
+        async for process_data in cursor:
+            processes.append(HiringProcessDocument(**process_data))
+        
+        return processes
+    
+    async def update_hiring_process(self, process_id: str, user_id: str, update_data: Dict[str, Any]) -> Optional[HiringProcessDocument]:
+        """Update a hiring process."""
+        try:
+            process_object_id = ObjectId(process_id)
+            user_object_id = ObjectId(user_id)
+        except Exception:
+            return None
+        
+        update_data["updated_at"] = datetime.utcnow()
+        
+        result = await self.hiring_processes.update_one(
+            {"_id": process_object_id, "user_id": user_object_id},
+            {"$set": update_data}
+        )
+        
+        if result.modified_count > 0:
+            return await self.get_hiring_process_by_id(process_id, user_id)
+        return None
+    
+    async def delete_hiring_process(self, process_id: str, user_id: str) -> bool:
+        """Delete a hiring process."""
+        try:
+            process_object_id = ObjectId(process_id)
+            user_object_id = ObjectId(user_id)
+        except Exception:
+            return False
+        
+        result = await self.hiring_processes.delete_one({
+            "_id": process_object_id,
+            "user_id": user_object_id
+        })
+        
+        return result.deleted_count > 0
+    
+    async def add_candidate_to_process(
+        self,
+        process_id: str,
+        user_id: str,
+        resume_bank_entry_id: str,
+        initial_stage_id: str,
+        notes: Optional[str] = None
+    ) -> Optional[HiringProcessDocument]:
+        """Add a candidate to a hiring process."""
+        try:
+            process_object_id = ObjectId(process_id)
+            user_object_id = ObjectId(user_id)
+            resume_object_id = ObjectId(resume_bank_entry_id)
+        except Exception:
+            return None
+        
+        # Create candidate data
+        candidate_data = {
+            "resume_bank_entry_id": resume_object_id,
+            "current_stage_id": initial_stage_id,
+            "status": CandidateStageStatus.PENDING,
+            "notes": notes,
+            "stage_history": [{
+                "from_stage_id": None,
+                "from_stage_name": None,
+                "to_stage_id": initial_stage_id,
+                "to_stage_name": "Initial Assignment",
+                "status": CandidateStageStatus.PENDING,
+                "notes": notes,
+                "moved_at": datetime.utcnow(),
+                "moved_by": user_id
+            }],
+            "assigned_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+        
+        result = await self.hiring_processes.update_one(
+            {"_id": process_object_id, "user_id": user_object_id},
+            {
+                "$push": {"candidates": candidate_data},
+                "$set": {"updated_at": datetime.utcnow()}
+            }
+        )
+        
+        if result.modified_count > 0:
+            return await self.get_hiring_process_by_id(process_id, user_id)
+        return None
+    
+    async def move_candidate_stage(
+        self,
+        process_id: str,
+        user_id: str,
+        resume_bank_entry_id: str,
+        new_stage_id: str,
+        new_status: CandidateStageStatus,
+        notes: Optional[str] = None
+    ) -> Optional[HiringProcessDocument]:
+        """Move a candidate to a different stage."""
+        try:
+            process_object_id = ObjectId(process_id)
+            user_object_id = ObjectId(user_id)
+            resume_object_id = ObjectId(resume_bank_entry_id)
+        except Exception:
+            return None
+        
+        # Get current process to find stage names
+        process = await self.get_hiring_process_by_id(process_id, user_id)
+        if not process:
+            return None
+        
+        # Find current candidate and stage names
+        current_candidate = None
+        current_stage_name = None
+        new_stage_name = None
+        
+        for candidate in process.candidates:
+            if candidate.resume_bank_entry_id == resume_object_id:
+                current_candidate = candidate
+                break
+        
+        if not current_candidate:
+            return None
+        
+        # Find stage names
+        for stage in process.stages:
+            if stage.id == current_candidate.current_stage_id:
+                current_stage_name = stage.name
+            if stage.id == new_stage_id:
+                new_stage_name = stage.name
+        
+        # Create history entry
+        history_entry = {
+            "from_stage_id": current_candidate.current_stage_id,
+            "from_stage_name": current_stage_name,
+            "to_stage_id": new_stage_id,
+            "to_stage_name": new_stage_name,
+            "status": new_status,
+            "notes": notes,
+            "moved_at": datetime.utcnow(),
+            "moved_by": user_id
+        }
+        
+        result = await self.hiring_processes.update_one(
+            {
+                "_id": process_object_id,
+                "user_id": user_object_id,
+                "candidates.resume_bank_entry_id": resume_object_id
+            },
+            {
+                "$set": {
+                    "candidates.$.current_stage_id": new_stage_id,
+                    "candidates.$.status": new_status,
+                    "candidates.$.notes": notes,
+                    "candidates.$.updated_at": datetime.utcnow(),
+                    "updated_at": datetime.utcnow()
+                },
+                "$push": {
+                    "candidates.$.stage_history": history_entry
+                }
+            }
+        )
+        
+        if result.modified_count > 0:
+            return await self.get_hiring_process_by_id(process_id, user_id)
+        return None
+    
+    async def get_hiring_process_stats_by_user(self, user_id: str) -> Dict[str, Any]:
+        """Get hiring process statistics for a user."""
+        try:
+            user_object_id = ObjectId(user_id)
+        except Exception:
+            return {}
+        
+        pipeline = [
+            {"$match": {"user_id": user_object_id}},
+            {
+                "$group": {
+                    "_id": None,
+                    "total_processes": {"$sum": 1},
+                    "active_processes": {
+                        "$sum": {"$cond": [{"$eq": ["$status", ProcessStatus.ACTIVE]}, 1, 0]}
+                    },
+                    "completed_processes": {
+                        "$sum": {"$cond": [{"$eq": ["$status", ProcessStatus.COMPLETED]}, 1, 0]}
+                    },
+                    "paused_processes": {
+                        "$sum": {"$cond": [{"$eq": ["$status", ProcessStatus.PAUSED]}, 1, 0]}
+                    },
+                    "coming_soon_processes": {
+                        "$sum": {"$cond": [{"$eq": ["$status", ProcessStatus.COMING_SOON]}, 1, 0]}
+                    },
+                    "all_candidates": {"$push": "$candidates"}
+                }
+            },
+            {
+                "$project": {
+                    "total_processes": 1,
+                    "active_processes": 1,
+                    "completed_processes": 1,
+                    "paused_processes": 1,
+                    "coming_soon_processes": 1,
+                    "total_candidates": {"$size": {"$reduce": {
+                        "input": "$all_candidates",
+                        "initialValue": [],
+                        "in": {"$concatArrays": ["$$value", "$$this"]}
+                    }}},
+                    "candidates_hired": {"$size": {"$filter": {
+                        "input": {"$reduce": {
+                            "input": "$all_candidates",
+                            "initialValue": [],
+                            "in": {"$concatArrays": ["$$value", "$$this"]}
+                        }},
+                        "cond": {"$in": ["$$this.status", ["hired", "accepted"]]}
+                    }}},
+                    "candidates_rejected": {"$size": {"$filter": {
+                        "input": {"$reduce": {
+                            "input": "$all_candidates",
+                            "initialValue": [],
+                            "in": {"$concatArrays": ["$$value", "$$this"]}
+                        }},
+                        "cond": {"$eq": ["$$this.status", CandidateStageStatus.REJECTED]}
+                    }}}
+                }
+            }
+        ]
+        
+        result = await self.hiring_processes.aggregate(pipeline).to_list(1)
+        
+        if result:
+            return result[0]
+        else:
+            return {
+                "total_processes": 0,
+                "active_processes": 0,
+                "completed_processes": 0,
+                "paused_processes": 0,
+                "coming_soon_processes": 0,
+                "total_candidates": 0,
+                "candidates_hired": 0,
+                "candidates_rejected": 0
+            } 
