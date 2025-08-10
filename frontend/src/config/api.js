@@ -12,8 +12,20 @@
  * - Default values provide fallbacks for development
  */
 
-// Base API URL - can be changed for different environments
-export const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+// Base API URL - automatically detects environment
+export const API_BASE_URL = (() => {
+  // If we're in production (Vercel), use the same domain
+  if (process.env.NODE_ENV === 'production') {
+    // Get the current domain from window.location
+    if (typeof window !== 'undefined') {
+      return window.location.origin;
+    }
+    // Fallback for server-side rendering
+    return process.env.REACT_APP_VERCEL_URL || 'https://your-project.vercel.app';
+  }
+  // Development environment
+  return process.env.REACT_APP_API_URL || 'http://localhost:8000';
+})();
 
 // API path prefix
 export const API_BASE_PATH = process.env.REACT_APP_API_BASE_PATH || '/api/v1';

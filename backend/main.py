@@ -81,6 +81,11 @@ app.add_middleware(
         "http://127.0.0.1:3000",
         "http://localhost:5173",  # Vite development server
         "http://127.0.0.1:5173",
+        # Vercel deployment domains
+        "https://*.vercel.app",
+        "https://*.vercel.app",
+        # Add your specific Vercel domain here
+        os.getenv("FRONTEND_URL", ""),  # Custom frontend URL if needed
     ],
     allow_credentials=True,
     allow_methods=["*"],
