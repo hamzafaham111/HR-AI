@@ -275,14 +275,12 @@ const CreateJob = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-
+    
     try {
-      console.log('Submitting job data:', formData);
+      setLoading(true);
+      setCandidatesError(null); // Clear previous candidate search errors
       
-      // Debug token
       const token = localStorage.getItem('accessToken');
-      console.log('Token for job creation:', token ? 'Token exists' : 'No token found');
       
       const response = await authenticatedFetch('http://localhost:8000/api/v1/jobs/', {
         method: 'POST',
@@ -292,11 +290,8 @@ const CreateJob = () => {
         body: JSON.stringify(formData),
       });
 
-      console.log('Response status:', response.status);
-      
       if (response.ok) {
         const job = await response.json();
-        console.log('Job created successfully:', job);
         showToast('Job posting created successfully!', 'success');
         setTimeout(() => {
           navigate(`/jobs/${job.id}`);

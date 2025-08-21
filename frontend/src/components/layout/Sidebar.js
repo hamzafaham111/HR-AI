@@ -7,7 +7,9 @@ import {
   Settings,
   LogOut,
   Home,
-  GitBranch
+  GitBranch,
+  Calendar,
+  AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -39,6 +41,16 @@ const Sidebar = ({ setSidebarOpen }) => {
       name: 'Hiring Processes',
       path: '/hiring-processes',
       icon: GitBranch
+    },
+    {
+      name: 'Meetings',
+      path: '/meetings',
+      icon: Calendar
+    },
+    {
+      name: 'Pending Approvals',
+      path: '/meetings/pending-approvals',
+      icon: AlertCircle
     },
     {
       name: 'Settings',

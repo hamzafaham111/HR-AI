@@ -266,12 +266,71 @@ if (response.status === 401) {
 - **MongoDB** (Atlas cloud or local installation)
 - **OpenAI API Key** (get from platform.openai.com)
 
-### Step-by-Step Setup
+### Quick Start Commands
+
+#### Option 1: Using the Start Script (Recommended)
+```bash
+# 1. Clone the repository
+git clone <your-repo-url>
+cd first
+
+# 2. Backend Setup
+cd backend
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+
+# 3. Create environment file
+cp env.example .env
+# Edit .env with your MongoDB and OpenAI credentials
+
+# 4. Frontend Setup
+cd ../frontend
+npm install
+
+# 5. Start both servers with one command
+cd ..
+./start.sh
+```
+
+#### Option 2: Manual Start
+```bash
+# 1. Clone the repository
+git clone <your-repo-url>
+cd first
+
+# 2. Backend Setup
+cd backend
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+
+# 3. Create environment file
+cp env.example .env
+# Edit .env with your MongoDB and OpenAI credentials
+
+# 4. Start Backend Server
+python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
+
+# 5. Frontend Setup (in new terminal)
+cd ../frontend
+npm install
+
+# 6. Start Frontend Server
+npm start
+
+# 7. Access the application
+# Frontend: http://localhost:3000
+# Backend API: http://localhost:8000
+# API Docs: http://localhost:8000/docs
+```
+
+### Detailed Step-by-Step Setup
 
 #### 1. **Clone and Setup Project Structure**
 ```bash
-git clone https://github.com/hamzafaham111/HR-AI.git
-cd HR-AI
+git clone <your-repo-url>
+cd first
 
 # Project structure:
 # ├── backend/          # Python FastAPI server
@@ -306,7 +365,10 @@ pip install -r requirements.txt
 Create a `.env` file in the backend directory:
 
 ```bash
-# In backend/.env
+# Copy the example environment file
+cp env.example .env
+
+# Edit .env with your credentials:
 MONGODB_URL=mongodb+srv://username:password@cluster0.mongodb.net/resume_analysis?retryWrites=true&w=majority
 OPENAI_API_KEY=sk-your-openai-api-key-here
 SECRET_KEY=your-super-secret-key-for-jwt-signing
@@ -340,7 +402,7 @@ TEMPERATURE=0.3
 
 ```bash
 # Make sure you're in backend/ directory with (venv) active
-python main.py
+python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 # You should see:
 # INFO:     Started server process
@@ -683,7 +745,7 @@ SECRET_KEY="your secret here"
    ```bash
    cd backend
    source venv/bin/activate
-   python main.py
+   python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
    ```
 
 2. **Start Frontend** (new terminal):
@@ -693,14 +755,17 @@ SECRET_KEY="your secret here"
    ```
 
 3. **Make Changes**:
-   - Backend changes auto-reload
+   - Backend changes auto-reload (uvicorn --reload)
    - Frontend hot-reloads automatically
    - Check browser console for errors
 
 4. **Test Changes**:
-   - Use browser for frontend testing
+   - Use browser for frontend testing (http://localhost:3000)
    - Use http://localhost:8000/docs for API testing
    - Check terminal for error logs
+
+5. **Stop Servers**:
+   - Press `Ctrl+C` in each terminal to stop the servers
 
 ### Code Organization Tips
 

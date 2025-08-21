@@ -15,6 +15,11 @@ export const ROUTES = {
   ADD_RESUME: '/resume-bank/add',
   EDIT_RESUME: '/resume-bank/:id/edit',
   SEARCH_CANDIDATES: '/resume-bank/search-candidates/:jobId',
+  MEETINGS: '/meetings',
+  CREATE_MEETING: '/meetings/create',
+  MEETING_DETAIL: '/meetings/:id',
+  PUBLIC_MEETING: '/meeting/:meetingLink',
+  PENDING_APPROVALS: '/meetings/pending-approvals',
   SETTINGS: '/settings',
 };
 
@@ -35,5 +40,9 @@ export const PROTECTED_ROUTES = [
   ROUTES.ADD_RESUME,
   ROUTES.EDIT_RESUME,
   ROUTES.SEARCH_CANDIDATES,
+  ROUTES.MEETINGS,
+  ROUTES.CREATE_MEETING,
+  ROUTES.MEETING_DETAIL,
+  ROUTES.PENDING_APPROVALS,
   ROUTES.SETTINGS,
 ]; 

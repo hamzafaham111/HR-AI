@@ -12,12 +12,18 @@ from contextlib import asynccontextmanager
 import os
 from dotenv import load_dotenv
 
+# Import core modules first
+from app.core.config import settings
+from app.core.logging import logger, setup_logging
+from app.core.database import close_mongodb_connection
+
 # Import API routes
 from app.api.dashboard import router as dashboard_router
 from app.api.jobs import router as jobs_router
 from app.api.resume_bank import router as resume_bank_router
 from app.api.auth import router as auth_router
 from app.api.hiring_processes import router as hiring_processes_router
+from app.api.meetings import router as meetings_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -27,7 +33,7 @@ async def lifespan(app: FastAPI):
     
     # Initialize MongoDB
     try:
-        await db.connect_to_mongo()
+        # MongoDB is initialized lazily when needed, no explicit connection needed
         logger.info("MongoDB initialized successfully")
     except Exception as e:
         logger.error(f"Failed to initialize MongoDB: {e}")
@@ -48,14 +54,7 @@ async def lifespan(app: FastAPI):
     
     # Shutdown
     logger.info("Shutting down AI Resume Management API...")
-    await db.close_mongo_connection()
-from app.core.config import settings
-from app.core.logging import logger, setup_logging
-from app.core.database import db
-
-# Import middleware and error handling
-# from app.middleware.error_handler import setup_error_handlers
-# from app.middleware.security import setup_security_middleware
+    await close_mongodb_connection()
 
 # Load environment variables
 load_dotenv()
@@ -71,7 +70,8 @@ app = FastAPI(
 )
 
 # Setup error handlers and middleware
-# setup_error_handlers(app)
+# from app.middleware.error_handler import setup_error_handlers
+# from app.middleware.security import setup_security_middleware
 
 # Configure CORS middleware for frontend communication
 app.add_middleware(
@@ -79,13 +79,10 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",  # React development server
         "http://127.0.0.1:3000",
+        "http://localhost:3001",  # React development server (new port)
+        "http://127.0.0.1:3001",
         "http://localhost:5173",  # Vite development server
         "http://127.0.0.1:5173",
-        # Vercel deployment domains
-        "https://*.vercel.app",
-        "https://*.vercel.app",
-        # Add your specific Vercel domain here
-        os.getenv("FRONTEND_URL", ""),  # Custom frontend URL if needed
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -98,6 +95,7 @@ app.include_router(jobs_router, prefix="/api/v1/jobs", tags=["Job Management"])
 app.include_router(resume_bank_router, prefix="/api/v1/resume-bank", tags=["Resume Bank"])
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(hiring_processes_router, prefix="/api/v1", tags=["Hiring Processes"])
+app.include_router(meetings_router, prefix="/api/v1/meetings", tags=["Meeting Management"])
 
 # Health check endpoint
 @app.get("/health")

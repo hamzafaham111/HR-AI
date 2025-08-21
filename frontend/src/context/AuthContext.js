@@ -53,64 +53,63 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      console.log('Starting registration process...');
-      const response = await fetch(API_ENDPOINTS.AUTH.REGISTER, {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch('/api/v1/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          name: userData.name,
-          email: userData.email,
-          password: userData.password,
-          role: 'user',
-          company: userData.company || null
-        }),
+        body: JSON.stringify(userData),
       });
 
       const data = await response.json();
-      console.log('Registration response:', response.status, data);
 
       if (response.ok) {
-        console.log('Registration successful, attempting auto-login...');
-        // After successful registration, automatically log the user in
-        const loginResponse = await fetch(API_ENDPOINTS.AUTH.LOGIN, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ 
-            email: userData.email, 
-            password: userData.password 
-          }),
-        });
+        // Registration successful, try to auto-login
+        try {
+          const loginResponse = await fetch('/api/v1/auth/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: userData.email,
+              password: userData.password,
+            }),
+          });
 
-        const loginData = await loginResponse.json();
-        console.log('Auto-login response:', loginResponse.status, loginData);
+          const loginData = await loginResponse.json();
 
-        if (loginResponse.ok) {
-          // Set user data and tokens
-          setUser(loginData.user);
-          localStorage.setItem('user', JSON.stringify(loginData.user));
-          localStorage.setItem('accessToken', loginData.access_token);
-          localStorage.setItem('refreshToken', loginData.refresh_token);
-          localStorage.setItem('tokenExpiresAt', Date.now() + (loginData.expires_in * 1000));
-          console.log('Auto-login successful, tokens stored');
-          return { success: true, message: 'Registration successful! You are now logged in.' };
-        } else {
-          // Registration succeeded but auto-login failed
-          console.log('Auto-login failed, user needs to login manually');
-          setUser(data);
-          localStorage.setItem('user', JSON.stringify(data));
-          return { success: true, message: 'Registration successful! Please log in to continue.' };
+          if (loginResponse.ok && loginData.access_token) {
+            // Store tokens and user data
+            localStorage.setItem('accessToken', loginData.access_token);
+            localStorage.setItem('refreshToken', loginData.refresh_token);
+            localStorage.setItem('tokenExpiresAt', Date.now() + (loginData.expires_in * 1000));
+            localStorage.setItem('user', JSON.stringify(loginData.user));
+            
+            setUser(loginData.user);
+            setToken(loginData.access_token);
+            setAuthenticated(true);
+            navigate('/dashboard');
+          } else {
+            // Auto-login failed, user needs to login manually
+            setMessage('Registration successful! Please log in.');
+            navigate('/login');
+          }
+        } catch (loginError) {
+          // Auto-login failed, user needs to login manually
+          setMessage('Registration successful! Please log in.');
+          navigate('/login');
         }
       } else {
-        console.log('Registration failed:', data.detail);
-        return { success: false, error: data.detail || 'Registration failed' };
+        setError(data.detail || 'Registration failed');
       }
     } catch (error) {
-      console.error('Registration error:', error);
-      return { success: false, error: 'Network error. Please try again.' };
+      setError('Registration failed');
+    } finally {
+      setLoading(false);
     }
   };
 

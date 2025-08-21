@@ -15,10 +15,9 @@ def send_welcome_email(email: str, name: str) -> bool:
         bool: True if email sent successfully, False otherwise
     """
     try:
-        # TODO: Implement actual email sending logic
-        # This is a placeholder for email service integration
-        logger.info(f"Welcome email sent to {email} for user {name}")
-        return True
+        # Placeholder for email sending implementation
+        # In production, integrate with email service (SendGrid, AWS SES, etc.)
+        pass
     except Exception as e:
         logger.error(f"Failed to send welcome email to {email}: {e}")
         return False
@@ -35,8 +34,8 @@ def send_password_reset_email(email: str, reset_token: str) -> bool:
         bool: True if email sent successfully, False otherwise
     """
     try:
-        # TODO: Implement actual email sending logic
-        # This is a placeholder for email service integration
+        # Placeholder for email sending implementation
+        # In production, integrate with email service (SendGrid, AWS SES, etc.)
         reset_link = f"http://localhost:3000/reset-password?token={reset_token}"
         logger.info(f"Password reset email sent to {email} with token: {reset_token}")
         logger.info(f"Reset link: {reset_link}")
@@ -58,8 +57,8 @@ def send_notification_email(email: str, subject: str, message: str) -> bool:
         bool: True if email sent successfully, False otherwise
     """
     try:
-        # TODO: Implement actual email sending logic
-        # This is a placeholder for email service integration
+        # Placeholder for email sending implementation
+        # In production, integrate with email service (SendGrid, AWS SES, etc.)
         logger.info(f"Notification email sent to {email}")
         logger.info(f"Subject: {subject}")
         logger.info(f"Message: {message}")

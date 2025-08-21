@@ -28,6 +28,18 @@ export const API_ENDPOINTS = {
   UPDATE_JOB: '/api/v1/jobs/:id',
   DELETE_JOB: '/api/v1/jobs/:id',
   
+  // Meeting endpoints
+  GET_MEETINGS: '/api/v1/meetings',
+  CREATE_MEETING: '/api/v1/meetings',
+  GET_MEETING: '/api/v1/meetings/:id',
+  UPDATE_MEETING: '/api/v1/meetings/:id',
+  DELETE_MEETING: '/api/v1/meetings/:id',
+  GET_PUBLIC_MEETING: '/api/v1/meetings/public/:meetingLink',
+  BOOK_PUBLIC_MEETING: '/api/v1/meetings/public/:meetingLink/book',
+  GET_MEETING_TEMPLATES: '/api/v1/meetings/templates',
+  CREATE_MEETING_TEMPLATE: '/api/v1/meetings/templates',
+  DELETE_MEETING_TEMPLATE: '/api/v1/meetings/templates/:id',
+  
   // Analysis endpoints removed - functionality moved to resume bank
   
   // Search endpoints

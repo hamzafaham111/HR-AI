@@ -78,7 +78,6 @@ const AddResume = () => {
 
       // Get the access token
       const token = localStorage.getItem('accessToken');
-      console.log('Token for upload (handleUploadOnly):', token ? 'Token exists' : 'No token found');
       
       const response = await fetch(API_ENDPOINTS.RESUME_BANK.UPLOAD, {
         method: 'POST',
@@ -88,12 +87,6 @@ const AddResume = () => {
         body: formData,
       });
       
-      console.log('Upload response status (handleUploadOnly):', response.status);
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Upload error response (handleUploadOnly):', errorText);
-      }
-
       if (response.ok) {
         showToast('Resume uploaded successfully!', 'success');
         setTimeout(() => {
@@ -143,7 +136,6 @@ const AddResume = () => {
 
       // Get the access token
       const token = localStorage.getItem('accessToken');
-      console.log('Token for upload (handleSubmitWithInfo):', token ? 'Token exists' : 'No token found');
       
       const response = await fetch(API_ENDPOINTS.RESUME_BANK.UPLOAD, {
         method: 'POST',
@@ -153,12 +145,6 @@ const AddResume = () => {
         body: formData,
       });
       
-      console.log('Upload response status (handleSubmitWithInfo):', response.status);
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Upload error response (handleSubmitWithInfo):', errorText);
-      }
-
       if (response.ok) {
         showToast('Resume added to bank successfully!', 'success');
         setTimeout(() => {

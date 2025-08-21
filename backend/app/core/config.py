@@ -96,8 +96,11 @@ def validate_settings():
     Raises:
         ValueError: If required settings are missing
     """
-    if not settings.openai_api_key or settings.openai_api_key == "your-openai-api-key":
-        print("Warning: OPENAI_API_KEY not set. Please set it in your .env file.")
+    # OpenAI Configuration
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    if not OPENAI_API_KEY:
+        # Warning: OPENAI_API_KEY not set. Please set it in your .env file.
+        pass
     
     # Create upload directory if it doesn't exist
     os.makedirs(settings.upload_folder, exist_ok=True) 

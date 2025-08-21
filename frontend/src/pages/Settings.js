@@ -108,6 +108,28 @@ const Settings = () => {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+      try {
+        setLoading(true);
+        // Call delete account API
+        const response = await apiCall('DELETE', '/auth/delete-account');
+
+        if (response.success) {
+          // Clear local storage and redirect to home
+          localStorage.clear();
+          window.location.href = '/';
+        } else {
+          setMessage({ type: 'error', text: 'Failed to delete account' });
+        }
+      } catch (error) {
+        setMessage({ type: 'error', text: 'Failed to delete account' });
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   return (
     <>
       <div className="min-h-screen bg-gray-50">
@@ -343,12 +365,7 @@ const Settings = () => {
                   </div>
                   <button
                     className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-                    onClick={() => {
-                      if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-                        // Handle account deletion
-                        console.log('Account deletion requested');
-                      }
-                    }}
+                    onClick={handleDeleteAccount}
                   >
                     Delete Account
                   </button>

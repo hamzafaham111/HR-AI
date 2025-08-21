@@ -1,5 +1,4 @@
 import { API_CONFIG, HTTP_METHODS, HTTP_STATUS } from '../constants/api';
-import { API_ENDPOINTS } from '../config/api';
 
 class ApiError extends Error {
   constructor(message, status, data = null) {
@@ -10,66 +9,42 @@ class ApiError extends Error {
   }
 }
 
-export const apiRequest = async (endpoint, options = {}) => {
-  const {
-    method = HTTP_METHODS.GET,
-    body = null,
-    headers = {},
-    timeout = API_CONFIG.TIMEOUT,
-  } = options;
-
-  const url = `${API_CONFIG.BASE_URL}${endpoint}`;
+export const apiRequest = async (url, method = 'GET', body = null, headers = {}) => {
+  const token = localStorage.getItem('accessToken');
   
-  const requestOptions = {
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const config = {
     method,
     headers: {
       'Content-Type': 'application/json',
-      ...headers,
-    },
-    ...(body && { body: JSON.stringify(body) }),
+      ...headers
+    }
   };
 
-  // Add auth token if available
-  const token = localStorage.getItem('accessToken');
-  if (token) {
-    requestOptions.headers.Authorization = `Bearer ${token}`;
+  if (body) {
+    config.body = JSON.stringify(body);
   }
 
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-    const response = await fetch(url, {
-      ...requestOptions,
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
+    const response = await fetch(url, config);
+    
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new ApiError(
-        errorData.detail || `HTTP ${response.status}`,
-        response.status,
-        errorData
-      );
+      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
 
-    // Handle empty responses
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
-      return await response.json();
+      const result = await response.json();
+      return result;
+    } else {
+      return null;
     }
-    
-    return null;
   } catch (error) {
-    if (error.name === 'AbortError') {
-      throw new ApiError('Request timeout', 408);
-    }
-    if (error instanceof ApiError) {
-      throw error;
-    }
-    throw new ApiError('Network error', 0, error.message);
+    throw error;
   }
 };
 
@@ -132,7 +107,7 @@ export const authenticatedFetch = async (url, options = {}) => {
     if (refreshToken) {
       try {
         // Try to refresh the token
-        const refreshResponse = await fetch(API_ENDPOINTS.AUTH.REFRESH, {
+        const refreshResponse = await fetch('/api/v1/auth/refresh', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

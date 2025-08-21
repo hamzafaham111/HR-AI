@@ -12,7 +12,6 @@ from enum import Enum
 
 # Resume analysis models removed - using simplified models
 from .job import CompatibilityScore
-from .database_models import JobPosting
 
 
 class ResumeStatus(str, Enum):

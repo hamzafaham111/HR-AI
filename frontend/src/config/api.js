@@ -12,20 +12,8 @@
  * - Default values provide fallbacks for development
  */
 
-// Base API URL - automatically detects environment
-export const API_BASE_URL = (() => {
-  // If we're in production (Vercel), use the same domain
-  if (process.env.NODE_ENV === 'production') {
-    // Get the current domain from window.location
-    if (typeof window !== 'undefined') {
-      return window.location.origin;
-    }
-    // Fallback for server-side rendering
-    return process.env.REACT_APP_VERCEL_URL || 'https://your-project.vercel.app';
-  }
-  // Development environment
-  return process.env.REACT_APP_API_URL || 'http://localhost:8000';
-})();
+// Base API URL - can be changed for different environments
+export const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
 // API path prefix
 export const API_BASE_PATH = process.env.REACT_APP_API_BASE_PATH || '/api/v1';
@@ -85,6 +73,31 @@ export const API_ENDPOINTS = {
     STATS: `${API_URL}/hiring-processes/stats`,
     ADD_CANDIDATE: (id) => `${API_URL}/hiring-processes/${id}/candidates`,
     MOVE_CANDIDATE: (processId, candidateId) => `${API_URL}/hiring-processes/${processId}/candidates/${candidateId}/move`
+  },
+  
+  // Meetings
+  MEETINGS: {
+    LIST: `${API_URL}/meetings/`,
+    CREATE: `${API_URL}/meetings/`,
+    DETAIL: (id) => `${API_URL}/meetings/${id}`,
+    UPDATE: (id) => `${API_URL}/meetings/${id}`,
+    DELETE: (id) => `${API_URL}/meetings/${id}`,
+    PUBLIC_INFO: (meetingLink) => `${API_URL}/meetings/public/${meetingLink}`,
+    BOOK_PUBLIC: (meetingLink) => `${API_URL}/meetings/public/${meetingLink}/book`,
+    TEMPLATES: `${API_URL}/meetings/templates/`,
+    CREATE_TEMPLATE: `${API_URL}/meetings/templates/`,
+    DELETE_TEMPLATE: (id) => `${API_URL}/meetings/templates/${id}`,
+    
+    // New workflow endpoints
+    OPEN: (id) => `${API_URL}/meetings/${id}/open`,
+    CLOSE: (id) => `${API_URL}/meetings/${id}/close`,
+    APPROVE_BOOKING: (id) => `${API_URL}/meetings/bookings/${id}/approve`,
+    REJECT_BOOKING: (id) => `${API_URL}/meetings/bookings/${id}/reject`,
+    START: (id) => `${API_URL}/meetings/${id}/start`,
+    COMPLETE: (id) => `${API_URL}/meetings/${id}/complete`,
+    CANCEL: (id) => `${API_URL}/meetings/${id}/cancel`,
+    BY_STATUS: (status) => `${API_URL}/meetings/status/${status}`,
+    PENDING_BOOKINGS: `${API_URL}/meetings/bookings/pending`,
   }
 };
 
@@ -110,14 +123,7 @@ export const UI_CONFIG = {
   DEFAULT_THEME: process.env.REACT_APP_DEFAULT_THEME || 'light',
 };
 
-// Development helpers
-if (APP_CONFIG.DEBUG) {
-  console.log('🔧 API Configuration:', {
-    API_BASE_URL,
-    API_BASE_PATH,
-    API_URL,
-    APP_CONFIG,
-    UPLOAD_CONFIG,
-    UI_CONFIG
-  });
+// Log configuration for debugging (only in development)
+if (process.env.NODE_ENV === 'development') {
+  // Configuration is ready
 }

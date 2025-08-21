@@ -445,7 +445,7 @@ class PDFProcessor:
         for pattern in role_patterns:
             match = re.search(pattern, resume_text, re.IGNORECASE)
             if match:
-                if 'Full\s+stack\s+Software\s+engineer' in pattern:
+                if r'Full\s+stack\s+Software\s+engineer' in pattern:
                     role = match.group(0).strip()
                 else:
                     role = match.group(1).strip()

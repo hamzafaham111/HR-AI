@@ -1,64 +1,69 @@
 """
-MongoDB database configuration and connection management.
+Database configuration and session management.
 """
 
-from motor.motor_asyncio import AsyncIOMotorClient
-from pymongo import MongoClient
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from app.core.config import settings
-from loguru import logger
+from typing import Optional
 
-# MongoDB connection
-class MongoDB:
-    client: AsyncIOMotorClient = None
-    sync_client: MongoClient = None
-    
-    @classmethod
-    async def connect_to_mongo(cls):
-        """Create database connection."""
-        try:
-            # Get MongoDB URL from settings or use default
-            mongodb_url = getattr(settings, 'mongodb_url', 'mongodb://localhost:27017')
-            database_name = getattr(settings, 'database_name', 'resume_analysis')
-            
-            logger.info(f"Connecting to MongoDB: {mongodb_url}")
-            
-            # Create async client
-            cls.client = AsyncIOMotorClient(mongodb_url)
-            
-            # Create sync client for operations that need it
-            cls.sync_client = MongoClient(mongodb_url)
-            
-            # Test connection
-            await cls.client.admin.command('ping')
-            logger.info("Successfully connected to MongoDB")
-            
-            return cls.client[database_name]
-            
-        except Exception as e:
-            logger.error(f"Failed to connect to MongoDB: {e}")
-            raise
-    
-    @classmethod
-    async def close_mongo_connection(cls):
-        """Close database connection."""
-        if cls.client:
-            cls.client.close()
-            logger.info("MongoDB connection closed")
-        
-        if cls.sync_client:
-            cls.sync_client.close()
+# MongoDB client
+client: Optional[AsyncIOMotorClient] = None
+database: Optional[AsyncIOMotorDatabase] = None
 
-# Database instance
-db = MongoDB()
+def get_mongodb_client() -> AsyncIOMotorClient:
+    """Get MongoDB client instance."""
+    global client
+    if client is None:
+        client = AsyncIOMotorClient(settings.mongodb_url)
+    return client
 
-# Dependency to get database
-async def get_database():
-    """Get database instance."""
-    if not db.client:
-        await db.connect_to_mongo()
-    return db.client[getattr(settings, 'database_name', 'resume_analysis')]
+def get_mongodb_database() -> AsyncIOMotorDatabase:
+    """Get MongoDB database instance."""
+    global database
+    if database is None:
+        client = get_mongodb_client()
+        database = client[settings.database_name]
+    return database
 
-# Legacy function for compatibility (will be removed)
+async def get_database() -> AsyncIOMotorDatabase:
+    """Dependency to get MongoDB database connection."""
+    return get_mongodb_database()
+
+# Legacy SQLAlchemy support (for backward compatibility)
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
+# Database URL for SQL databases (if needed)
+if settings.database_url:
+    # Production: Use PostgreSQL
+    database_url = settings.database_url
+else:
+    # Development: Use SQLite
+    database_url = "sqlite:///./resume_analysis.db"
+
+# Create engine
+engine = create_engine(
+    database_url,
+    connect_args={"check_same_thread": False} if "sqlite" in database_url else {}
+)
+
+# Create session factory
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Create base class for models
+Base = declarative_base()
+
+# Dependency to get database session
 def get_db():
-    """Legacy function - use get_database() instead."""
-    raise DeprecationWarning("Use get_database() instead of get_db()") 
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+async def close_mongodb_connection():
+    """Close MongoDB connection."""
+    global client
+    if client:
+        client.close() 

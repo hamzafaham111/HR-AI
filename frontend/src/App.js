@@ -20,6 +20,11 @@ import Settings from './pages/Settings';
 import HiringProcesses from './pages/HiringProcesses';
 import CreateHiringProcess from './pages/CreateHiringProcess';
 import HiringProcessDetail from './pages/HiringProcessDetail';
+import Meetings from './pages/Meetings';
+import CreateMeeting from './pages/CreateMeeting';
+import PublicMeeting from './pages/PublicMeeting';
+import MeetingDetail from './pages/MeetingDetail';
+import PendingApprovals from './pages/PendingApprovals';
 import './styles/App.css';
 
 function App() {
@@ -131,6 +136,42 @@ function App() {
               </Layout>
             </ProtectedRoute>
           } />
+          
+          {/* Meeting routes */}
+          <Route path="/meetings" element={
+            <ProtectedRoute>
+              <Layout showSidebar={true}>
+                <Meetings />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/meetings/create" element={
+            <ProtectedRoute>
+              <Layout showSidebar={true}>
+                <CreateMeeting />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/meetings/:id" element={
+            <ProtectedRoute>
+              <Layout showSidebar={true}>
+                <MeetingDetail />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/meetings/pending-approvals" element={
+            <ProtectedRoute>
+              <Layout showSidebar={true}>
+                <PendingApprovals />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          
+          {/* Public meeting route - no authentication required */}
+          <Route path="/meeting/:meetingLink" element={<PublicMeeting />} />
           
           {/* Redirect any unknown routes to home */}
           <Route path="*" element={<Navigate to="/" replace />} />
