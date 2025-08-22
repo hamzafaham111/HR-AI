@@ -126,36 +126,6 @@ class MeetingRepository:
             return MeetingBookingDocument(**booking_data)
         return None
     
-    async def get_pending_bookings(self, user_id: str) -> List[MeetingBookingDocument]:
-        """Get all pending bookings for a user's meetings."""
-        if not ObjectId.is_valid(user_id):
-            return []
-        
-        user_id_obj = ObjectId(user_id)
-        
-        # First get all meetings by this user
-        user_meetings = await self.get_meetings_by_user(user_id)
-        meeting_ids = [str(meeting.id) for meeting in user_meetings]
-        
-        if not meeting_ids:
-            return []
-        
-        # Get all pending bookings for these meetings
-        cursor = self.meeting_bookings.find({
-            "meeting_id": {"$in": [ObjectId(mid) for mid in meeting_ids]},
-            "status": BookingStatus.PENDING
-        })
-        
-        bookings = []
-        async for booking_data in cursor:
-            try:
-                bookings.append(MeetingBookingDocument(**booking_data))
-            except Exception as e:
-                # Log error and continue with other bookings
-                continue
-        
-        return bookings
-    
     async def free_slot(self, slot_id: str) -> bool:
         """Free up a slot by removing booking reference."""
         if not ObjectId.is_valid(slot_id):

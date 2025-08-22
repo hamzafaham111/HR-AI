@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit, Trash2, Users, Calendar, MapPin, Building, DollarSign } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Users, Calendar, MapPin, Building, DollarSign, Copy, ExternalLink, FileText, Settings } from 'lucide-react';
 import ConfirmationModal from '../components/ui/ConfirmationModal';
+import ApplicationFormBuilder from '../components/ApplicationFormBuilder';
+import ApplicationsDataTable from '../components/ApplicationsDataTable';
+import ApplicationDetailModal from '../components/ApplicationDetailModal';
 import Toast from '../components/ui/Toast';
 import { authenticatedFetch } from '../utils/api';
 
@@ -11,6 +14,11 @@ const JobDetail = () => {
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [applicationForm, setApplicationForm] = useState(null);
+  const [showFormModal, setShowFormModal] = useState(false);
+  const [applications, setApplications] = useState([]);
+  const [applicationsLoading, setApplicationsLoading] = useState(false);
+  const [selectedApplication, setSelectedApplication] = useState(null);
   const [deleteModal, setDeleteModal] = useState({
     isOpen: false
   });
@@ -19,10 +27,6 @@ const JobDetail = () => {
     message: '',
     type: 'info'
   });
-
-  useEffect(() => {
-    fetchJob();
-  }, [id]);
 
   const showToast = (message, type = 'info') => {
     setToast({
@@ -58,6 +62,50 @@ const JobDetail = () => {
     }
   };
 
+  const fetchApplicationForm = async () => {
+    try {
+      const response = await authenticatedFetch(`http://localhost:8000/api/v1/job-applications/forms/${id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setApplicationForm(data.data);
+      } else if (response.status === 404) {
+        setApplicationForm(null);
+      } else {
+        throw new Error('Failed to fetch application form');
+      }
+    } catch (error) {
+      console.error('Error fetching application form:', error);
+      setApplicationForm(null);
+    }
+  };
+
+  const fetchApplications = async () => {
+    try {
+      setApplicationsLoading(true);
+      const response = await authenticatedFetch(`http://localhost:8000/api/v1/job-applications/${id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setApplications(data.data.applications || []);
+      } else {
+        console.error('Failed to fetch applications');
+        setApplications([]);
+      }
+    } catch (error) {
+      console.error('Error fetching applications:', error);
+      setApplications([]);
+    } finally {
+      setApplicationsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchJob();
+    fetchApplicationForm();
+    fetchApplications();
+  }, [id]);
+
+
+
   const openDeleteModal = () => {
     setDeleteModal({
       isOpen: true
@@ -90,16 +138,90 @@ const JobDetail = () => {
     }
   };
 
+  const copyApplicationLink = async () => {
+    try {
+      const applicationLink = `${window.location.origin}/job/${id}/apply`;
+      await navigator.clipboard.writeText(applicationLink);
+      showToast('Application link copied to clipboard!', 'success');
+    } catch (err) {
+      showToast('Failed to copy link', 'error');
+    }
+  };
+
+  const openApplicationForm = () => {
+    const applicationLink = `${window.location.origin}/job/${id}/apply`;
+    window.open(applicationLink, '_blank');
+  };
+
+  const handleSaveApplicationForm = async (formData) => {
+    try {
+      const url = applicationForm 
+        ? `http://localhost:8000/api/v1/job-applications/forms/${applicationForm.id}`
+        : `http://localhost:8000/api/v1/job-applications/forms/${id}`;
+      
+      const method = applicationForm ? 'PUT' : 'POST';
+      
+      const response = await authenticatedFetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setApplicationForm(data.data);
+        setShowFormModal(false);
+        showToast(
+          applicationForm ? 'Application form updated successfully' : 'Application form created successfully',
+          'success'
+        );
+      } else {
+        throw new Error('Failed to save application form');
+      }
+    } catch (error) {
+      console.error('Error saving application form:', error);
+      showToast('Failed to save application form', 'error');
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'active':
         return 'bg-green-100 text-green-800';
-      case 'closed':
-        return 'bg-red-100 text-red-800';
+      case 'inactive':
+        return 'bg-gray-100 text-gray-800';
       case 'draft':
         return 'bg-yellow-100 text-yellow-800';
       default:
         return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+
+
+  // Handle status updates
+  const handleStatusUpdate = async (applicationId, newStatus) => {
+    try {
+      const response = await authenticatedFetch(
+        `http://localhost:8000/api/v1/job-applications/applications/${applicationId}/status`,
+        'PUT',
+        { status: newStatus }
+      );
+      
+      if (response.ok) {
+        // Update the application in the local state
+        setApplications(prev => prev.map(app => 
+          app.id === applicationId ? { ...app, status: newStatus } : app
+        ));
+        showToast(`Application status updated to ${newStatus}`, 'success');
+      } else {
+        throw new Error('Failed to update status');
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
+      showToast('Failed to update application status', 'error');
     }
   };
 
@@ -338,6 +460,88 @@ const JobDetail = () => {
             </div>
           </div>
         </div>
+
+        {/* Application Form Management */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+              <FileText className="w-5 h-5 mr-2 text-blue-600" />
+              Application Form
+            </h2>
+            <button
+              onClick={() => setShowFormModal(true)}
+              className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              {applicationForm ? 'Edit Form' : 'Create Form'}
+            </button>
+          </div>
+
+          {applicationForm ? (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
+                <div>
+                  <h3 className="font-semibold text-green-900">{applicationForm.title}</h3>
+                  {applicationForm.description && (
+                    <p className="text-green-700 text-sm mt-1">{applicationForm.description}</p>
+                  )}
+                  <div className="flex items-center space-x-4 mt-2 text-sm text-green-600">
+                    <span>Resume required: {applicationForm.requires_resume ? 'Yes' : 'No'}</span>
+                    <span>Multiple files: {applicationForm.allow_multiple_files ? 'Yes' : 'No'}</span>
+                  </div>
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={copyApplicationLink}
+                    className="flex items-center px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                    title="Copy application link"
+                  >
+                    <Copy className="w-4 h-4 mr-2" />
+                    Copy Link
+                  </button>
+                  <button
+                    onClick={openApplicationForm}
+                    className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    title="Open application form"
+                  >
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Preview
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No Application Form</h3>
+              <p className="text-gray-600 mb-4">
+                Create a custom application form to collect information from job applicants.
+              </p>
+              <button
+                onClick={() => setShowFormModal(true)}
+                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Create Application Form
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Direct Applications */}
+        <div className="mb-8">
+          {applicationsLoading ? (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading applications...</p>
+            </div>
+          ) : (
+            <ApplicationsDataTable 
+              applications={applications}
+              onViewApplication={(application) => setSelectedApplication(application)}
+            />
+          )}
+        </div>
         </div>
       </div>
       <ConfirmationModal
@@ -350,6 +554,21 @@ const JobDetail = () => {
         cancelText="Cancel"
         type="danger"
       />
+      
+      <ApplicationFormBuilder
+        isOpen={showFormModal}
+        onClose={() => setShowFormModal(false)}
+        onSave={handleSaveApplicationForm}
+        existingForm={applicationForm}
+      />
+      
+      <ApplicationDetailModal
+        application={selectedApplication}
+        isOpen={!!selectedApplication}
+        onClose={() => setSelectedApplication(null)}
+        onUpdateStatus={handleStatusUpdate}
+      />
+      
       <Toast
         isVisible={toast.isVisible}
         message={toast.message}

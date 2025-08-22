@@ -219,10 +219,6 @@ class MeetingService:
         """Get meetings by specific status."""
         return await self.meeting_repository.get_meetings_by_status(user_id, status)
     
-    async def get_pending_bookings(self, user_id: str) -> List[MeetingBookingDocument]:
-        """Get all pending bookings for a user's meetings."""
-        return await self.meeting_repository.get_pending_bookings(user_id)
-    
     async def generate_slots_for_meeting(self, meeting_id: str, slot_config: Dict[str, Any]) -> List[MeetingSlotDocument]:
         """Generate time slots for a meeting based on configuration."""
         meeting = await self.get_meeting_by_id(meeting_id)

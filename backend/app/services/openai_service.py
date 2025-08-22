@@ -248,4 +248,8 @@ class OpenAIService:
 
 
 # Create global service instance
-openai_service = OpenAIService() 
+openai_service = OpenAIService()
+
+def get_openai_service() -> OpenAIService:
+    """Get the global OpenAI service instance."""
+    return openai_service 

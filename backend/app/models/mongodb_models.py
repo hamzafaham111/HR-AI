@@ -50,6 +50,11 @@ class JobPostingDocument(BaseModel):
     responsibilities: List[str] = Field(default_factory=list, description="Job responsibilities")
     benefits: List[str] = Field(default_factory=list, description="Job benefits")
     status: str = Field(default="active", description="Job status")
+    
+    # Public application settings
+    public_application_link: Optional[str] = Field(None, description="Public application link")
+    allow_public_applications: bool = Field(default=False, description="Whether to allow public applications")
+    
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     
@@ -100,6 +105,9 @@ class ResumeBankEntryDocument(BaseModel):
     notes: Optional[str] = Field(None, description="Additional notes")
     resume_analysis_id: Optional[PyObjectId] = Field(None, description="ID of the resume analysis")
     status: str = Field(default="active", description="Resume status")
+    source: str = Field(default="direct_upload", description="Source of the resume: direct_upload, job_application")
+    job_id: Optional[str] = Field(None, description="Job ID if from job application")
+    application_id: Optional[str] = Field(None, description="Application ID if from job application")
     last_contact_date: Optional[datetime] = Field(None, description="Last contact date")
     
     # AI Analysis Results (simplified)
@@ -366,6 +374,67 @@ class MeetingDocument(BaseModel):
     # Additional fields for frontend compatibility
     slot_selection_type: SlotSelectionType = Field(default=SlotSelectionType.SINGLE, description="Type of slot selection")
     allow_guest_booking: bool = Field(default=True, description="Whether guests can book slots")
+    
+    # Metadata
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now, onupdate=datetime.now)
+    
+    model_config = {
+        "populate_by_name": True,
+        "arbitrary_types_allowed": True,
+        "json_encoders": {ObjectId: str}
+    } 
+
+
+class JobApplicationFormDocument(BaseModel):
+    """MongoDB document for job application forms."""
+    id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias="_id")
+    job_id: PyObjectId = Field(..., description="Reference to the job")
+    title: str = Field(..., description="Form title")
+    description: Optional[str] = Field(None, description="Form description")
+    
+    # Form fields configuration
+    fields: List[Dict[str, Any]] = Field(default_factory=list, description="Form fields configuration")
+    
+    # Settings
+    is_active: bool = Field(default=True, description="Whether this form is active")
+    requires_resume: bool = Field(default=True, description="Whether resume upload is required")
+    allow_multiple_files: bool = Field(default=False, description="Allow multiple file uploads")
+    max_file_size_mb: int = Field(default=10, description="Maximum file size in MB")
+    allowed_file_types: List[str] = Field(default_factory=lambda: ["pdf", "doc", "docx"], description="Allowed file types")
+    
+    # Metadata
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now, onupdate=datetime.now)
+    
+    model_config = {
+        "populate_by_name": True,
+        "arbitrary_types_allowed": True,
+        "json_encoders": {ObjectId: str}
+    }
+
+
+class JobApplicationDocument(BaseModel):
+    """MongoDB document for job applications."""
+    id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias="_id")
+    job_id: PyObjectId = Field(..., description="Reference to the job")
+    form_id: PyObjectId = Field(..., description="Reference to the application form")
+    
+    # Applicant information
+    applicant_name: str = Field(..., description="Applicant's full name")
+    applicant_email: str = Field(..., description="Applicant's email")
+    applicant_phone: Optional[str] = Field(None, description="Applicant's phone")
+    
+    # Application data
+    form_data: Dict[str, Any] = Field(default_factory=dict, description="Form field responses")
+    resume_files: List[str] = Field(default_factory=list, description="Uploaded resume file paths")
+    
+    # Status
+    status: str = Field(default="pending", description="Application status: pending, reviewed, shortlisted, rejected, hired")
+    notes: Optional[str] = Field(None, description="Internal notes about the application")
+    
+    # AI matching score (for comparison with resume bank candidates)
+    matching_score: Optional[float] = Field(None, description="AI matching score with job requirements")
     
     # Metadata
     created_at: datetime = Field(default_factory=datetime.now)

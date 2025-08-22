@@ -41,6 +41,8 @@ class JobPostingCreate(BaseModel):
     requirements: List[JobRequirement] = Field(default_factory=list, description="Job requirements")
     responsibilities: List[str] = Field(default_factory=list, description="Job responsibilities")
     benefits: List[str] = Field(default_factory=list, description="Job benefits")
+    allow_public_applications: bool = Field(default=False, description="Whether to allow public applications")
+    public_application_link: Optional[str] = Field(None, description="Public application link")
 
 
 class JobPostingUpdate(BaseModel):
@@ -56,6 +58,8 @@ class JobPostingUpdate(BaseModel):
     responsibilities: Optional[List[str]] = Field(None, description="Job responsibilities")
     benefits: Optional[List[str]] = Field(None, description="Job benefits")
     status: Optional[str] = Field(None, description="Job status")
+    allow_public_applications: Optional[bool] = Field(None, description="Whether to allow public applications")
+    public_application_link: Optional[str] = Field(None, description="Public application link")
 
 
 class JobPosting(BaseModel):
@@ -90,6 +94,8 @@ class JobPostingResponse(BaseModel):
     responsibilities: List[str]
     benefits: List[str]
     status: str
+    allow_public_applications: Optional[bool] = None
+    public_application_link: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
 

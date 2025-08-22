@@ -24,6 +24,7 @@ from app.api.resume_bank import router as resume_bank_router
 from app.api.auth import router as auth_router
 from app.api.hiring_processes import router as hiring_processes_router
 from app.api.meetings import router as meetings_router
+from app.api.job_applications import router as job_applications_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -96,6 +97,7 @@ app.include_router(resume_bank_router, prefix="/api/v1/resume-bank", tags=["Resu
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(hiring_processes_router, prefix="/api/v1", tags=["Hiring Processes"])
 app.include_router(meetings_router, prefix="/api/v1/meetings", tags=["Meeting Management"])
+app.include_router(job_applications_router, prefix="/api/v1/job-applications", tags=["Job Applications"])
 
 # Health check endpoint
 @app.get("/health")

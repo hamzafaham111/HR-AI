@@ -23,8 +23,8 @@ import HiringProcessDetail from './pages/HiringProcessDetail';
 import Meetings from './pages/Meetings';
 import CreateMeeting from './pages/CreateMeeting';
 import PublicMeeting from './pages/PublicMeeting';
+import PublicJobApplication from './pages/PublicJobApplication';
 import MeetingDetail from './pages/MeetingDetail';
-import PendingApprovals from './pages/PendingApprovals';
 import './styles/App.css';
 
 function App() {
@@ -162,16 +162,11 @@ function App() {
             </ProtectedRoute>
           } />
           
-          <Route path="/meetings/pending-approvals" element={
-            <ProtectedRoute>
-              <Layout showSidebar={true}>
-                <PendingApprovals />
-              </Layout>
-            </ProtectedRoute>
-          } />
-          
           {/* Public meeting route - no authentication required */}
           <Route path="/meeting/:meetingLink" element={<PublicMeeting />} />
+
+          {/* Public job application route - no authentication required */}
+          <Route path="/job/:jobId/apply" element={<PublicJobApplication />} />
           
           {/* Redirect any unknown routes to home */}
           <Route path="*" element={<Navigate to="/" replace />} />

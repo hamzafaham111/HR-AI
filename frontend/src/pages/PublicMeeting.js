@@ -95,13 +95,43 @@ const PublicMeeting = () => {
     try {
       setBookingLoading(true);
       
-      const response = await apiRequest(API_ENDPOINTS.MEETINGS.BOOK_PUBLIC(meetingLink), {
-        method: 'POST',
-        body: {
-          slot_id: selectedSlot.id,
-          ...bookingForm
+      // Prepare the booking data in the correct format
+      const bookingData = {
+        slot_id: selectedSlot.id,
+        participant_name: bookingForm.participant_name,
+        participant_email: bookingForm.participant_email,
+        participant_phone: bookingForm.participant_phone || null,
+        notes: bookingForm.notes || null
+      };
+      
+      console.log('Booking data being sent:', bookingData);
+      console.log('API endpoint:', API_ENDPOINTS.MEETINGS.BOOK_PUBLIC(meetingLink));
+      
+      let response;
+      try {
+        // Try the apiRequest function first
+        response = await apiRequest(API_ENDPOINTS.MEETINGS.BOOK_PUBLIC(meetingLink), 'POST', bookingData);
+      } catch (apiError) {
+        console.log('apiRequest failed, trying direct fetch:', apiError);
+        
+        // Fallback to direct fetch
+        const fetchResponse = await fetch(API_ENDPOINTS.MEETINGS.BOOK_PUBLIC(meetingLink), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(bookingData)
+        });
+        
+        if (!fetchResponse.ok) {
+          const errorData = await fetchResponse.json().catch(() => ({}));
+          throw new Error(errorData.detail || `HTTP error! status: ${fetchResponse.status}`);
         }
-      });
+        
+        response = await fetchResponse.json();
+      }
+      
+      console.log('Booking response:', response);
       
       if (response && response.success) {
         setToast({
@@ -121,6 +151,8 @@ const PublicMeeting = () => {
         
         // Refresh available slots
         fetchMeetingInfo();
+      } else {
+        throw new Error(response?.message || 'Failed to book slot');
       }
     } catch (error) {
       console.error('Error booking slot:', error);

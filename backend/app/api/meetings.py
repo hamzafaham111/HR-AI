@@ -692,55 +692,6 @@ async def get_meetings_by_status(
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to get meetings: {str(e)}")
 
-@router.get("/bookings/pending")
-async def get_pending_bookings(
-    current_user: UserDocument = Depends(get_current_user),
-    meeting_service: MeetingService = Depends(get_meeting_service)
-):
-    """Get all pending bookings for the current user's meetings."""
-    try:
-        bookings = await meeting_service.get_pending_bookings(str(current_user.id))
-        
-        formatted_bookings = []
-        for booking in bookings:
-            # Get meeting and slot info
-            meeting = await meeting_service.get_meeting_by_id(str(booking.meeting_id))
-            slot = await meeting_service.meeting_repository.get_slot_by_id(str(booking.slot_id))
-            
-            formatted_bookings.append({
-                "id": str(booking.id),
-                "participant_name": booking.participant_name,
-                "participant_email": booking.participant_email,
-                "participant_phone": booking.participant_phone,
-                "notes": booking.notes,
-                "status": booking.status.value,
-                "created_at": booking.created_at.isoformat(),
-                "meeting": {
-                    "id": str(meeting.id),
-                    "title": meeting.title,
-                    "duration": meeting.duration
-                } if meeting else None,
-                "slot": {
-                    "id": str(slot.id),
-                    "start_time": slot.start_time.isoformat(),
-                    "end_time": slot.end_time.isoformat(),
-                    "formatted_time": f"{slot.start_time.strftime('%I:%M %p')} - {slot.end_time.strftime('%I:%M %p')}",
-                    "formatted_date": slot.start_time.strftime('%B %d, %Y')
-                } if slot else None
-            })
-        
-        return {
-            "success": True,
-            "data": {
-                "bookings": formatted_bookings,
-                "count": len(formatted_bookings)
-            }
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to get pending bookings: {str(e)}")
-
 @router.delete("/{meeting_id}")
 async def delete_meeting(
     meeting_id: str,

@@ -51,6 +51,7 @@ export const API_ENDPOINTS = {
     LIST: `${API_URL}/jobs/`,
     CREATE: `${API_URL}/jobs/`,
     DETAIL: (id) => `${API_URL}/jobs/${id}`,
+    PUBLIC_DETAIL: (id) => `${API_URL}/jobs/public/${id}`,
     UPDATE: (id) => `${API_URL}/jobs/${id}`,
     DELETE: (id) => `${API_URL}/jobs/${id}`,
     PARSE_DOCUMENT: `${API_URL}/jobs/parse-document`,
@@ -98,7 +99,26 @@ export const API_ENDPOINTS = {
     CANCEL: (id) => `${API_URL}/meetings/${id}/cancel`,
     BY_STATUS: (status) => `${API_URL}/meetings/status/${status}`,
     PENDING_BOOKINGS: `${API_URL}/meetings/bookings/pending`,
-  }
+  },
+  
+  // Job Applications
+  JOB_APPLICATIONS: {
+    FORMS: {
+      LIST: `${API_URL}/job-applications/forms/`,
+      CREATE: (jobId) => `${API_URL}/job-applications/forms/${jobId}`,
+      DETAIL: (formId) => `${API_URL}/job-applications/forms/${formId}`,
+      UPDATE: (formId) => `${API_URL}/job-applications/forms/${formId}`,
+      DELETE: (formId) => `${API_URL}/job-applications/forms/${formId}`,
+      PUBLIC_FORM: (jobId) => `${API_URL}/job-applications/public/forms/${jobId}`,
+    },
+    APPLICATIONS: {
+      LIST: (jobId) => `${API_URL}/job-applications/${jobId}`,
+      APPLY: (jobId) => `${API_URL}/job-applications/public/apply/${jobId}`,
+      PUBLIC_APPLY: (jobId) => `${API_URL}/job-applications/public/apply/${jobId}`,
+      WITH_SCORES: (jobId) => `${API_URL}/job-applications/${jobId}/applications-with-scores`,
+      UPDATE_STATUS: (applicationId) => `${API_URL}/job-applications/applications/${applicationId}/status`,
+    }
+  },
 };
 
 // Application Configuration

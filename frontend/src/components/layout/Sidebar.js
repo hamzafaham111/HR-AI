@@ -48,11 +48,6 @@ const Sidebar = ({ setSidebarOpen }) => {
       icon: Calendar
     },
     {
-      name: 'Pending Approvals',
-      path: '/meetings/pending-approvals',
-      icon: AlertCircle
-    },
-    {
       name: 'Settings',
       path: '/settings',
       icon: Settings
