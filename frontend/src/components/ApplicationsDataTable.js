@@ -12,10 +12,11 @@ import {
   Phone,
   Calendar,
   User,
-  FileText
+  FileText,
+  CheckCircle
 } from 'lucide-react';
 
-const ApplicationsDataTable = ({ applications, onViewApplication }) => {
+const ApplicationsDataTable = ({ applications, onViewApplication, onApproveApplication }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -250,13 +251,46 @@ const ApplicationsDataTable = ({ applications, onViewApplication }) => {
                   )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button
-                    onClick={() => onViewApplication(application)}
-                    className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-                  >
-                    <Eye className="w-4 h-4 mr-1" />
-                    View
-                  </button>
+                  <div className="flex items-center justify-end gap-2">
+                    <button
+                      onClick={() => onViewApplication(application)}
+                      className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                    >
+                      <Eye className="w-4 h-4 mr-1" />
+                      View
+                    </button>
+                    
+                    {application.status === 'pending' && onApproveApplication && (
+                      <button
+                        onClick={() => onApproveApplication(application)}
+                        className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+                      >
+                        <CheckCircle className="w-4 h-4 mr-1" />
+                        Approve & Add to Process
+                      </button>
+                    )}
+                  </div>
+                  
+                  {/* Show assigned processes if any */}
+                  {application.assigned_processes && application.assigned_processes.length > 0 && (
+                    <div className="mt-2 text-xs text-gray-600">
+                      <span className="font-medium">Assigned to:</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {application.assigned_processes.map((process, index) => (
+                          <span
+                            key={index}
+                            className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800"
+                            title={`Added on: ${new Date(process.assigned_at).toLocaleDateString()}`}
+                          >
+                            {process.hiring_process_id ? 
+                              `Process ${process.hiring_process_id.slice(-6)}` : 
+                              'Unknown Process'
+                            }
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}

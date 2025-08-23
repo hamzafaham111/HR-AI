@@ -113,3 +113,94 @@ class JobApplicationService:
         # Sort by matching score (highest first)
         result.sort(key=lambda x: x["matching_score"], reverse=True)
         return result
+
+    async def approve_and_add_to_process(
+        self,
+        application_id: str,
+        hiring_process_id: str,
+        notes: Optional[str] = None,
+        assigned_by: Optional[str] = None
+    ) -> bool:
+        """Approve a job application and add the candidate to a hiring process."""
+        try:
+            # Get the application
+            application = await self.repository.get_application_by_id(application_id)
+            if not application:
+                return False
+            
+            # Update application status to approved
+            updated_application = await self.repository.update_application_status(
+                application_id, 
+                "approved", 
+                notes
+            )
+            
+            if not updated_application:
+                return False
+            
+            # Add the process assignment to the application
+            await self.repository.add_process_assignment(
+                application_id,
+                hiring_process_id,
+                notes,
+                assigned_by
+            )
+            
+            # Now actually add the candidate to the hiring process
+            # We need to inject the hiring process repository
+            from ..repositories.mongodb_repository import MongoDBRepository
+            from ..core.database import get_database
+            
+            # Get database connection
+            database = await get_database()
+            hiring_repository = MongoDBRepository(database)
+            
+            # Add candidate to hiring process
+            # For job applications, we'll use the application data instead of resume bank data
+            candidate_data = {
+                "application_source": "job_application",
+                "job_application_id": application.id,
+                "job_id": application.job_id,
+                "current_stage_id": None,  # Will be set to first stage
+                "status": "pending",
+                "notes": notes,
+                "stage_history": [],
+                "assigned_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow(),
+                # Use application data for candidate information
+                "candidate_name": application.applicant_name,
+                "candidate_email": application.applicant_email,
+                "candidate_phone": application.applicant_phone,
+                "candidate_location": application.applicant_location if hasattr(application, 'applicant_location') else None,
+                "assigned_by": assigned_by
+            }
+            
+            # Get the hiring process to find the first stage
+            hiring_process = await hiring_repository.get_hiring_process_by_id(hiring_process_id, str(assigned_by))
+            if not hiring_process or not hiring_process.stages:
+                print(f"Hiring process {hiring_process_id} not found or has no stages")
+                return False
+            
+            # Find the first stage (lowest order)
+            first_stage = min(hiring_process.stages, key=lambda s: s.order)
+            candidate_data["current_stage_id"] = first_stage.id
+            
+            # Add candidate to hiring process
+            result = await hiring_repository.hiring_processes.update_one(
+                {"_id": hiring_process.id},
+                {
+                    "$push": {"candidates": candidate_data},
+                    "$set": {"updated_at": datetime.utcnow()}
+                }
+            )
+            
+            if result.modified_count > 0:
+                print(f"Successfully added candidate {application.applicant_name} to hiring process {hiring_process_id}")
+                return True
+            else:
+                print(f"Failed to add candidate to hiring process {hiring_process_id}")
+                return False
+            
+        except Exception as e:
+            print(f"Error approving application and adding to process: {e}")
+            return False

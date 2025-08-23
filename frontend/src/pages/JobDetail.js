@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Edit, Trash2, Users, Calendar, MapPin, Building, DollarSign, Copy, ExternalLink, FileText, Settings } from 'lucide-react';
 import ConfirmationModal from '../components/ui/ConfirmationModal';
 import ApplicationFormBuilder from '../components/ApplicationFormBuilder';
 import ApplicationsDataTable from '../components/ApplicationsDataTable';
 import ApplicationDetailModal from '../components/ApplicationDetailModal';
+import ProcessSelectionModal from '../components/ProcessSelectionModal';
 import Toast from '../components/ui/Toast';
 import { authenticatedFetch } from '../utils/api';
 
 const JobDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -27,6 +29,24 @@ const JobDetail = () => {
     message: '',
     type: 'info'
   });
+  
+  // Process selection modal state
+  const [showProcessSelection, setShowProcessSelection] = useState(false);
+  const [newlyCreatedProcess, setNewlyCreatedProcess] = useState(null);
+
+  useEffect(() => {
+    fetchJob();
+    fetchApplicationForm();
+    fetchApplications();
+  }, [id]);
+
+  // Check if we're returning from process creation
+  useEffect(() => {
+    if (location.state?.showProcessSelection && location.state?.newlyCreatedProcess) {
+      setShowProcessSelection(true);
+      setNewlyCreatedProcess(location.state.newlyCreatedProcess);
+    }
+  }, [location.state]);
 
   const showToast = (message, type = 'info') => {
     setToast({
@@ -97,14 +117,6 @@ const JobDetail = () => {
       setApplicationsLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchJob();
-    fetchApplicationForm();
-    fetchApplications();
-  }, [id]);
-
-
 
   const openDeleteModal = () => {
     setDeleteModal({
@@ -202,27 +214,84 @@ const JobDetail = () => {
 
 
   // Handle status updates
-  const handleStatusUpdate = async (applicationId, newStatus) => {
+  const handleStatusUpdate = async (applicationId, newStatus, notes) => {
     try {
       const response = await authenticatedFetch(
         `http://localhost:8000/api/v1/job-applications/applications/${applicationId}/status`,
-        'PUT',
-        { status: newStatus }
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            status: newStatus,
+            notes: notes
+          })
+        }
       );
-      
+
       if (response.ok) {
-        // Update the application in the local state
-        setApplications(prev => prev.map(app => 
-          app.id === applicationId ? { ...app, status: newStatus } : app
-        ));
-        showToast(`Application status updated to ${newStatus}`, 'success');
+        showToast('Application status updated successfully', 'success');
+        fetchApplications();
+        setSelectedApplication(null);
       } else {
-        throw new Error('Failed to update status');
+        throw new Error('Failed to update application status');
       }
     } catch (error) {
-      console.error('Error updating status:', error);
+      console.error('Error updating application status:', error);
       showToast('Failed to update application status', 'error');
     }
+  };
+
+  const handleApproveApplication = (application) => {
+    setSelectedApplication(application);
+    setShowProcessSelection(true);
+  };
+
+  const handleProcessSelected = async (processId) => {
+    try {
+      const response = await authenticatedFetch(
+        `http://localhost:8000/api/v1/job-applications/applications/${selectedApplication.id}/approve-and-add-to-process`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            hiring_process_id: processId,
+            notes: `Approved and added to hiring process from job application`
+          })
+        }
+      );
+
+      if (response.ok) {
+        showToast(`Candidate added to hiring process successfully!`, 'success');
+        
+        // Refresh applications list
+        fetchApplications();
+        
+        // Note: Don't close the modal yet - user might want to add to more processes
+        // Only close if this was the last process or user manually closes
+        
+      } else {
+        throw new Error('Failed to approve application and add to process');
+      }
+    } catch (error) {
+      console.error('Error approving application:', error);
+      showToast('Failed to approve application', 'error');
+    }
+  };
+
+  const handleAllProcessesAssigned = () => {
+    // Close modals after all processes are assigned
+    setShowProcessSelection(false);
+    setSelectedApplication(null);
+    setNewlyCreatedProcess(null);
+    
+    // Clear navigation state
+    navigate(location.pathname, { replace: true });
+    
+    showToast('All process assignments completed!', 'success');
   };
 
   const getJobTypeColor = (type) => {
@@ -539,6 +608,7 @@ const JobDetail = () => {
             <ApplicationsDataTable 
               applications={applications}
               onViewApplication={(application) => setSelectedApplication(application)}
+              onApproveApplication={handleApproveApplication}
             />
           )}
         </div>
@@ -567,6 +637,15 @@ const JobDetail = () => {
         isOpen={!!selectedApplication}
         onClose={() => setSelectedApplication(null)}
         onUpdateStatus={handleStatusUpdate}
+      />
+      
+      <ProcessSelectionModal
+        isOpen={showProcessSelection}
+        onClose={() => setShowProcessSelection(false)}
+        onProcessSelected={handleProcessSelected}
+        onAllProcessesAssigned={handleAllProcessesAssigned}
+        application={selectedApplication}
+        newlyCreatedProcess={newlyCreatedProcess}
       />
       
       <Toast

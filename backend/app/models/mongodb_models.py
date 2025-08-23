@@ -197,13 +197,55 @@ class ProcessStage(BaseModel):
 
 class ProcessCandidate(BaseModel):
     """Candidate assigned to a hiring process."""
-    resume_bank_entry_id: PyObjectId = Field(..., description="Reference to resume bank entry")
+    # Source identification
+    application_source: str = Field(..., description="Source: 'resume_bank' or 'job_application'")
+    
+    # Resume bank integration (existing)
+    resume_bank_entry_id: Optional[PyObjectId] = Field(None, description="Reference to resume bank entry (if source is resume_bank)")
+    
+    # Job application integration (new)
+    job_application_id: Optional[PyObjectId] = Field(None, description="Reference to job application (if source is job_application)")
+    job_id: Optional[PyObjectId] = Field(None, description="Reference to the job this candidate applied for")
+    
+    # Common fields
     current_stage_id: str = Field(..., description="Current stage ID")
     status: CandidateStageStatus = Field(default=CandidateStageStatus.PENDING, description="Current status")
     notes: Optional[str] = Field(None, description="HR notes about this candidate")
     stage_history: List[Dict[str, Any]] = Field(default_factory=list, description="History of stage movements")
     assigned_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+    
+    # Candidate information (for easy access)
+    candidate_name: str = Field(..., description="Candidate's full name")
+    candidate_email: str = Field(..., description="Candidate's email")
+    candidate_phone: Optional[str] = Field(None, description="Candidate's phone")
+    candidate_location: Optional[str] = Field(None, description="Candidate's location")
+    
+    # Assignment metadata
+    assigned_by: Optional[PyObjectId] = Field(None, description="User ID who assigned candidate to this process")
+    assignment_notes: Optional[str] = Field(None, description="Notes when adding to this process")
+    
+    @validator('resume_bank_entry_id', 'job_application_id')
+    def validate_source_fields(cls, v, values):
+        source = values.get('application_source')
+        
+        # If this is a resume bank candidate, ensure they have resume_bank_entry_id
+        if source == 'resume_bank':
+            if 'resume_bank_entry_id' in values and values['resume_bank_entry_id'] is None:
+                raise ValueError("Resume bank candidates must have resume_bank_entry_id")
+            # Job application candidates from resume bank should not have job_application_id
+            if 'job_application_id' in values and values['job_application_id'] is not None:
+                values['job_application_id'] = None
+        
+        # If this is a job application candidate, ensure they have job_application_id
+        elif source == 'job_application':
+            if 'job_application_id' in values and values['job_application_id'] is None:
+                raise ValueError("Job application candidates must have job_application_id")
+            # Resume bank candidates from job applications should not have resume_bank_entry_id
+            if 'resume_bank_entry_id' in values and values['resume_bank_entry_id'] is not None:
+                values['resume_bank_entry_id'] = None
+        
+        return v
 
 
 class HiringProcessDocument(BaseModel):
@@ -248,7 +290,9 @@ COLLECTIONS = {
     "resume_analyses": "resume_analyses", 
     "resume_bank_entries": "resume_bank_entries",
     "users": "users",
-    "hiring_processes": "hiring_processes"
+    "hiring_processes": "hiring_processes",
+    "job_applications": "job_applications",
+    "job_application_forms": "job_application_forms"
 } 
 
 
@@ -435,6 +479,9 @@ class JobApplicationDocument(BaseModel):
     
     # AI matching score (for comparison with resume bank candidates)
     matching_score: Optional[float] = Field(None, description="AI matching score with job requirements")
+    
+    # Hiring process integration - Multiple processes support
+    assigned_processes: List[Dict[str, Any]] = Field(default_factory=list, description="List of hiring processes this candidate is assigned to")
     
     # Metadata
     created_at: datetime = Field(default_factory=datetime.now)

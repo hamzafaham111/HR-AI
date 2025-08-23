@@ -20,7 +20,6 @@ import {
   Plus,
   GitBranch,
   Search,
-  ArrowRight,
   MoreVertical,
   ChevronRight
 } from 'lucide-react';
@@ -91,10 +90,15 @@ const HiringProcessDetail = () => {
   };
 
   const toggleCandidateMenu = (candidateId) => {
-    setCandidateMenus(prev => ({
-      ...prev,
-      [candidateId]: !prev[candidateId]
-    }));
+    setCandidateMenus(prev => {
+      // Close all other menus first, then toggle the clicked one
+      const newState = {};
+      Object.keys(prev).forEach(id => {
+        newState[id] = false;
+      });
+      newState[candidateId] = !prev[candidateId];
+      return newState;
+    });
   };
 
   // Function to move candidate between stages (status defaults to 'pending')
@@ -162,8 +166,10 @@ const HiringProcessDetail = () => {
     try {
       setMovingCandidates(prev => ({ ...prev, [candidateId]: true }));
       
-      // Get current candidate info
-      const candidate = process.candidates.find(c => c.resume_bank_entry_id === candidateId);
+      // Get current candidate info - handle both resume bank and job application candidates
+      const candidate = process.candidates.find(c => 
+        c.resume_bank_entry_id === candidateId || c.job_application_id === candidateId
+      );
       if (!candidate) {
         throw new Error('Candidate not found');
       }
@@ -283,14 +289,25 @@ const HiringProcessDetail = () => {
   // Close dropdown menus when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // Close all menus if clicking outside any candidate menu
       if (!event.target.closest('.candidate-menu')) {
         setCandidateMenus({});
       }
     };
 
+    // Also close menus when pressing Escape key
+    const handleEscapeKey = (event) => {
+      if (event.key === 'Escape') {
+        setCandidateMenus({});
+      }
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscapeKey);
+    
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscapeKey);
     };
   }, []);
 
@@ -554,136 +571,221 @@ const HiringProcessDetail = () => {
                         {/* Candidates in this stage */}
                         {stageCandidates.length > 0 ? (
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                            {stageCandidates.map((candidate) => {
+                            {stageCandidates.map((candidate, index) => {
                               const currentStage = getCurrentStageInfo(candidate);
                               return (
-                                <div key={candidate.resume_bank_entry_id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
-                                <div className="flex items-start justify-between">
-                                  <div className="flex items-center space-x-3 flex-1">
-                                    <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                                      <User className="w-5 h-5 text-primary-600" />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <h4 className="font-medium text-gray-900 truncate">{candidate.candidate_name}</h4>
-                                      <p className="text-sm text-gray-600 truncate">{candidate.candidate_email}</p>
-                                      <div className="flex items-center space-x-2 mt-1">
-                                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                          candidate.status === 'call_pending' ? 'bg-blue-100 text-blue-800' :
-                                          candidate.status === 'interviewed' ? 'bg-green-100 text-green-800' :
-                                          candidate.status === 'feedback_pending' ? 'bg-yellow-100 text-yellow-800' :
-                                          candidate.status === 'accepted' ? 'bg-emerald-100 text-emerald-800' :
-                                          candidate.status === 'hired' ? 'bg-purple-100 text-purple-800' :
-                                          candidate.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                                          'bg-gray-100 text-gray-800'
-                                        }`}>
-                                          {candidate.status.replace('_', ' ')}
-                                        </span>
-                                        <span className="text-xs text-gray-500">
-                                          Added {new Date(candidate.assigned_at).toLocaleDateString()}
-                                        </span>
+                                <div key={`${candidate.resume_bank_entry_id || candidate.job_application_id || 'unknown'}-${candidate.candidate_email}-${index}`} className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-lg transition-all duration-300 hover:border-primary-300 hover:scale-[1.02] relative group">
+                                  {/* Header with Avatar and Basic Info */}
+                                  <div className="flex items-start justify-between mb-4">
+                                    <div className="flex items-center space-x-3 flex-1">
+                                      <div className="w-14 h-14 bg-gradient-to-br from-primary-100 via-primary-200 to-primary-300 rounded-full flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
+                                        <User className="w-7 h-7 text-primary-700" />
                                       </div>
-                                      {candidate.notes && (
-                                        <p className="text-xs text-gray-500 mt-1 truncate" title={candidate.notes}>
-                                          Note: {candidate.notes}
+                                      <div className="flex-1 min-w-0">
+                                        <h4 className="font-bold text-gray-900 truncate text-lg mb-1">{candidate.candidate_name}</h4>
+                                        <p className="text-sm text-gray-600 truncate flex items-center">
+                                          <Mail className="w-3 h-3 mr-1" />
+                                          {candidate.candidate_email}
                                         </p>
-                                      )}
+                                      </div>
                                     </div>
                                   </div>
                                   
-                                  {/* Action Menu */}
-                                  <div className="ml-2 relative candidate-menu">
-                                    <button 
-                                      onClick={() => toggleCandidateMenu(candidate.resume_bank_entry_id)}
-                                      className="p-1 hover:bg-gray-100 rounded transition-colors"
-                                      disabled={movingCandidates[candidate.resume_bank_entry_id]}
+                                  {/* Essential Badges - Clean and Compact */}
+                                  <div className="flex items-center gap-2 mb-4">
+                                    <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold ${
+                                      candidate.status === 'call_pending' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+                                      candidate.status === 'interviewed' ? 'bg-green-50 text-green-700 border border-green-200' :
+                                      candidate.status === 'feedback_pending' ? 'bg-yellow-50 text-yellow-700 border border-yellow-200' :
+                                      candidate.status === 'accepted' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                                      candidate.status === 'hired' ? 'bg-purple-50 text-purple-700 border border-purple-200' :
+                                      candidate.status === 'rejected' ? 'bg-red-50 text-red-700 border border-red-200' :
+                                      'bg-gray-50 text-gray-700 border border-gray-200'
+                                    }`}>
+                                      {candidate.status === 'call_pending' ? '📞 Call Pending' :
+                                       candidate.status === 'interviewed' ? '✅ Interviewed' :
+                                       candidate.status === 'feedback_pending' ? '⏳ Feedback' :
+                                       candidate.status === 'accepted' ? '🎯 Accepted' :
+                                       candidate.status === 'hired' ? '🏆 Hired' :
+                                       candidate.status === 'rejected' ? '❌ Rejected' :
+                                       '⏸️ Pending'}
+                                    </span>
+                                    
+                                    <span className={`inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-medium ${
+                                      candidate.application_source === 'resume_bank' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' :
+                                      candidate.application_source === 'job_application' ? 'bg-teal-50 text-teal-700 border border-teal-200' :
+                                      'bg-gray-50 text-gray-700 border border-gray-200'
+                                    }`}>
+                                      {candidate.application_source === 'resume_bank' ? '📄 Resume' :
+                                       candidate.application_source === 'job_application' ? '🎯 Job App' :
+                                       'Unknown'}
+                                    </span>
+                                  </div>
+                                  
+                                  {/* Quick Info Bar */}
+                                  <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
+                                    <span className="flex items-center">
+                                      <Calendar className="w-3 h-3 mr-1" />
+                                      Added {new Date(candidate.assigned_at).toLocaleDateString()}
+                                    </span>
+                                    {candidate.notes && (
+                                      <span className="flex items-center text-blue-600">
+                                        <FileText className="w-3 h-3 mr-1" />
+                                        Has Notes
+                                      </span>
+                                    )}
+                                  </div>
+                                  
+                                  {/* Expandable Details Section */}
+                                  <div className="border-t border-gray-100 pt-3">
+                                    <button
+                                      onClick={() => {
+                                        const detailsId = `details-${candidate.resume_bank_entry_id || candidate.job_application_id || candidate.candidate_email}-${stage.id}-${index}`;
+                                        setCandidateMenus(prev => ({
+                                          ...prev,
+                                          [detailsId]: !prev[detailsId]
+                                        }));
+                                      }}
+                                      className="w-full flex items-center justify-between text-sm text-gray-600 hover:text-gray-900 transition-colors py-2"
                                     >
-                                      {movingCandidates[candidate.resume_bank_entry_id] ? (
-                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-500"></div>
-                                      ) : (
-                                        <MoreVertical className="w-4 h-4 text-gray-500" />
-                                      )}
+                                      <span className="flex items-center">
+                                        <Eye className="w-4 h-4 mr-2" />
+                                        View Details
+                                      </span>
+                                      <ChevronRight className={`w-4 h-4 transition-transform ${
+                                        candidateMenus[`details-${candidate.resume_bank_entry_id || candidate.job_application_id || candidate.candidate_email}-${stage.id}-${index}`] ? 'rotate-90' : ''
+                                      }`} />
                                     </button>
-
-                                    {/* Dropdown Menu */}
-                                    {candidateMenus[candidate.resume_bank_entry_id] && (
-                                      <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg z-10 border border-gray-200">
-                                        <div className="py-1">
-                                          {/* Move to Stage Section */}
-                                          <div className="px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100">
-                                            Move to Stage
+                                    
+                                    {/* Collapsible Details */}
+                                    {candidateMenus[`details-${candidate.resume_bank_entry_id || candidate.job_application_id || candidate.candidate_email}-${stage.id}-${index}`] && (
+                                      <div className="mt-3 pt-3 border-t border-gray-100 space-y-2">
+                                        {candidate.notes && (
+                                          <div className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg">
+                                            <div className="font-medium text-gray-900 mb-1">Notes:</div>
+                                            <p className="text-gray-600">{candidate.notes}</p>
                                           </div>
-                                          {process.stages
-                                            .filter(s => s.id !== candidate.current_stage_id)
-                                            .sort((a, b) => a.order - b.order)
-                                            .map((targetStage) => (
-                                              <button
-                                                key={targetStage.id}
-                                                onClick={() => moveCandidateToStage(candidate.resume_bank_entry_id, targetStage.id)}
-                                                className={`block w-full text-left px-3 py-2 text-sm transition-colors ${
-                                                  targetStage.is_final 
-                                                    ? 'text-purple-700 hover:bg-purple-50 font-medium' 
-                                                    : 'text-gray-700 hover:bg-gray-100'
-                                                }`}
-                                              >
-                                                {targetStage.order}. {targetStage.name}
-                                                {targetStage.is_final && (
-                                                  <span className="ml-2 text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
-                                                    Final
-                                                  </span>
-                                                )}
-                                              </button>
-                                            ))}
-                                          
-                                          {/* Status Update Section - Always show for status updates */}
-                                          <div className="border-t border-gray-100 mt-1">
-                                            <div className="px-3 py-2 text-xs font-medium text-gray-500">
-                                              Update Status
-                                            </div>
-                                            <button
-                                              onClick={() => updateCandidateStatus(candidate.resume_bank_entry_id, 'call_pending')}
-                                              className="block w-full text-left px-3 py-2 text-sm text-blue-700 hover:bg-blue-50 transition-colors"
-                                            >
-                                              📞 Call Pending
-                                            </button>
-                                            <button
-                                              onClick={() => updateCandidateStatus(candidate.resume_bank_entry_id, 'interviewed')}
-                                              className="block w-full text-left px-3 py-2 text-sm text-green-700 hover:bg-green-50 transition-colors"
-                                            >
-                                              ✅ Interviewed
-                                            </button>
-                                            <button
-                                              onClick={() => updateCandidateStatus(candidate.resume_bank_entry_id, 'feedback_pending')}
-                                              className="block w-full text-left px-3 py-2 text-sm text-yellow-700 hover:bg-yellow-50 transition-colors"
-                                            >
-                                              ⏳ Feedback Pending
-                                            </button>
-                                            <button
-                                              onClick={() => updateCandidateStatus(candidate.resume_bank_entry_id, 'accepted')}
-                                              className="block w-full text-left px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors"
-                                            >
-                                              🎯 Accepted
-                                            </button>
+                                        )}
+                                        
+                                        {candidate.application_source === 'job_application' && candidate.job_id && (
+                                          <div className="text-sm text-gray-700 bg-blue-50 p-3 rounded-lg">
+                                            <div className="font-medium text-blue-900 mb-1">Job Application Details:</div>
+                                            <p className="text-blue-700">Applied to Job: {candidate.job_id}</p>
+                                          </div>
+                                        )}
+                                        
+                                        <div className="text-xs text-gray-500">
+                                          <p>Current Stage: {currentStage?.name || 'Unknown'}</p>
+                                          <p>Stage Order: {currentStage?.order || 'N/A'}</p>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                  
+                                  {/* Action Menu - Better Positioned */}
+                                  <div className="absolute top-4 right-4 candidate-menu">
+                                    {/* Create a unique identifier for each candidate based on source */}
+                                    {(() => {
+                                      // Create a truly unique identifier that includes stage and position
+                                      let candidateId;
+                                      const baseId = candidate.resume_bank_entry_id || candidate.job_application_id || candidate.candidate_email;
+                                      candidateId = `${baseId}-${stage.id}-${index}`;
+                                      return (
+                                        <>
+                                          <button 
+                                            onClick={() => toggleCandidateMenu(candidateId)}
+                                            className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 hover:shadow-sm"
+                                            disabled={movingCandidates[candidateId]}
+                                          >
+                                            {movingCandidates[candidateId] ? (
+                                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-500"></div>
+                                            ) : (
+                                              <MoreVertical className="w-4 h-4 text-gray-500" />
+                                            )}
+                                          </button>
+
+                                          {/* Dropdown Menu */}
+                                          {candidateMenus[candidateId] && (
+                                            <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl z-10 border border-gray-200 overflow-hidden">
+                                                                                              <div className="py-1">
+                                                  {/* Move to Stage Section */}
+                                                  <div className="px-4 py-3 text-xs font-semibold text-gray-700 border-b border-gray-100 bg-gray-50 uppercase tracking-wide">
+                                                    Move to Stage
+                                                  </div>
+                                                {process.stages
+                                                  .filter(s => s.id !== candidate.current_stage_id)
+                                                  .sort((a, b) => a.order - b.order)
+                                                  .map((targetStage) => (
+                                                    <button
+                                                      key={targetStage.id}
+                                                      onClick={() => moveCandidateToStage(candidate.resume_bank_entry_id || candidate.job_application_id, targetStage.id)}
+                                                      className={`block w-full text-left px-4 py-3 text-sm transition-colors hover:bg-gray-50 ${
+                                                        targetStage.is_final 
+                                                          ? 'text-purple-700 font-semibold' 
+                                                          : 'text-gray-700'
+                                                      }`}
+                                                    >
+                                                      {targetStage.order}. {targetStage.name}
+                                                      {targetStage.is_final && (
+                                                        <span className="ml-2 text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
+                                                          Final
+                                                        </span>
+                                                      )}
+                                                    </button>
+                                                  ))}
+                                                
+                                                {/* Status Update Section - Always show for status updates */}
+                                                <div className="border-t border-gray-100 mt-1">
+                                                  <div className="px-4 py-3 text-xs font-semibold text-gray-700 bg-gray-50 uppercase tracking-wide">
+                                                    Update Status
+                                                  </div>
+                                                  <button
+                                                    onClick={() => updateCandidateStatus(candidate.resume_bank_entry_id || candidate.job_application_id, 'call_pending')}
+                                                    className="block w-full text-left px-4 py-3 text-sm text-blue-700 hover:bg-blue-50 transition-colors"
+                                                  >
+                                                    📞 Call Pending
+                                                  </button>
+                                                  <button
+                                                    onClick={() => updateCandidateStatus(candidate.resume_bank_entry_id || candidate.job_application_id, 'interviewed')}
+                                                    className="block w-full text-left px-4 py-3 text-sm text-green-700 hover:bg-green-50 transition-colors"
+                                                  >
+                                                    ✅ Interviewed
+                                                  </button>
+                                                  <button
+                                                    onClick={() => updateCandidateStatus(candidate.resume_bank_entry_id || candidate.job_application_id, 'feedback_pending')}
+                                                    className="block w-full text-left px-4 py-3 text-sm text-yellow-700 hover:bg-yellow-50 transition-colors"
+                                                  >
+                                                    ⏳ Feedback Pending
+                                                  </button>
+                                                  <button
+                                                    onClick={() => updateCandidateStatus(candidate.resume_bank_entry_id || candidate.job_application_id, 'accepted')}
+                                                    className="block w-full text-left px-4 py-3 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors"
+                                                  >
+                                                    🎯 Accepted
+                                                  </button>
                                           </div>
                                           
                                           {/* Final Stage Actions */}
                                           {currentStage?.is_final && (
                                             <div className="border-t border-gray-100 mt-1">
-                                              <div className="px-3 py-2 text-xs font-medium text-gray-500">
+                                              <div className="px-4 py-3 text-xs font-semibold text-gray-700 bg-gray-50 uppercase tracking-wide">
                                                 Final Stage Actions
                                               </div>
-                                                                                              <div className="px-3 py-2 text-xs text-gray-600">
-                                                  {currentStage.name.toLowerCase().includes('hired') 
-                                                    ? '✅ Candidate is hired' 
-                                                    : '❌ Candidate is rejected'}
-                                                </div>
+                                              <div className="px-4 py-3 text-sm text-gray-600 bg-green-50">
+                                                {currentStage.name.toLowerCase().includes('hired') 
+                                                  ? '✅ Candidate is hired' 
+                                                  : '❌ Candidate is rejected'}
+                                              </div>
                                             </div>
                                           )}
                                         </div>
                                       </div>
                                     )}
+                                        </>
+                                      );
+                                    })()}
                                   </div>
                                 </div>
-                              </div>
                             );
                           })}
                           </div>
@@ -814,7 +916,7 @@ const HiringProcessDetail = () => {
         </div>
       </div>
 
-      {/* Add Candidate Modal */}
+     
       {showAddCandidateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-5xl mx-4 max-h-[90vh] overflow-hidden">

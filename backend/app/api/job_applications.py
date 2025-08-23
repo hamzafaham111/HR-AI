@@ -63,9 +63,12 @@ class SubmitApplicationRequest(BaseModel):
     form_data: dict = {}
     resume_files: Optional[List[str]] = []  # File names for now, will be enhanced for actual file uploads
 
-
 class UpdateApplicationStatusRequest(BaseModel):
     status: str
+    notes: Optional[str] = None
+
+class ApproveAndAddToProcessRequest(BaseModel):
+    hiring_process_id: str
     notes: Optional[str] = None
 
 
@@ -430,7 +433,7 @@ async def update_application_status(
             "data": {
                 "id": str(application.id),
                 "status": application.status,
-                "notes": application.notes,
+                "notes": application.status,
                 "updated_at": application.updated_at.isoformat()
             }
         }
@@ -441,6 +444,48 @@ async def update_application_status(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update application status: {str(e)}"
+        )
+
+
+@router.post("/applications/{application_id}/approve-and-add-to-process")
+async def approve_and_add_to_process(
+    application_id: str,
+    process_data: ApproveAndAddToProcessRequest,
+    current_user: UserDocument = Depends(get_current_user),
+    service: JobApplicationService = Depends(get_job_application_service)
+):
+    """Approve a job application and add the candidate to a hiring process."""
+    try:
+        result = await service.approve_and_add_to_process(
+            application_id=application_id,
+            hiring_process_id=process_data.hiring_process_id,
+            notes=process_data.notes,
+            assigned_by=str(current_user.id)
+        )
+        
+        if not result:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to approve application and add to process"
+            )
+        
+        return {
+            "success": True,
+            "message": "Application approved and candidate added to hiring process successfully",
+            "data": {
+                "application_id": application_id,
+                "hiring_process_id": process_data.hiring_process_id,
+                "status": "approved",
+                "process_assignment_date": datetime.utcnow().isoformat()
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to approve application and add to process: {str(e)}"
         )
 
 

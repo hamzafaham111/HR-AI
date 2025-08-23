@@ -3,7 +3,7 @@ from datetime import datetime
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
-from app.models.mongodb_models import JobApplicationFormDocument, JobApplicationDocument
+from app.models.mongodb_models import JobApplicationFormDocument, JobApplicationDocument, COLLECTIONS
 
 
 class JobApplicationRepository:
@@ -11,8 +11,8 @@ class JobApplicationRepository:
     
     def __init__(self, database: AsyncIOMotorDatabase):
         self.database = database
-        self.job_application_forms = database.job_application_forms
-        self.job_applications = database.job_applications
+        self.job_application_forms = database[COLLECTIONS["job_application_forms"]]
+        self.job_applications = database[COLLECTIONS["job_applications"]]
     
     # Job Application Forms
     async def create_application_form(self, form_data: Dict[str, Any]) -> JobApplicationFormDocument:
@@ -196,3 +196,41 @@ class JobApplicationRepository:
                 continue
         
         return applications
+
+    async def add_process_assignment(
+        self,
+        application_id: str,
+        hiring_process_id: str,
+        notes: Optional[str] = None,
+        assigned_by: Optional[str] = None
+    ) -> bool:
+        """Add a hiring process assignment to a job application."""
+        if not ObjectId.is_valid(application_id):
+            return False
+        
+        process_assignment = {
+            "hiring_process_id": ObjectId(hiring_process_id),
+            "assigned_at": datetime.now(),
+            "notes": notes,
+            "assigned_by": ObjectId(assigned_by) if assigned_by else None
+        }
+        
+        result = await self.job_applications.update_one(
+            {"_id": ObjectId(application_id)},
+            {
+                "$push": {"assigned_processes": process_assignment},
+                "$set": {"updated_at": datetime.now()}
+            }
+        )
+        
+        return result.modified_count > 0
+
+    async def get_process_assignments(self, application_id: str) -> List[Dict[str, Any]]:
+        """Get all process assignments for a job application."""
+        if not ObjectId.is_valid(application_id):
+            return []
+        
+        application = await self.job_applications.find_one({"_id": ObjectId(application_id)})
+        if application:
+            return application.get("assigned_processes", [])
+        return []

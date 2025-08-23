@@ -86,7 +86,17 @@ class ProcessStageResponse(BaseModel):
 
 class ProcessCandidateResponse(BaseModel):
     """Response model for process candidate."""
-    resume_bank_entry_id: str
+    # Source identification
+    application_source: str = Field(..., description="Source: 'resume_bank' or 'job_application'")
+    
+    # Resume bank integration
+    resume_bank_entry_id: Optional[str] = Field(None, description="Resume bank entry ID (if source is resume_bank)")
+    
+    # Job application integration
+    job_application_id: Optional[str] = Field(None, description="Job application ID (if source is job_application)")
+    job_id: Optional[str] = Field(None, description="Job ID (if source is job_application)")
+    
+    # Common fields
     candidate_name: str
     candidate_email: str
     current_stage_id: str

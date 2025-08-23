@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -10,7 +10,8 @@ import {
   Target,
   FileText,
   Users,
-  AlertCircle
+  AlertCircle,
+  Info
 } from 'lucide-react';
 import { authenticatedFetch } from '../utils/api';
 import { API_ENDPOINTS } from '../config/api';
@@ -20,6 +21,7 @@ const CreateHiringProcess = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState({ message: '', type: '', isVisible: false });
+  const [showReturnBanner, setShowReturnBanner] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -46,6 +48,14 @@ const CreateHiringProcess = () => {
   ]);
 
   const [errors, setErrors] = useState({});
+
+  // Check if we're returning from application approval
+  useEffect(() => {
+    const pendingApproval = sessionStorage.getItem('pendingApplicationApproval');
+    if (pendingApproval) {
+      setShowReturnBanner(true);
+    }
+  }, []);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type, isVisible: true });
@@ -180,10 +190,38 @@ const CreateHiringProcess = () => {
       });
       
       if (response.ok) {
+        const newProcess = await response.json();
         showToast('Hiring process created successfully');
-        setTimeout(() => {
-          navigate('/hiring-processes');
-        }, 1000);
+        
+        // Check if we're returning from application approval
+        const pendingApproval = sessionStorage.getItem('pendingApplicationApproval');
+        
+        if (pendingApproval) {
+          try {
+            const { returnUrl } = JSON.parse(pendingApproval);
+            
+            // Clear the pending approval
+            sessionStorage.removeItem('pendingApplicationApproval');
+            
+            // Navigate back to application approval with new process
+            navigate(returnUrl, { 
+              state: { 
+                newlyCreatedProcess: newProcess,
+                showProcessSelection: true 
+              }
+            });
+          } catch (error) {
+            console.error('Error parsing pending approval:', error);
+            // Fallback to normal navigation
+            setTimeout(() => {
+              navigate('/hiring-processes');
+            }, 1000);
+          }
+        } else {
+          console.log('No pending approval, staying on creation page');
+          // Don't navigate away - stay on the creation page
+          // The user can manually navigate back or create another process
+        }
       } else {
         throw new Error(`Creation failed with status: ${response.status}`);
       }
@@ -211,6 +249,26 @@ const CreateHiringProcess = () => {
           <p className="text-gray-600">Set up a new recruitment pipeline with custom stages</p>
         </div>
       </div>
+
+      {showReturnBanner && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex items-center justify-between">
+          <div className="flex items-center">
+            <Info className="w-5 h-5 text-blue-500 mr-2" />
+            <p className="text-sm text-blue-800">
+              You have a pending application approval. Please complete it before creating a new hiring process.
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              sessionStorage.removeItem('pendingApplicationApproval');
+              setShowReturnBanner(false);
+            }}
+            className="px-3 py-1 bg-blue-600 text-white rounded-md text-xs hover:bg-blue-700 transition-colors"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Basic Information */}

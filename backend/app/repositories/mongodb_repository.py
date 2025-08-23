@@ -339,7 +339,32 @@ class MongoDBRepository:
         })
         
         if process_data:
-            return HiringProcessDocument(**process_data)
+            try:
+                # Handle existing data that might be missing required fields
+                if 'candidates' in process_data:
+                    # Clean up invalid candidates
+                    valid_candidates = []
+                    for candidate in process_data['candidates']:
+                        try:
+                            # Set default values for missing required fields
+                            if 'application_source' not in candidate:
+                                candidate['application_source'] = 'resume_bank'  # Default for existing data
+                            if 'candidate_name' not in candidate:
+                                candidate['candidate_name'] = 'Unknown Candidate'
+                            if 'candidate_email' not in candidate:
+                                candidate['candidate_email'] = 'unknown@example.com'
+                            
+                            valid_candidates.append(candidate)
+                        except Exception as e:
+                            logger.warning(f"Skipping invalid candidate: {e}")
+                            continue
+                    
+                    process_data['candidates'] = valid_candidates
+                
+                return HiringProcessDocument(**process_data)
+            except Exception as e:
+                logger.warning(f"Error creating hiring process document: {e}")
+                return None
         return None
     
     async def get_hiring_processes_by_user(
@@ -380,7 +405,97 @@ class MongoDBRepository:
         processes = []
         
         async for process_data in cursor:
-            processes.append(HiringProcessDocument(**process_data))
+            try:
+                # Handle existing data that might be missing required fields
+                if 'candidates' in process_data:
+                    # Clean up invalid candidates
+                    valid_candidates = []
+                    for candidate in process_data['candidates']:
+                        try:
+                            # Set default values for missing required fields
+                            if 'application_source' not in candidate:
+                                candidate['application_source'] = 'resume_bank'  # Default for existing data
+                            if 'candidate_name' not in candidate:
+                                candidate['candidate_name'] = 'Unknown Candidate'
+                            if 'candidate_email' not in candidate:
+                                candidate['candidate_email'] = 'unknown@example.com'
+                            
+                            valid_candidates.append(candidate)
+                        except Exception as e:
+                            logger.warning(f"Skipping invalid candidate: {e}")
+                            continue
+                    
+                    process_data['candidates'] = valid_candidates
+                
+                processes.append(HiringProcessDocument(**process_data))
+            except Exception as e:
+                logger.warning(f"Skipping invalid hiring process document: {e}")
+                continue
+        
+        return processes
+    
+    async def get_hiring_processes_by_user_and_status(
+        self,
+        user_id: str,
+        status: ProcessStatus
+    ) -> List[HiringProcessDocument]:
+        """Get hiring processes for a user with specific status."""
+        try:
+            user_object_id = ObjectId(user_id)
+        except Exception:
+            logger.error(f"Invalid user_id format: {user_id}")
+            return []
+        
+        # Build query - using $or to handle both ObjectId and string formats
+        # Also handle documents with no status (default to active)
+        query = {
+            "$and": [
+                {
+                    "$or": [
+                        {"user_id": user_object_id},
+                        {"user_id": user_id}
+                    ]
+                },
+                {
+                    "$or": [
+                        {"status": status.value},  # Status matches the requested status
+                        {"status": {"$exists": False}},  # Status field doesn't exist (default to active)
+                        {"status": None}  # Status is null (default to active)
+                    ]
+                }
+            ]
+        }
+        
+        cursor = self.hiring_processes.find(query).sort("created_at", -1)
+        processes = []
+        
+        async for process_data in cursor:
+            try:
+                # Handle existing data that might be missing required fields
+                if 'candidates' in process_data:
+                    # Clean up invalid candidates
+                    valid_candidates = []
+                    for candidate in process_data['candidates']:
+                        try:
+                            # Set default values for missing required fields
+                            if 'application_source' not in candidate:
+                                candidate['application_source'] = 'resume_bank'  # Default for existing data
+                            if 'candidate_name' not in candidate:
+                                candidate['candidate_name'] = 'Unknown Candidate'
+                            if 'candidate_email' not in candidate:
+                                candidate['candidate_email'] = 'unknown@example.com'
+                            
+                            valid_candidates.append(candidate)
+                        except Exception as e:
+                            logger.warning(f"Skipping invalid candidate: {e}")
+                            continue
+                    
+                    process_data['candidates'] = valid_candidates
+                
+                processes.append(HiringProcessDocument(**process_data))
+            except Exception as e:
+                logger.warning(f"Skipping invalid hiring process document: {e}")
+                continue
         
         return processes
     
@@ -431,11 +546,24 @@ class MongoDBRepository:
             process_object_id = ObjectId(process_id)
             user_object_id = ObjectId(user_id)
             resume_object_id = ObjectId(resume_bank_entry_id)
-        except Exception:
+        except Exception as e:
+            logger.error(f"Invalid ObjectId conversion: {e}")
             return None
         
-        # Create candidate data
+        # Get resume bank entry to extract candidate information first
+        resume_entry = None
+        try:
+            resume_entry = await self.get_resume_bank_entry_by_id(str(resume_object_id))
+            if not resume_entry:
+                logger.error(f"Resume bank entry not found: {resume_bank_entry_id}")
+                return None
+        except Exception as e:
+            logger.error(f"Error fetching resume bank entry: {e}")
+            return None
+        
+        # Create candidate data with proper structure
         candidate_data = {
+            "application_source": "resume_bank",
             "resume_bank_entry_id": resume_object_id,
             "current_stage_id": initial_stage_id,
             "status": CandidateStageStatus.PENDING,
@@ -451,9 +579,23 @@ class MongoDBRepository:
                 "moved_by": user_id
             }],
             "assigned_at": datetime.utcnow(),
-            "updated_at": datetime.utcnow()
+            "updated_at": datetime.utcnow(),
+            # Include candidate information directly
+            "candidate_name": resume_entry.candidate_name,
+            "candidate_email": resume_entry.candidate_email,
+            "candidate_phone": resume_entry.candidate_phone,
+            "candidate_location": resume_entry.candidate_location
         }
         
+        # Check if candidate is already in this process
+        existing_process = await self.get_hiring_process_by_id(process_id, user_id)
+        if existing_process:
+            for existing_candidate in existing_process.candidates:
+                if str(existing_candidate.resume_bank_entry_id) == resume_bank_entry_id:
+                    logger.warning(f"Candidate already exists in process: {resume_bank_entry_id}")
+                    return None
+        
+        # Add candidate to process
         result = await self.hiring_processes.update_one(
             {"_id": process_object_id, "user_id": user_object_id},
             {
@@ -463,14 +605,17 @@ class MongoDBRepository:
         )
         
         if result.modified_count > 0:
+            logger.info(f"Successfully added candidate {resume_entry.candidate_name} to process {process_id}")
             return await self.get_hiring_process_by_id(process_id, user_id)
-        return None
+        else:
+            logger.error(f"Failed to add candidate to process: {process_id}")
+            return None
     
     async def move_candidate_stage(
         self,
         process_id: str,
         user_id: str,
-        resume_bank_entry_id: str,
+        candidate_id: str,
         new_stage_id: str,
         new_status: CandidateStageStatus,
         notes: Optional[str] = None
@@ -479,7 +624,6 @@ class MongoDBRepository:
         try:
             process_object_id = ObjectId(process_id)
             user_object_id = ObjectId(user_id)
-            resume_object_id = ObjectId(resume_bank_entry_id)
         except Exception:
             return None
         
@@ -493,8 +637,20 @@ class MongoDBRepository:
         current_stage_name = None
         new_stage_name = None
         
+        # Try to find candidate by resume_bank_entry_id or job_application_id
         for candidate in process.candidates:
-            if candidate.resume_bank_entry_id == resume_object_id:
+            candidate_identifier = None
+            if hasattr(candidate, 'resume_bank_entry_id') and candidate.resume_bank_entry_id:
+                candidate_identifier = str(candidate.resume_bank_entry_id)
+            elif hasattr(candidate, 'job_application_id') and candidate.job_application_id:
+                candidate_identifier = str(candidate.job_application_id)
+            elif isinstance(candidate, dict):
+                if candidate.get('resume_bank_entry_id'):
+                    candidate_identifier = str(candidate['resume_bank_entry_id'])
+                elif candidate.get('job_application_id'):
+                    candidate_identifier = str(candidate['job_application_id'])
+            
+            if candidate_identifier == candidate_id:
                 current_candidate = candidate
                 break
         
@@ -520,12 +676,25 @@ class MongoDBRepository:
             "moved_by": user_id
         }
         
+        # Build the query to find the candidate
+        candidate_query = {
+            "_id": process_object_id,
+            "user_id": user_object_id
+        }
+        
+        # Add the candidate identifier to the query
+        if hasattr(current_candidate, 'resume_bank_entry_id') and current_candidate.resume_bank_entry_id:
+            candidate_query["candidates.resume_bank_entry_id"] = current_candidate.resume_bank_entry_id
+        elif hasattr(current_candidate, 'job_application_id') and current_candidate.job_application_id:
+            candidate_query["candidates.job_application_id"] = current_candidate.job_application_id
+        elif isinstance(current_candidate, dict):
+            if current_candidate.get('resume_bank_entry_id'):
+                candidate_query["candidates.resume_bank_entry_id"] = current_candidate['resume_bank_entry_id']
+            elif current_candidate.get('job_application_id'):
+                candidate_query["candidates.job_application_id"] = current_candidate['job_application_id']
+        
         result = await self.hiring_processes.update_one(
-            {
-                "_id": process_object_id,
-                "user_id": user_object_id,
-                "candidates.resume_bank_entry_id": resume_object_id
-            },
+            candidate_query,
             {
                 "$set": {
                     "candidates.$.current_stage_id": new_stage_id,
