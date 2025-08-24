@@ -12,6 +12,9 @@ from typing import Optional, Tuple, Dict, Any
 from fastapi import UploadFile, HTTPException
 import os
 
+from app.core.config import settings
+from app.core.logger import logger
+
 # Try to import pdfplumber for better PDF processing
 try:
     import pdfplumber
@@ -19,9 +22,6 @@ try:
 except ImportError:
     HAS_PDFPLUMBER = False
     logger.warning("pdfplumber not available, using PyPDF2 only")
-
-from app.core.config import settings
-from app.core.logger import logger
 
 
 class PDFProcessor:

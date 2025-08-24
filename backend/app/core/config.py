@@ -59,10 +59,7 @@ class Settings(BaseSettings):
     mongodb_url: str = "mongodb://localhost:27017"
     database_name: str = "resume_analysis"
     
-    # Legacy database settings (for migration)
-    database_url: Optional[str] = None
-    DATABASE_URL: Optional[str] = None
-    database_echo: bool = False
+
     
     class Config:
         """
