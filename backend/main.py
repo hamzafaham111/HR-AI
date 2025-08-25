@@ -40,14 +40,7 @@ async def lifespan(app: FastAPI):
         logger.error(f"Failed to initialize MongoDB: {e}")
         raise
     
-    # Initialize Qdrant vector database
-    try:
-        from app.services.qdrant_service import init_qdrant
-        await init_qdrant()
-        logger.info("Qdrant vector database initialized successfully")
-    except Exception as e:
-        logger.warning(f"Failed to initialize Qdrant: {e}")
-        logger.info("System will work without vector database for basic functionality")
+
     
     logger.info("AI Resume Management API started successfully")
     

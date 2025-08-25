@@ -20,7 +20,7 @@ class DashboardResponse(BaseModel):
     total_jobs: int
     statistics: Dict[str, Any]
 
-from app.services.qdrant_service import qdrant_service
+
 from app.core.logger import logger
 from app.core.database import get_database
 from app.repositories.mongodb_repository import MongoDBRepository

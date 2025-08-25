@@ -216,35 +216,7 @@ class OpenAIService:
             "skills": ["Python", "JavaScript", "React", "SQL"]
         }
     
-    async def generate_embedding(self, text: str) -> List[float]:
-        """
-        Generate embedding for text using OpenAI's embedding model.
-        
-        Args:
-            text: Text to generate embedding for
-            
-        Returns:
-            List[float]: Embedding vector (1536 dimensions)
-        """
-        try:
-            # Use text-embedding-ada-002 model for embeddings
-            response = await self.client.embeddings.create(
-                model="text-embedding-ada-002",
-                input=text[:8000]  # Limit text length for embedding
-            )
-            
-            embedding = response.data[0].embedding
-            logger.info(f"Generated embedding with {len(embedding)} dimensions")
-            return embedding
-            
-        except Exception as e:
-            logger.error(f"Failed to generate embedding: {e}")
-            # Return mock embedding for fallback
-            import random
-            random.seed(hash(text) % 1000)  # Deterministic mock embedding
-            mock_embedding = [random.uniform(-1, 1) for _ in range(1536)]
-            logger.info("Using mock embedding due to API error")
-            return mock_embedding
+
 
 
 # Create global service instance

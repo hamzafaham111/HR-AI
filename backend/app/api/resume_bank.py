@@ -227,7 +227,7 @@ async def upload_resume_to_bank(
         # Add to Qdrant for vector search
         try:
             from app.services.openai_service import openai_service
-            from app.services.qdrant_service import qdrant_service
+            
             
             # Generate embedding for the resume text
             embedding = await openai_service.generate_embedding(resume_text)
@@ -437,84 +437,20 @@ async def get_resume_bank_stats(
         )
 
 
-@router.post("/semantic-search", response_model=CandidateSearchResponse)
-async def semantic_search_candidates(
-    query: str = Query(..., description="Search query for semantic matching"),
-    limit: int = Query(10, ge=1, le=50, description="Maximum number of candidates"),
-    score_threshold: float = Query(0.3, ge=0.0, le=1.0, description="Minimum similarity score")
-):
-    """
-    Perform semantic search for candidates using embeddings.
-    
-    Args:
-        query: Search query (job description, skills, etc.)
-        limit: Maximum number of candidates to return
-        score_threshold: Minimum similarity score threshold
-        
-    Returns:
-        CandidateSearchResponse: List of matching candidates
-    """
-    try:
-        start_time = datetime.now()
-        
-        # Generate embedding for search query
-        from app.services.openai_service import openai_service
-        from app.services.qdrant_service import qdrant_service
-        
-        query_embedding = await openai_service.generate_embedding(query)
-        
-        # Find similar resumes using vector search
-        similar_resumes = await qdrant_service.find_similar_resumes(
-            embedding=query_embedding,
-            limit=limit,
-            score_threshold=score_threshold
-        )
-        
-        # Convert to candidate format
-        candidates = []
-        for resume in similar_resumes:
-            # Get resume details from resume bank
-            resume_entry = await resume_bank_service.get_resume_by_analysis_id(
-                resume["analysis_id"]
-            )
-            if resume_entry:
-                candidates.append(resume_entry)
-        
-        search_time = (datetime.now() - start_time).total_seconds()
-        
-        return CandidateSearchResponse(
-            candidates=candidates,
-            total_count=len(candidates),
-            search_criteria={
-                "query": query,
-                "limit": limit,
-                "search_type": "semantic",
-                "similarity_threshold": score_threshold
-            },
-            search_time=search_time
-        )
-        
-    except Exception as e:
-        logger.error(f"Failed to perform semantic search: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to perform semantic search"
-        )
+
 
 
 @router.post("/find-candidates", response_model=CandidateSearchResponse)
 async def find_candidates_for_job_criteria(
     job_criteria: dict,
-    limit: int = Query(10, ge=1, le=50, description="Maximum number of candidates"),
-    use_semantic_search: bool = Query(True, description="Use semantic search with embeddings")
+    limit: int = Query(10, ge=1, le=50, description="Maximum number of candidates")
 ):
     """
-    Find candidates based on job criteria (for job creation).
+    Find candidates based on job criteria using rule-based search.
     
     Args:
         job_criteria: Job criteria including title, skills, experience, location, etc.
         limit: Maximum number of candidates to return
-        use_semantic_search: Whether to use semantic search with embeddings
         
     Returns:
         CandidateSearchResponse: List of matching candidates
@@ -522,60 +458,7 @@ async def find_candidates_for_job_criteria(
     try:
         start_time = datetime.now()
         
-        if use_semantic_search:
-            # Try semantic search first
-            try:
-                from app.services.qdrant_service import qdrant_service
-                from app.services.openai_service import openai_service
-                
-                # Create job description for embedding
-                job_description = f"""
-                Job Title: {job_criteria.get('title', '')}
-                Requirements: {', '.join([req.get('skill', '') if isinstance(req, dict) else req for req in job_criteria.get('requirements', [])])}
-                Location: {job_criteria.get('location', '')}
-                Experience Level: {job_criteria.get('experience_level', '')}
-                Job Type: {job_criteria.get('job_type', '')}
-                """
-                
-                # Generate embedding for job criteria
-                job_embedding = await openai_service.generate_embedding(job_description)
-                
-                # Find similar resumes using vector search
-                similar_resumes = await qdrant_service.find_similar_resumes(
-                    embedding=job_embedding,
-                    limit=limit,
-                    score_threshold=0.3  # Lower threshold for broader matches
-                )
-                
-                # Convert to candidate format
-                candidates = []
-                for resume in similar_resumes:
-                    # Get resume details from resume bank
-                    resume_entry = await resume_bank_service.get_resume_by_analysis_id(
-                        resume["analysis_id"]
-                    )
-                    if resume_entry:
-                        candidates.append(resume_entry)
-                
-                search_time = (datetime.now() - start_time).total_seconds()
-                
-                return CandidateSearchResponse(
-                    candidates=candidates,
-                    total_count=len(candidates),
-                    search_criteria={
-                        "job_title": job_criteria.get("title", "Unknown"),
-                        "limit": limit,
-                        "search_type": "semantic",
-                        "similarity_threshold": 0.3
-                    },
-                    search_time=search_time
-                )
-                
-            except Exception as e:
-                logger.warning(f"Semantic search failed, falling back to rule-based search: {e}")
-                # Fall back to rule-based search
-        
-        # Rule-based search (fallback or when semantic search is disabled)
+        # Rule-based search
         filters = ResumeSearchFilters()
         
         if job_criteria.get("requirements"):

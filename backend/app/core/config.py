@@ -29,11 +29,7 @@ class Settings(BaseSettings):
     openai_api_base: str = "https://api.openai.com/v1"
     openai_model: str = "gpt-3.5-turbo"
     
-    # Qdrant vector database configuration
-    qdrant_host: str = "localhost"
-    qdrant_port: int = 6333
-    qdrant_collection_name: str = "resumes"
-    qdrant_vector_size: int = 1536  # OpenAI embedding dimension
+
     
     # File upload settings
     max_file_size: int = 10 * 1024 * 1024  # 10MB
