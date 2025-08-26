@@ -217,7 +217,8 @@ const HiringProcesses = () => {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <>
+      <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
         <div>
@@ -510,7 +511,8 @@ const HiringProcesses = () => {
         isVisible={toast.isVisible}
         onClose={() => setToast(prev => ({ ...prev, isVisible: false }))}
       />
-    </div>
+      </div>
+    </>
   );
 };
 

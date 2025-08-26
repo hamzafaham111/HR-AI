@@ -536,7 +536,8 @@ const HiringProcessDetail = () => {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <>
+      <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
         <div className="flex items-center space-x-4 mb-4 sm:mb-0">
@@ -1259,6 +1260,7 @@ const HiringProcessDetail = () => {
           onClose={() => setShowToast(false)}
         />
       )}
+      </div>
 
       {/* Delete Process Confirmation Modal */}
       <ConfirmationModal
@@ -1284,7 +1286,7 @@ const HiringProcessDetail = () => {
         cancelText="Cancel"
         type="danger"
       />
-    </div>
+    </>
   );
 };
 

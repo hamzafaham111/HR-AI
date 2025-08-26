@@ -364,8 +364,7 @@ const JobDetail = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-4xl">
+      <div className="space-y-6">
         {/* Header */}
         <div className="mb-8">
           <button
@@ -615,8 +614,8 @@ const JobDetail = () => {
             />
           )}
         </div>
-        </div>
       </div>
+
       <ConfirmationModal
         isOpen={deleteModal.isOpen}
         onClose={closeDeleteModal}

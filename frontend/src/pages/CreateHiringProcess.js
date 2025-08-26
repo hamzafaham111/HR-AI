@@ -235,7 +235,8 @@ const CreateHiringProcess = () => {
   };
 
   return (
-    <div className="p-6 max-w-4xl">
+    <>
+      <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center space-x-4 mb-8">
         <button
@@ -647,7 +648,8 @@ const CreateHiringProcess = () => {
         isVisible={toast.isVisible}
         onClose={() => setToast(prev => ({ ...prev, isVisible: false }))}
       />
-    </div>
+      </div>
+    </>
   );
 };
 
