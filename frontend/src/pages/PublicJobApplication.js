@@ -32,6 +32,7 @@ const PublicJobApplication = () => {
   const [applicationForm, setApplicationForm] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [toast, setToast] = useState(null);
   const [copied, setCopied] = useState(false);
   
@@ -177,19 +178,7 @@ const PublicJobApplication = () => {
       console.log('Submit response:', response);
       
       if (response && response.success) {
-        setToast({
-          type: 'success',
-          message: 'Application submitted successfully! We will contact you soon.'
-        });
-        
-        // Reset form
-        setApplicationData({
-          applicant_name: '',
-          applicant_email: '',
-          applicant_phone: '',
-          form_data: {}
-        });
-        setResumeFiles([]);
+        setSubmitted(true);
       } else {
         throw new Error(response?.message || 'Failed to submit application');
       }
@@ -277,6 +266,46 @@ const PublicJobApplication = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600 text-lg">Loading job application...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (submitted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center">
+        <div className="text-center max-w-2xl mx-auto px-4">
+          <div className="bg-white rounded-full p-6 w-24 h-24 mx-auto mb-8 flex items-center justify-center shadow-lg">
+            <CheckCircle className="h-12 w-12 text-green-500" />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">Application Submitted Successfully!</h1>
+          <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+            Thank you for your interest in the <span className="font-semibold text-blue-600">{job.title}</span> position at <span className="font-semibold text-blue-600">{job.company}</span>.
+          </p>
+          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200 mb-8">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">What happens next?</h3>
+            <div className="space-y-3 text-left">
+              <div className="flex items-start">
+                <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                  <span className="text-sm font-semibold text-blue-600">1</span>
+                </div>
+                <p className="text-gray-700">We've received your application and will review it carefully.</p>
+              </div>
+              <div className="flex items-start">
+                <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                  <span className="text-sm font-semibold text-blue-600">2</span>
+                </div>
+                <p className="text-gray-700">Our team will contact you within 3-5 business days if your profile matches our requirements.</p>
+              </div>
+              <div className="flex items-start">
+                <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                  <span className="text-sm font-semibold text-blue-600">3</span>
+                </div>
+                <p className="text-gray-700">You may also receive an email confirmation shortly.</p>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     );

@@ -86,6 +86,9 @@ class ProcessStageResponse(BaseModel):
 
 class ProcessCandidateResponse(BaseModel):
     """Response model for process candidate."""
+    # Unique identifier for the candidate in this process
+    id: str = Field(..., description="Unique candidate ID in this process")
+    
     # Source identification
     application_source: str = Field(..., description="Source: 'resume_bank' or 'job_application'")
     

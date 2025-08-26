@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Filter, Users, Eye, Edit, Trash2, Plus, BarChart3, MapPin, Calendar, Star } from 'lucide-react';
 import ConfirmationModal from '../components/ui/ConfirmationModal';
+import Toast from '../components/ui/Toast';
 import { authenticatedFetch } from '../utils/api';
 import { API_ENDPOINTS } from '../config/api';
+import { ResumeBankSkeleton } from '../components/ui/SkeletonLoader';
 
 const ResumeBank = () => {
   const navigate = useNavigate();
@@ -22,6 +24,9 @@ const ResumeBank = () => {
     resumeId: null,
     resumeName: ''
   });
+  const [deletingResumeId, setDeletingResumeId] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [toast, setToast] = useState({ message: '', type: '', isVisible: false });
 
   useEffect(() => {
     fetchResumeBank();
@@ -46,6 +51,7 @@ const ResumeBank = () => {
 
   const fetchStats = async () => {
     try {
+      setStatsLoading(true);
       const response = await authenticatedFetch(API_ENDPOINTS.RESUME_BANK.STATS);
       if (response.ok) {
         const data = await response.json();
@@ -53,6 +59,8 @@ const ResumeBank = () => {
       }
     } catch (error) {
       console.error('Error fetching stats:', error);
+    } finally {
+      setStatsLoading(false);
     }
   };
 
@@ -72,10 +80,16 @@ const ResumeBank = () => {
     });
   };
 
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type, isVisible: true });
+    setTimeout(() => setToast(prev => ({ ...prev, isVisible: false })), 5000);
+  };
+
   const deleteResume = async () => {
     const { resumeId } = deleteModal;
     
     try {
+      setDeletingResumeId(resumeId);
       const response = await authenticatedFetch(API_ENDPOINTS.RESUME_BANK.DELETE(resumeId), {
         method: 'DELETE',
       });
@@ -83,12 +97,16 @@ const ResumeBank = () => {
       if (response.ok) {
         setResumes(resumes.filter(resume => resume.id !== resumeId));
         fetchStats(); // Refresh stats
+        closeDeleteModal();
+        showToast('Resume deleted successfully');
       } else {
         throw new Error('Failed to delete resume');
       }
     } catch (error) {
       console.error('Error deleting resume:', error);
-      alert('Failed to delete resume from bank');
+      showToast('Failed to delete resume from bank', 'error');
+    } finally {
+      setDeletingResumeId(null);
     }
   };
 
@@ -135,14 +153,7 @@ const ResumeBank = () => {
   });
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading resume bank...</p>
-        </div>
-      </div>
-    );
+    return <ResumeBankSkeleton />;
   }
 
   return (
@@ -164,7 +175,21 @@ const ResumeBank = () => {
       </div>
 
         {/* Stats Cards */}
-        {stats && (
+        {statsLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {[...Array(4)].map((_, index) => (
+              <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="flex items-center">
+                  <div className="w-8 h-8 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="ml-4 flex-1">
+                    <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
+                    <div className="h-8 bg-gray-200 rounded animate-pulse"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : stats && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="flex items-center">
@@ -310,10 +335,15 @@ const ResumeBank = () => {
                       </button>
                       <button
                         onClick={() => openDeleteModal(resume.id, resume.candidate_name)}
-                        className="p-1 text-gray-400 hover:text-red-600"
+                        disabled={deletingResumeId === resume.id}
+                        className="p-1 text-gray-400 hover:text-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
                         title="Delete resume"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        {deletingResumeId === resume.id ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -418,9 +448,18 @@ const ResumeBank = () => {
         onConfirm={deleteResume}
         title="Delete Resume"
         message={`Are you sure you want to delete "${deleteModal.resumeName}" from the resume bank? This action cannot be undone.`}
-        confirmText="Delete"
+        confirmText={deletingResumeId ? "Deleting..." : "Delete"}
         cancelText="Cancel"
         type="danger"
+        isLoading={!!deletingResumeId}
+      />
+
+      {/* Toast Notification */}
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={() => setToast(prev => ({ ...prev, isVisible: false }))}
       />
     </>
   );

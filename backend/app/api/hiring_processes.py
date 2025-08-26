@@ -325,11 +325,18 @@ async def add_candidate_to_process(
             logger.error(f"Resume does not belong to user: {candidate_data.resume_bank_entry_id}")
             raise HTTPException(status_code=403, detail="You can only add your own resumes to your processes")
         
-        # Check if candidate is already in this process
+        # Check if candidate is already in this process (enhanced check)
         for existing_candidate in process.candidates:
-            if str(existing_candidate.resume_bank_entry_id) == candidate_data.resume_bank_entry_id:
-                logger.warning(f"Candidate already in process: {candidate_data.resume_bank_entry_id}")
-                raise HTTPException(status_code=400, detail="Candidate is already in this process")
+            # Check by resume_bank_entry_id
+            if hasattr(existing_candidate, 'resume_bank_entry_id') and existing_candidate.resume_bank_entry_id:
+                if str(existing_candidate.resume_bank_entry_id) == candidate_data.resume_bank_entry_id:
+                    logger.warning(f"Candidate already in process (resume_bank_entry_id): {candidate_data.resume_bank_entry_id}")
+                    raise HTTPException(status_code=400, detail="This candidate is already in this process")
+            # Check by candidate email (additional safety check)
+            if hasattr(existing_candidate, 'candidate_email') and existing_candidate.candidate_email:
+                if existing_candidate.candidate_email.lower() == resume_entry.candidate_email.lower():
+                    logger.warning(f"Candidate already in process (email): {resume_entry.candidate_email}")
+                    raise HTTPException(status_code=400, detail="A candidate with this email is already in this process")
         
         # Add candidate to process
         updated_process = await repository.add_candidate_to_process(
@@ -408,6 +415,46 @@ async def move_candidate_stage(
         raise HTTPException(status_code=500, detail="Failed to move candidate")
 
 
+@router.put("/{process_id}/candidates/{candidate_id}/remove")
+async def remove_candidate_from_process(
+    process_id: str,
+    candidate_id: str,
+    current_user: UserDocument = Depends(get_current_user),
+    database = Depends(get_database)
+):
+    """
+    Remove a candidate from a hiring process.
+    
+    This will permanently remove the candidate from the process pipeline.
+    The candidate can be identified by either resume_bank_entry_id or job_application_id.
+    """
+    try:
+        repository = MongoDBRepository(database)
+        
+        # Verify the process exists and user has access
+        process = await repository.get_hiring_process_by_id(process_id, str(current_user.id))
+        if not process:
+            raise HTTPException(status_code=404, detail="Hiring process not found")
+        
+        # Remove the candidate
+        success = await repository.remove_candidate_from_process(
+            process_id=process_id,
+            user_id=str(current_user.id),
+            candidate_id=candidate_id
+        )
+        
+        if not success:
+            raise HTTPException(status_code=404, detail="Candidate not found in process")
+        
+        return {"message": "Candidate removed from process successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error removing candidate from process {process_id}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to remove candidate from process")
+
+
 # Helper Functions
 async def _convert_to_process_response(process, repository) -> HiringProcessResponse:
     """Convert a process document to response model."""
@@ -468,6 +515,7 @@ async def _convert_to_process_detail(process, repository) -> HiringProcessDetail
             if hasattr(candidate, 'resume_bank_entry_id'):
                 # Pydantic model
                 candidate_data = {
+                    'id': getattr(candidate, 'id', None),  # Include the unique ID
                     'application_source': getattr(candidate, 'application_source', 'resume_bank'),
                     'resume_bank_entry_id': candidate.resume_bank_entry_id,
                     'job_application_id': getattr(candidate, 'job_application_id', None),
@@ -485,6 +533,7 @@ async def _convert_to_process_detail(process, repository) -> HiringProcessDetail
             elif isinstance(candidate, dict):
                 # Raw dictionary
                 candidate_data = {
+                    'id': candidate.get('id'),  # Include the unique ID
                     'application_source': candidate.get('application_source', 'resume_bank'),
                     'resume_bank_entry_id': candidate.get('resume_bank_entry_id'),
                     'job_application_id': candidate.get('job_application_id'),
@@ -500,13 +549,31 @@ async def _convert_to_process_detail(process, repository) -> HiringProcessDetail
                     'candidate_location': candidate.get('candidate_location')
                 }
             
-            # Validate required fields (resume_bank_entry_id can be None for some legacy data)
+            # Validate required fields
+            # For resume bank candidates: need resume_bank_entry_id
+            # For job application candidates: need job_application_id
+            application_source = candidate_data.get('application_source', 'resume_bank')
+            
             if (candidate_data.get('current_stage_id') and 
                 candidate_data.get('status')):
-                valid_candidates.append(candidate_data)
-                logger.info(f"Valid candidate: {candidate_data.get('candidate_name')} -> Stage {candidate_data.get('current_stage_id')}")
+                
+                # Additional validation based on source
+                if application_source == 'resume_bank':
+                    if candidate_data.get('resume_bank_entry_id'):
+                        valid_candidates.append(candidate_data)
+                        logger.info(f"Valid resume bank candidate: {candidate_data.get('candidate_name')} -> Stage {candidate_data.get('current_stage_id')}")
+                    else:
+                        logger.warning(f"Resume bank candidate missing resume_bank_entry_id: {candidate_data}")
+                elif application_source == 'job_application':
+                    if candidate_data.get('job_application_id'):
+                        valid_candidates.append(candidate_data)
+                        logger.info(f"Valid job application candidate: {candidate_data.get('candidate_name')} -> Stage {candidate_data.get('current_stage_id')}")
+                    else:
+                        logger.warning(f"Job application candidate missing job_application_id: {candidate_data}")
+                else:
+                    logger.warning(f"Unknown application source: {application_source}")
             else:
-                logger.warning(f"Invalid candidate data: {candidate_data}")
+                logger.warning(f"Invalid candidate data - missing required fields: {candidate_data}")
                 
         except Exception as e:
             logger.warning(f"Skipping invalid candidate: {e}")
@@ -588,6 +655,7 @@ async def _convert_to_process_detail(process, repository) -> HiringProcessDetail
             resume_bank_entry_id_str = str(resume_bank_entry_id) if resume_bank_entry_id else "unknown"
             
             candidates.append(ProcessCandidateResponse(
+                id=candidate.get('id'),  # Use the unique ID we added to the database
                 application_source=application_source,
                 resume_bank_entry_id=resume_bank_entry_id_str if application_source == 'resume_bank' else None,
                 job_application_id=str(candidate.get('job_application_id')) if application_source == 'job_application' else None,

@@ -8,6 +8,7 @@ import ApplicationDetailModal from '../components/ApplicationDetailModal';
 import ProcessSelectionModal from '../components/ProcessSelectionModal';
 import Toast from '../components/ui/Toast';
 import { authenticatedFetch } from '../utils/api';
+import { DetailPageSkeleton } from '../components/ui/SkeletonLoader';
 
 const JobDetail = () => {
   const { id } = useParams();
@@ -24,6 +25,7 @@ const JobDetail = () => {
   const [deleteModal, setDeleteModal] = useState({
     isOpen: false
   });
+  const [deletingJob, setDeletingJob] = useState(false);
   const [toast, setToast] = useState({
     isVisible: false,
     message: '',
@@ -132,6 +134,7 @@ const JobDetail = () => {
 
   const deleteJob = async () => {
     try {
+      setDeletingJob(true);
       const response = await authenticatedFetch(`http://localhost:8000/api/v1/jobs/${id}`, {
         method: 'DELETE',
       });
@@ -147,6 +150,8 @@ const JobDetail = () => {
     } catch (error) {
       console.error('Error deleting job:', error);
       showToast('Failed to delete job posting', 'error');
+    } finally {
+      setDeletingJob(false);
     }
   };
 
@@ -320,14 +325,7 @@ const JobDetail = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading job details...</p>
-        </div>
-      </div>
-    );
+    return <DetailPageSkeleton title="Loading job details..." />;
   }
 
   if (error) {
@@ -416,10 +414,15 @@ const JobDetail = () => {
               </button>
               <button
                 onClick={openDeleteModal}
-                className="flex items-center px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                disabled={deletingJob}
+                className="flex items-center px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete
+                {deletingJob ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                ) : (
+                  <Trash2 className="w-4 h-4 mr-2" />
+                )}
+                {deletingJob ? 'Deleting...' : 'Delete'}
               </button>
             </div>
           </div>
@@ -620,9 +623,10 @@ const JobDetail = () => {
         onConfirm={deleteJob}
         title="Delete Job Posting"
         message={`Are you sure you want to delete the job posting "${job?.title}"? This action cannot be undone.`}
-        confirmText="Delete"
+        confirmText={deletingJob ? "Deleting..." : "Delete"}
         cancelText="Cancel"
         type="danger"
+        isLoading={deletingJob}
       />
       
       <ApplicationFormBuilder

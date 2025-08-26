@@ -53,9 +53,7 @@ export const handleApiError = (error) => {
     switch (error.status) {
       case HTTP_STATUS.UNAUTHORIZED:
         // Handle unauthorized - redirect to login
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
+        handleTokenExpiry();
         break;
       case HTTP_STATUS.FORBIDDEN:
         // Handle forbidden
@@ -85,7 +83,8 @@ export const isAuthError = (error) => {
 
 // Utility function to add authentication headers to fetch calls
 export const authenticatedFetch = async (url, options = {}) => {
-  const token = localStorage.getItem('accessToken');
+  // Get a valid token (with refresh if needed)
+  const token = await getValidToken();
   
   const headers = {
     'Content-Type': 'application/json',
@@ -107,7 +106,7 @@ export const authenticatedFetch = async (url, options = {}) => {
     if (refreshToken) {
       try {
         // Try to refresh the token
-        const refreshResponse = await fetch('/api/v1/auth/refresh', {
+        const refreshResponse = await fetch('http://localhost:8000/api/v1/auth/refresh', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -128,18 +127,83 @@ export const authenticatedFetch = async (url, options = {}) => {
             ...options,
             headers,
           });
+        } else {
+          // Refresh token is also invalid, redirect to login
+          handleTokenExpiry();
+          throw new Error('Session expired. Please login again.');
         }
       } catch (refreshError) {
         // Refresh failed, redirect to login
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('tokenExpiresAt');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
+        handleTokenExpiry();
         throw new Error('Session expired. Please login again.');
       }
+    } else {
+      // No refresh token available, redirect to login
+      handleTokenExpiry();
+      throw new Error('Session expired. Please login again.');
     }
   }
 
   return response;
+};
+
+// Helper function to handle token expiry consistently
+export const handleTokenExpiry = () => {
+  // Clear all auth-related data
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+  localStorage.removeItem('tokenExpiresAt');
+  localStorage.removeItem('user');
+  
+  // Redirect to login page
+  window.location.href = '/login';
+};
+
+// Helper function to check if token is expired or about to expire
+export const isTokenExpired = () => {
+  const tokenExpiresAt = localStorage.getItem('tokenExpiresAt');
+  if (!tokenExpiresAt) return true;
+  
+  // Check if token expires in the next 30 seconds (buffer time)
+  const bufferTime = 30 * 1000; // 30 seconds
+  return Date.now() > (parseInt(tokenExpiresAt) - bufferTime);
+};
+
+// Helper function to get a valid token (with refresh if needed)
+export const getValidToken = async () => {
+  const accessToken = localStorage.getItem('accessToken');
+  const refreshToken = localStorage.getItem('refreshToken');
+  
+  if (!accessToken || !refreshToken) {
+    handleTokenExpiry();
+    return null;
+  }
+  
+  // If token is expired, try to refresh it
+  if (isTokenExpired()) {
+    try {
+      const refreshResponse = await fetch('http://localhost:8000/api/v1/auth/refresh', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+
+      if (refreshResponse.ok) {
+        const refreshData = await refreshResponse.json();
+        localStorage.setItem('accessToken', refreshData.access_token);
+        localStorage.setItem('tokenExpiresAt', Date.now() + (refreshData.expires_in * 1000));
+        return refreshData.access_token;
+      } else {
+        handleTokenExpiry();
+        return null;
+      }
+    } catch (error) {
+      handleTokenExpiry();
+      return null;
+    }
+  }
+  
+  return accessToken;
 }; 

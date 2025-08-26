@@ -73,7 +73,8 @@ export const API_ENDPOINTS = {
     DELETE: (id) => `${API_URL}/hiring-processes/${id}`,
     STATS: `${API_URL}/hiring-processes/stats`,
     ADD_CANDIDATE: (id) => `${API_URL}/hiring-processes/${id}/candidates`,
-    MOVE_CANDIDATE: (processId, candidateId) => `${API_URL}/hiring-processes/${processId}/candidates/${candidateId}/move`
+    MOVE_CANDIDATE: (processId, candidateId) => `${API_URL}/hiring-processes/${processId}/candidates/${candidateId}/move`,
+    REMOVE_CANDIDATE: (processId, candidateId) => `${API_URL}/hiring-processes/${processId}/candidates/${candidateId}/remove`
   },
   
   // Meetings

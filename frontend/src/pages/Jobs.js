@@ -4,6 +4,7 @@ import { Plus, Search, Filter, Eye, Edit, Trash2, Users, Calendar } from 'lucide
 import ConfirmationModal from '../components/ui/ConfirmationModal';
 import Toast from '../components/ui/Toast';
 import { authenticatedFetch } from '../utils/api';
+import { JobsSkeleton } from '../components/ui/SkeletonLoader';
 
 const Jobs = () => {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ const Jobs = () => {
     jobId: null,
     jobTitle: ''
   });
+  const [deletingJobId, setDeletingJobId] = useState(null);
   const [toast, setToast] = useState({
     isVisible: false,
     message: '',
@@ -79,6 +81,7 @@ const Jobs = () => {
     const { jobId } = deleteModal;
     
     try {
+      setDeletingJobId(jobId);
       const response = await authenticatedFetch(`http://localhost:8000/api/v1/jobs/${jobId}`, {
         method: 'DELETE',
       });
@@ -86,12 +89,15 @@ const Jobs = () => {
       if (response.ok) {
         setJobs(jobs.filter(job => job.id !== jobId));
         showToast('Job posting deleted successfully', 'success');
+        closeDeleteModal();
       } else {
         throw new Error('Failed to delete job');
       }
     } catch (error) {
       console.error('Error deleting job:', error);
       showToast('Failed to delete job posting', 'error');
+    } finally {
+      setDeletingJobId(null);
     }
   };
 
@@ -142,14 +148,7 @@ const Jobs = () => {
   });
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading jobs...</p>
-        </div>
-      </div>
-    );
+    return <JobsSkeleton />;
   }
 
   return (
@@ -251,10 +250,15 @@ const Jobs = () => {
                       </button>
                       <button
                         onClick={() => openDeleteModal(job.id, job.title)}
-                        className="p-1 text-gray-400 hover:text-red-600"
+                        disabled={deletingJobId === job.id}
+                        className="p-1 text-gray-400 hover:text-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
                         title="Delete job"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        {deletingJobId === job.id ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -324,9 +328,10 @@ const Jobs = () => {
         onConfirm={deleteJob}
         title="Delete Job Posting"
         message={`Are you sure you want to delete the job posting "${deleteModal.jobTitle}"? This action cannot be undone.`}
-        confirmText="Delete"
+        confirmText={deletingJobId ? "Deleting..." : "Delete"}
         cancelText="Cancel"
         type="danger"
+        isLoading={!!deletingJobId}
       />
       <Toast
         isVisible={toast.isVisible}

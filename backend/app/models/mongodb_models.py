@@ -197,6 +197,9 @@ class ProcessStage(BaseModel):
 
 class ProcessCandidate(BaseModel):
     """Candidate assigned to a hiring process."""
+    # Unique identifier for this candidate in this process
+    id: Optional[str] = Field(None, description="Unique candidate ID in this process")
+    
     # Source identification
     application_source: str = Field(..., description="Source: 'resume_bank' or 'job_application'")
     

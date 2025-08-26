@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, Plus, Check, Building, Users, Calendar } from 'lucide-react';
+import { SimpleLoader } from './ui/SkeletonLoader';
 
 const ProcessSelectionModal = ({ 
   isOpen, 
@@ -145,10 +146,7 @@ const ProcessSelectionModal = ({
             </h3>
             
             {loading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="text-gray-500 mt-2">Loading processes...</p>
-              </div>
+              <SimpleLoader message="Loading processes..." />
             ) : processes.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 <Users size={48} className="mx-auto mb-3 text-gray-300" />

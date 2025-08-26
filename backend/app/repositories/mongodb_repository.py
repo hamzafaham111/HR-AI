@@ -561,8 +561,28 @@ class MongoDBRepository:
             logger.error(f"Error fetching resume bank entry: {e}")
             return None
         
-        # Create candidate data with proper structure
+        # Check if candidate is already in this process (improved duplicate check)
+        existing_process = await self.get_hiring_process_by_id(process_id, user_id)
+        if existing_process:
+            for existing_candidate in existing_process.candidates:
+                # Check by resume_bank_entry_id
+                if hasattr(existing_candidate, 'resume_bank_entry_id') and existing_candidate.resume_bank_entry_id:
+                    if str(existing_candidate.resume_bank_entry_id) == resume_bank_entry_id:
+                        logger.warning(f"Candidate already exists in process (resume_bank_entry_id): {resume_bank_entry_id}")
+                        return None
+                # Check by candidate email (additional safety check)
+                if hasattr(existing_candidate, 'candidate_email') and existing_candidate.candidate_email:
+                    if existing_candidate.candidate_email.lower() == resume_entry.candidate_email.lower():
+                        logger.warning(f"Candidate already exists in process (email): {resume_entry.candidate_email}")
+                        return None
+        
+        # Generate unique candidate ID for this process
+        import uuid
+        candidate_id = str(uuid.uuid4())
+        
+        # Create candidate data with proper structure and unique ID
         candidate_data = {
+            "id": candidate_id,  # Unique ID for this candidate in this process
             "application_source": "resume_bank",
             "resume_bank_entry_id": resume_object_id,
             "current_stage_id": initial_stage_id,
@@ -587,14 +607,6 @@ class MongoDBRepository:
             "candidate_location": resume_entry.candidate_location
         }
         
-        # Check if candidate is already in this process
-        existing_process = await self.get_hiring_process_by_id(process_id, user_id)
-        if existing_process:
-            for existing_candidate in existing_process.candidates:
-                if str(existing_candidate.resume_bank_entry_id) == resume_bank_entry_id:
-                    logger.warning(f"Candidate already exists in process: {resume_bank_entry_id}")
-                    return None
-        
         # Add candidate to process
         result = await self.hiring_processes.update_one(
             {"_id": process_object_id, "user_id": user_object_id},
@@ -605,7 +617,7 @@ class MongoDBRepository:
         )
         
         if result.modified_count > 0:
-            logger.info(f"Successfully added candidate {resume_entry.candidate_name} to process {process_id}")
+            logger.info(f"Successfully added candidate {resume_entry.candidate_name} (ID: {candidate_id}) to process {process_id}")
             return await self.get_hiring_process_by_id(process_id, user_id)
         else:
             logger.error(f"Failed to add candidate to process: {process_id}")
@@ -676,42 +688,114 @@ class MongoDBRepository:
             "moved_by": user_id
         }
         
-        # Build the query to find the candidate
-        candidate_query = {
-            "_id": process_object_id,
-            "user_id": user_object_id
-        }
+        # Use arrayFilters for more precise targeting
+        # This approach is more reliable than positional operator
+        array_filters = []
         
-        # Add the candidate identifier to the query
         if hasattr(current_candidate, 'resume_bank_entry_id') and current_candidate.resume_bank_entry_id:
-            candidate_query["candidates.resume_bank_entry_id"] = current_candidate.resume_bank_entry_id
+            array_filters.append({"candidate.resume_bank_entry_id": current_candidate.resume_bank_entry_id})
         elif hasattr(current_candidate, 'job_application_id') and current_candidate.job_application_id:
-            candidate_query["candidates.job_application_id"] = current_candidate.job_application_id
+            array_filters.append({"candidate.job_application_id": current_candidate.job_application_id})
         elif isinstance(current_candidate, dict):
             if current_candidate.get('resume_bank_entry_id'):
-                candidate_query["candidates.resume_bank_entry_id"] = current_candidate['resume_bank_entry_id']
+                array_filters.append({"candidate.resume_bank_entry_id": current_candidate['resume_bank_entry_id']})
             elif current_candidate.get('job_application_id'):
-                candidate_query["candidates.job_application_id"] = current_candidate['job_application_id']
+                array_filters.append({"candidate.job_application_id": current_candidate['job_application_id']})
+        
+        if not array_filters:
+            logger.error(f"No valid candidate identifier found for candidate_id: {candidate_id}")
+            return None
         
         result = await self.hiring_processes.update_one(
-            candidate_query,
+            {
+                "_id": process_object_id,
+                "user_id": user_object_id
+            },
             {
                 "$set": {
-                    "candidates.$.current_stage_id": new_stage_id,
-                    "candidates.$.status": new_status,
-                    "candidates.$.notes": notes,
-                    "candidates.$.updated_at": datetime.utcnow(),
+                    "candidates.$[candidate].current_stage_id": new_stage_id,
+                    "candidates.$[candidate].status": new_status,
+                    "candidates.$[candidate].notes": notes,
+                    "candidates.$[candidate].updated_at": datetime.utcnow(),
                     "updated_at": datetime.utcnow()
                 },
                 "$push": {
-                    "candidates.$.stage_history": history_entry
+                    "candidates.$[candidate].stage_history": history_entry
                 }
-            }
+            },
+            array_filters=array_filters
         )
         
         if result.modified_count > 0:
             return await self.get_hiring_process_by_id(process_id, user_id)
         return None
+    
+    async def remove_candidate_from_process(
+        self,
+        process_id: str,
+        user_id: str,
+        candidate_id: str
+    ) -> bool:
+        """Remove a candidate from a hiring process."""
+        logger.info(f"Attempting to remove candidate {candidate_id} from process {process_id}")
+        try:
+            process_object_id = ObjectId(process_id)
+            user_object_id = ObjectId(user_id)
+        except Exception as e:
+            logger.error(f"Invalid ObjectId format: {e}")
+            return False
+        
+        # Try to remove candidate by unique ID first (new approach)
+        result = await self.hiring_processes.update_one(
+            {
+                "_id": process_object_id,
+                "user_id": user_object_id
+            },
+            {
+                "$pull": {
+                    "candidates": {"id": candidate_id}
+                },
+                "$set": {"updated_at": datetime.utcnow()}
+            }
+        )
+        
+        # If no candidate was removed by ID, try legacy approach (resume_bank_entry_id)
+        if result.modified_count == 0:
+            try:
+                candidate_object_id = ObjectId(candidate_id)
+                result = await self.hiring_processes.update_one(
+                    {
+                        "_id": process_object_id,
+                        "user_id": user_object_id
+                    },
+                    {
+                        "$pull": {
+                            "candidates": {"resume_bank_entry_id": candidate_object_id}
+                        },
+                        "$set": {"updated_at": datetime.utcnow()}
+                    }
+                )
+                
+                # If still no candidate was removed, try job_application_id
+                if result.modified_count == 0:
+                    result = await self.hiring_processes.update_one(
+                        {
+                            "_id": process_object_id,
+                            "user_id": user_object_id
+                        },
+                        {
+                            "$pull": {
+                                "candidates": {"job_application_id": candidate_object_id}
+                            },
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
+            except Exception as e:
+                logger.error(f"Error in legacy candidate removal: {e}")
+                return False
+        
+        logger.info(f"Update result: modified_count={result.modified_count}, matched_count={result.matched_count}")
+        return result.modified_count > 0
     
     async def get_hiring_process_stats_by_user(self, user_id: str) -> Dict[str, Any]:
         """Get hiring process statistics for a user."""

@@ -157,14 +157,27 @@ class JobApplicationService:
             
             # Add candidate to hiring process
             # For job applications, we'll use the application data instead of resume bank data
+            import uuid
+            candidate_id = str(uuid.uuid4())
+            
             candidate_data = {
+                "id": candidate_id,  # Unique ID for this candidate in this process
                 "application_source": "job_application",
                 "job_application_id": application.id,
                 "job_id": application.job_id,
                 "current_stage_id": None,  # Will be set to first stage
                 "status": "pending",
                 "notes": notes,
-                "stage_history": [],
+                "stage_history": [{
+                    "from_stage_id": None,
+                    "from_stage_name": None,
+                    "to_stage_id": None,  # Will be set to first stage
+                    "to_stage_name": "Initial Assignment",
+                    "status": "pending",
+                    "notes": notes,
+                    "moved_at": datetime.utcnow(),
+                    "moved_by": assigned_by
+                }],
                 "assigned_at": datetime.utcnow(),
                 "updated_at": datetime.utcnow(),
                 # Use application data for candidate information
@@ -184,6 +197,8 @@ class JobApplicationService:
             # Find the first stage (lowest order)
             first_stage = min(hiring_process.stages, key=lambda s: s.order)
             candidate_data["current_stage_id"] = first_stage.id
+            # Update the stage history with the correct stage ID
+            candidate_data["stage_history"][0]["to_stage_id"] = first_stage.id
             
             # Add candidate to hiring process
             result = await hiring_repository.hiring_processes.update_one(

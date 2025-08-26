@@ -26,6 +26,7 @@ import {
 import { authenticatedFetch } from '../utils/api';
 import { API_ENDPOINTS } from '../config/api';
 import Toast from '../components/ui/Toast';
+import ConfirmationModal from '../components/ui/ConfirmationModal';
 
 const HiringProcessDetail = () => {
   const { id } = useParams();
@@ -44,6 +45,15 @@ const HiringProcessDetail = () => {
   const [addingCandidates, setAddingCandidates] = useState({}); // Track loading state per candidate
   const [candidateMenus, setCandidateMenus] = useState({}); // Track which candidate menus are open
   const [movingCandidates, setMovingCandidates] = useState({}); // Track candidates being moved
+  const [deletingCandidates, setDeletingCandidates] = useState({}); // Track candidates being deleted
+  const [deleteCandidateModal, setDeleteCandidateModal] = useState({
+    isOpen: false,
+    candidateId: null,
+    candidateName: ''
+  });
+  const [deleteProcessModal, setDeleteProcessModal] = useState({
+    isOpen: false
+  });
 
   const showToastMessage = (message, type = 'success') => {
     setToastMessage(message);
@@ -51,11 +61,15 @@ const HiringProcessDetail = () => {
     setShowToast(true);
   };
 
-  const deleteProcess = async () => {
-    if (!window.confirm('Are you sure you want to delete this hiring process? This action cannot be undone.')) {
-      return;
-    }
+  const openDeleteProcessModal = () => {
+    setDeleteProcessModal({ isOpen: true });
+  };
 
+  const closeDeleteProcessModal = () => {
+    setDeleteProcessModal({ isOpen: false });
+  };
+
+  const deleteProcess = async () => {
     try {
       setDeleting(true);
       const response = await authenticatedFetch(API_ENDPOINTS.HIRING_PROCESSES.DELETE(id), {
@@ -64,6 +78,7 @@ const HiringProcessDetail = () => {
       
       if (response.ok) {
         showToastMessage('Hiring process deleted successfully');
+        closeDeleteProcessModal();
         setTimeout(() => {
           navigate('/hiring-processes');
         }, 1500);
@@ -161,6 +176,63 @@ const HiringProcessDetail = () => {
     }
   };
 
+  // Function to open delete candidate modal
+  const openDeleteCandidateModal = (candidateId, candidateName) => {
+    setDeleteCandidateModal({
+      isOpen: true,
+      candidateId,
+      candidateName
+    });
+  };
+
+  // Function to close delete candidate modal
+  const closeDeleteCandidateModal = () => {
+    setDeleteCandidateModal({
+      isOpen: false,
+      candidateId: null,
+      candidateName: ''
+    });
+  };
+
+  // Function to delete candidate from process
+  const deleteCandidateFromProcess = async () => {
+    const { candidateId } = deleteCandidateModal;
+    
+    try {
+      setDeletingCandidates(prev => ({ ...prev, [candidateId]: true }));
+      
+      // Use the candidate's unique ID if available, otherwise fall back to the provided ID
+      const candidate = process.candidates.find(c => 
+        c.id === candidateId || 
+        c.resume_bank_entry_id === candidateId || 
+        c.job_application_id === candidateId
+      );
+      
+      const candidateIdToUse = candidate?.id || candidateId;
+      
+      const response = await authenticatedFetch(
+        API_ENDPOINTS.HIRING_PROCESSES.REMOVE_CANDIDATE(id, candidateIdToUse),
+        {
+          method: 'PUT'
+        }
+      );
+      
+      if (response.ok) {
+        showToastMessage('Candidate removed from process successfully');
+        closeDeleteCandidateModal();
+        fetchProcessDetail(); // Refresh the process data
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `Failed to remove candidate: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Error removing candidate:', error);
+      showToastMessage(error.message || 'Failed to remove candidate', 'error');
+    } finally {
+      setDeletingCandidates(prev => ({ ...prev, [candidateId]: false }));
+    }
+  };
+
   // Function to update candidate status independently (without changing stage)
   const updateCandidateStatus = async (candidateId, newStatus) => {
     try {
@@ -235,8 +307,34 @@ const HiringProcessDetail = () => {
     }
   };
 
+  // Helper function to check if a candidate is already in the process
+  const isCandidateAlreadyInProcess = (resumeId) => {
+    if (!process || !process.candidates) return false;
+    
+    // Find the resume to get candidate email for additional check
+    const resume = resumes.find(r => r.id === resumeId || r._id === resumeId);
+    
+    return process.candidates.some(candidate => {
+      // Check by resume_bank_entry_id
+      if (candidate.resume_bank_entry_id === resumeId) {
+        return true;
+      }
+      // Check by email (additional safety check)
+      if (resume && candidate.candidate_email && resume.candidate_email) {
+        return candidate.candidate_email.toLowerCase() === resume.candidate_email.toLowerCase();
+      }
+      return false;
+    });
+  };
+
   const addCandidateToProcess = async (resumeId) => {
     try {
+      // Check if candidate is already in the process (enhanced frontend validation)
+      if (isCandidateAlreadyInProcess(resumeId)) {
+        showToastMessage('This candidate is already in the process', 'error');
+        return;
+      }
+      
       // Set loading state for this specific candidate
       setAddingCandidates(prev => ({ ...prev, [resumeId]: true }));
       
@@ -252,10 +350,37 @@ const HiringProcessDetail = () => {
       
       if (response.ok) {
         showToastMessage('Candidate added successfully');
+        // Immediately update the process state to reflect the new candidate
+        if (process) {
+          const newCandidate = {
+            resume_bank_entry_id: resumeId,
+            candidate_name: resumes.find(r => r.id === resumeId || r._id === resumeId)?.candidate_name || 'Unknown Candidate',
+            candidate_email: resumes.find(r => r.id === resumeId || r._id === resumeId)?.candidate_email || '',
+            status: 'pending',
+            current_stage_id: process.stages[0]?.id,
+            assigned_at: new Date().toISOString(),
+            application_source: 'resume_bank'
+          };
+          setProcess(prev => ({
+            ...prev,
+            candidates: [...(prev.candidates || []), newCandidate],
+            total_candidates: (prev.total_candidates || 0) + 1,
+            active_candidates: (prev.active_candidates || 0) + 1
+          }));
+        }
         closeAddCandidateModal();
         fetchProcessDetail(); // Refresh the process data
       } else {
         const errorData = await response.json().catch(() => ({}));
+        
+        // Handle specific 400 error for already added candidate
+        if (response.status === 400 && errorData.detail && errorData.detail.includes('already in this process')) {
+          showToastMessage('This candidate is already in the process', 'error');
+          // Refresh the process data to ensure UI is up to date
+          fetchProcessDetail();
+          return;
+        }
+        
         throw new Error(errorData.detail || `Failed to add candidate: ${response.status}`);
       }
     } catch (error) {
@@ -318,6 +443,9 @@ const HiringProcessDetail = () => {
       
       if (response.ok) {
         const data = await response.json();
+        console.log('Process data received:', data);
+        console.log('Candidates:', data.candidates);
+        console.log('Stages:', data.stages);
         setProcess(data);
       } else {
         console.error('Failed to fetch process details:', response.status);
@@ -533,6 +661,7 @@ const HiringProcessDetail = () => {
                   .sort((a, b) => a.order - b.order)
                   .map((stage, index) => {
                     const stageCandidates = process.candidates?.filter(c => c.current_stage_id === stage.id) || [];
+                    console.log(`Stage ${stage.name} (${stage.id}):`, stageCandidates);
                     const isLastStage = index === process.stages.length - 1;
                     
                     return (
@@ -574,7 +703,7 @@ const HiringProcessDetail = () => {
                             {stageCandidates.map((candidate, index) => {
                               const currentStage = getCurrentStageInfo(candidate);
                               return (
-                                <div key={`${candidate.resume_bank_entry_id || candidate.job_application_id || 'unknown'}-${candidate.candidate_email}-${index}`} className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-lg transition-all duration-300 hover:border-primary-300 hover:scale-[1.02] relative group">
+                                <div key={`${candidate.resume_bank_entry_id || candidate.job_application_id || 'unknown'}-${candidate.candidate_email}-${index}`} className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-lg transition-all duration-300 hover:border-primary-300 hover:scale-[1.02] relative group" style={{ zIndex: 1 }}>
                                   {/* Header with Avatar and Basic Info */}
                                   <div className="flex items-start justify-between mb-4">
                                     <div className="flex items-center space-x-3 flex-1">
@@ -706,7 +835,7 @@ const HiringProcessDetail = () => {
 
                                           {/* Dropdown Menu */}
                                           {candidateMenus[candidateId] && (
-                                            <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl z-10 border border-gray-200 overflow-hidden">
+                                            <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl z-[99999] border border-gray-200 overflow-hidden" style={{ zIndex: 99999 }}>
                                                                                               <div className="py-1">
                                                   {/* Move to Stage Section */}
                                                   <div className="px-4 py-3 text-xs font-semibold text-gray-700 border-b border-gray-100 bg-gray-50 uppercase tracking-wide">
@@ -778,6 +907,22 @@ const HiringProcessDetail = () => {
                                               </div>
                                             </div>
                                           )}
+                                          
+                                          {/* Delete Candidate Section */}
+                                          <div className="border-t border-gray-100 mt-1">
+                                            <div className="px-4 py-3 text-xs font-semibold text-gray-700 bg-gray-50 uppercase tracking-wide">
+                                              Actions
+                                            </div>
+                                            <button
+                                              onClick={() => openDeleteCandidateModal(
+                                                candidate.resume_bank_entry_id || candidate.job_application_id,
+                                                candidate.candidate_name
+                                              )}
+                                              className="block w-full text-left px-4 py-3 text-sm text-red-700 hover:bg-red-50 transition-colors"
+                                            >
+                                              🗑️ Remove from Process
+                                            </button>
+                                          </div>
                                         </div>
                                       </div>
                                     )}
@@ -904,7 +1049,7 @@ const HiringProcessDetail = () => {
               </button>
               
               <button 
-                onClick={deleteProcess}
+                onClick={openDeleteProcessModal}
                 disabled={deleting}
                 className="w-full bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white px-4 py-2 rounded-lg inline-flex items-center justify-center space-x-2 transition-colors"
               >
@@ -1064,27 +1209,37 @@ const HiringProcessDetail = () => {
                         
                         {/* Action Button */}
                         <div className="ml-4">
-                          <button
-                            onClick={() => addCandidateToProcess(resume.id)}
-                            disabled={addingCandidates[resume.id]}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors inline-flex items-center space-x-2 ${
-                              addingCandidates[resume.id]
-                                ? 'bg-primary-400 cursor-not-allowed'
-                                : 'bg-primary-600 hover:bg-primary-700'
-                            } text-white`}
-                          >
-                            {addingCandidates[resume.id] ? (
-                              <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                <span>Adding...</span>
-                              </>
-                            ) : (
-                              <>
-                                <Plus className="w-4 h-4" />
-                                <span>Add</span>
-                              </>
-                            )}
-                          </button>
+                          {isCandidateAlreadyInProcess(resume.id) ? (
+                            <button
+                              disabled={true}
+                              className="px-4 py-2 rounded-lg text-sm font-medium transition-colors inline-flex items-center space-x-2 bg-gray-400 cursor-not-allowed text-white"
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                              <span>Already Added</span>
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => addCandidateToProcess(resume.id)}
+                              disabled={addingCandidates[resume.id]}
+                              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors inline-flex items-center space-x-2 ${
+                                addingCandidates[resume.id]
+                                  ? 'bg-primary-400 cursor-not-allowed'
+                                  : 'bg-primary-600 hover:bg-primary-700'
+                              } text-white`}
+                            >
+                              {addingCandidates[resume.id] ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                  <span>Adding...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Plus className="w-4 h-4" />
+                                  <span>Add</span>
+                                </>
+                              )}
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1104,6 +1259,31 @@ const HiringProcessDetail = () => {
           onClose={() => setShowToast(false)}
         />
       )}
+
+      {/* Delete Process Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={deleteProcessModal.isOpen}
+        onClose={closeDeleteProcessModal}
+        onConfirm={deleteProcess}
+        title="Delete Hiring Process"
+        message={`Are you sure you want to delete the hiring process "${process?.process_name}"? This action cannot be undone.`}
+        confirmText={deleting ? "Deleting..." : "Delete"}
+        cancelText="Cancel"
+        type="danger"
+        isLoading={deleting}
+      />
+
+      {/* Delete Candidate Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={deleteCandidateModal.isOpen}
+        onClose={closeDeleteCandidateModal}
+        onConfirm={deleteCandidateFromProcess}
+        title="Remove Candidate from Process"
+        message={`Are you sure you want to remove "${deleteCandidateModal.candidateName}" from this hiring process? This action cannot be undone.`}
+        confirmText="Remove"
+        cancelText="Cancel"
+        type="danger"
+      />
     </div>
   );
 };

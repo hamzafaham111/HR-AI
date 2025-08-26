@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { handleTokenExpiry } from '../../utils/api';
 
 const ProtectedRoute = ({ children }) => {
   const { user, isLoading } = useAuth();
@@ -19,11 +20,9 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (!user || !isTokenValid) {
-    // Clear invalid tokens
+    // Clear invalid tokens and redirect to login
     if (!isTokenValid) {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('tokenExpiresAt');
+      handleTokenExpiry();
     }
     return <Navigate to="/login" replace />;
   }

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { authenticatedFetch } from '../../utils/api';
+import { authenticatedFetch, handleTokenExpiry } from '../../utils/api';
 import { API_ENDPOINTS } from '../../config/api';
 
 // Create axios instance with base configuration
@@ -55,15 +55,17 @@ api.interceptors.response.use(
             const originalRequest = error.config;
             originalRequest.headers.Authorization = `Bearer ${refreshResponse.data.access_token}`;
             return api(originalRequest);
+          } else {
+            // Refresh token is also invalid, redirect to login
+            handleTokenExpiry();
           }
         } catch (refreshError) {
           // Refresh failed, redirect to login
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('tokenExpiresAt');
-          localStorage.removeItem('user');
-          window.location.href = '/login';
+          handleTokenExpiry();
         }
+      } else {
+        // No refresh token available, redirect to login
+        handleTokenExpiry();
       }
     }
     

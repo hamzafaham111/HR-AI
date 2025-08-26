@@ -23,6 +23,7 @@ import { meetingsAPI } from '../services/api/api';
 import { ROUTES } from '../constants/routes';
 import ConfirmationModal from '../components/ui/ConfirmationModal';
 import Toast from '../components/ui/Toast';
+import { DetailPageSkeleton } from '../components/ui/SkeletonLoader';
 
 const Meetings = () => {
   const navigate = useNavigate();
@@ -34,6 +35,7 @@ const Meetings = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [meetingToDelete, setMeetingToDelete] = useState(null);
+  const [deletingMeetingId, setDeletingMeetingId] = useState(null);
   const [toast, setToast] = useState(null);
 
   const statusOptions = [
@@ -257,11 +259,7 @@ const Meetings = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-500"></div>
-      </div>
-    );
+    return <DetailPageSkeleton title="Loading meetings..." />;
   }
 
   return (

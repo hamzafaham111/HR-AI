@@ -21,6 +21,7 @@ import {
 import { authenticatedFetch } from '../utils/api';
 import { API_ENDPOINTS } from '../config/api';
 import Toast from '../components/ui/Toast';
+import ConfirmationModal from '../components/ui/ConfirmationModal';
 
 const HiringProcesses = () => {
   const [processes, setProcesses] = useState([]);
@@ -29,6 +30,12 @@ const HiringProcesses = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [toast, setToast] = useState({ message: '', type: '', isVisible: false });
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    processId: null,
+    processName: ''
+  });
+  const [deletingProcessId, setDeletingProcessId] = useState(null);
 
   // Process status options
   const statusOptions = [
@@ -126,18 +133,34 @@ const HiringProcesses = () => {
     }
   };
 
-  const deleteProcess = async (processId) => {
-    if (!window.confirm('Are you sure you want to delete this hiring process? This action cannot be undone.')) {
-      return;
-    }
+  const openDeleteModal = (processId, processName) => {
+    setDeleteModal({
+      isOpen: true,
+      processId,
+      processName
+    });
+  };
 
+  const closeDeleteModal = () => {
+    setDeleteModal({
+      isOpen: false,
+      processId: null,
+      processName: ''
+    });
+  };
+
+  const deleteProcess = async () => {
+    const { processId } = deleteModal;
+    
     try {
+      setDeletingProcessId(processId);
       const response = await authenticatedFetch(API_ENDPOINTS.HIRING_PROCESSES.DELETE(processId), {
         method: 'DELETE'
       });
       
       if (response.ok) {
         showToast('Hiring process deleted successfully');
+        closeDeleteModal();
         fetchProcesses();
         fetchStats();
       } else {
@@ -146,6 +169,8 @@ const HiringProcesses = () => {
     } catch (error) {
       console.error('Error deleting process:', error);
       showToast('Failed to delete hiring process', 'error');
+    } finally {
+      setDeletingProcessId(null);
     }
   };
 
@@ -377,11 +402,16 @@ const HiringProcesses = () => {
                       <Eye className="w-5 h-5" />
                     </Link>
                     <button
-                      onClick={() => deleteProcess(process.id)}
-                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+                      onClick={() => openDeleteModal(process.id, process.process_name)}
+                      disabled={deletingProcessId === process.id}
+                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                       title="Delete Process"
                     >
-                      <Trash2 className="w-5 h-5" />
+                      {deletingProcessId === process.id ? (
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-600"></div>
+                      ) : (
+                        <Trash2 className="w-5 h-5" />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -459,6 +489,19 @@ const HiringProcesses = () => {
           ))
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={deleteModal.isOpen}
+        onClose={closeDeleteModal}
+        onConfirm={deleteProcess}
+        title="Delete Hiring Process"
+        message={`Are you sure you want to delete the hiring process "${deleteModal.processName}"? This action cannot be undone.`}
+        confirmText={deletingProcessId ? "Deleting..." : "Delete"}
+        cancelText="Cancel"
+        type="danger"
+        isLoading={!!deletingProcessId}
+      />
 
       {/* Toast Notification */}
       <Toast
