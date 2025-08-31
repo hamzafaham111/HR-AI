@@ -858,3 +858,11 @@ If you have questions or need clarification on any part, feel free to ask!
 
 
 
+Pending Tasks:
+- We have to fix the resume bank text extraction and parsing issue.
+----- [
+    right now the upload resume to resume bank functionality works fine but it does not extract the data properly, in 50% of the cases it does not exxtract the correct data, insted it uses "unKnown" for everything it does not find or extract from the file 
+    
+    right now we are using some pdf text extractors but if ther is a better way of doing it though AI or without AI, will use it.
+    
+    ]
