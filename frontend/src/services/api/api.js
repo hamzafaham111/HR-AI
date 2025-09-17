@@ -80,13 +80,15 @@ export const dashboardAPI = {
   // Get dashboard overview
   getOverview: async () => {
     const response = await api.get('/api/v1/dashboard/overview');
-    return response.data;
+    // Backend returns { success: true, data: {...} }
+    return response.data.data || response.data;
   },
 
   // Get statistics
   getStatistics: async () => {
     const response = await api.get('/api/v1/dashboard/statistics');
-    return response.data;
+    // Backend returns { success: true, data: {...} }
+    return response.data.data || response.data;
   },
 };
 

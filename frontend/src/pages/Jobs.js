@@ -4,6 +4,7 @@ import { Plus, Search, Filter, Eye, Edit, Trash2, Users, Calendar } from 'lucide
 import ConfirmationModal from '../components/ui/ConfirmationModal';
 import Toast from '../components/ui/Toast';
 import { authenticatedFetch } from '../utils/api';
+import { API_ENDPOINTS } from '../config/api';
 import { JobsSkeleton } from '../components/ui/SkeletonLoader';
 
 const Jobs = () => {
@@ -46,10 +47,11 @@ const Jobs = () => {
 
   const fetchJobs = async () => {
     try {
-      const response = await authenticatedFetch('http://localhost:8000/api/v1/jobs/');
+      const response = await authenticatedFetch(API_ENDPOINTS.JOBS.LIST);
       if (response.ok) {
         const data = await response.json();
-        setJobs(data);
+        // Backend returns { success: true, data: [...] }
+        setJobs(data.data || []);
       } else {
         throw new Error('Failed to fetch jobs');
       }
@@ -82,7 +84,7 @@ const Jobs = () => {
     
     try {
       setDeletingJobId(jobId);
-      const response = await authenticatedFetch(`http://localhost:8000/api/v1/jobs/${jobId}`, {
+      const response = await authenticatedFetch(API_ENDPOINTS.JOBS.DELETE(jobId), {
         method: 'DELETE',
       });
 
@@ -138,9 +140,9 @@ const Jobs = () => {
   };
 
   const filteredJobs = jobs.filter(job => {
-    const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         job.location.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (job.title?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
+                         (job.company?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
+                         (job.location?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
     
     const matchesStatus = statusFilter === 'all' || job.status === statusFilter;
     
@@ -270,8 +272,8 @@ const Jobs = () => {
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(job.status)}`}>
                       {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
                     </span>
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getJobTypeColor(job.job_type)}`}>
-                      {job.job_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getJobTypeColor(job.jobType)}`}>
+                      {job.jobType?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Unknown'}
                     </span>
                   </div>
                 </div>
@@ -285,17 +287,17 @@ const Jobs = () => {
                   <div className="space-y-2 text-sm text-gray-500">
                     <div className="flex items-center">
                       <Calendar className="w-4 h-4 mr-2" />
-                      <span>Posted {formatDate(job.created_at)}</span>
+                      <span>Posted {formatDate(job.createdAt)}</span>
                     </div>
-                    {job.salary_range && (
+                    {job.salaryRange && (
                       <div className="flex items-center">
                         <span className="font-medium text-gray-700">💰</span>
-                        <span className="ml-2">{job.salary_range}</span>
+                        <span className="ml-2">{job.salaryRange}</span>
                       </div>
                     )}
                     <div className="flex items-center">
                       <span className="font-medium text-gray-700">📋</span>
-                      <span className="ml-2">{job.requirements.length} requirements</span>
+                      <span className="ml-2">{job.requirements?.length || 0} requirements</span>
                     </div>
                   </div>
                 </div>

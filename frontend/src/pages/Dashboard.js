@@ -102,9 +102,9 @@ const Dashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Resumes</p>
-                <p className="text-2xl font-bold text-gray-900">{overview.total_resumes}</p>
+                <p className="text-2xl font-bold text-gray-900">{overview.totalResumes}</p>
                 <p className="text-xs text-gray-500 mt-1">
-                  {overview.statistics?.resume_stats?.recent || 0} recent
+                  {overview.statistics?.resumeStats?.recentUploads || 0} recent
                 </p>
               </div>
               <FileText className="w-8 h-8 text-primary-600" />
@@ -116,10 +116,10 @@ const Dashboard = () => {
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Jobs</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {overview.total_jobs}
+                  {overview.totalJobs}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  {overview.statistics?.job_stats?.recent || 0} recent
+                  {overview.statistics?.jobStats?.recentPostings || 0} recent
                 </p>
               </div>
               <BarChart3 className="w-8 h-8 text-green-600" />
@@ -131,10 +131,10 @@ const Dashboard = () => {
               <div>
                 <p className="text-sm font-medium text-gray-600">Hiring Processes</p>
                 <p className="text-2xl font-bold text-purple-600">
-                  {overview.total_hiring_processes}
+                  {overview.totalHiringProcesses}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  {overview.statistics?.hiring_process_stats?.total || 0} total
+                  {overview.statistics?.hiringProcessStats?.total || 0} total
                 </p>
               </div>
               <CheckCircle className="w-8 h-8 text-purple-600" />
@@ -146,10 +146,10 @@ const Dashboard = () => {
               <div>
                 <p className="text-sm font-medium text-gray-600">Meetings</p>
                 <p className="text-2xl font-bold text-blue-600">
-                  {overview.total_meetings}
+                  {overview.totalMeetings}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  {overview.statistics?.meeting_stats?.total || 0} total
+                  {overview.statistics?.meetingStats?.total || 0} total
                 </p>
               </div>
               <Clock className="w-8 h-8 text-blue-600" />
@@ -159,11 +159,11 @@ const Dashboard = () => {
       )}
 
       {/* Recent Activity */}
-      {overview?.recent_activity && overview.recent_activity.length > 0 && (
+      {overview?.recentActivity && overview.recentActivity.length > 0 && (
         <div className="card">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">Recent Activity</h2>
           <div className="space-y-4">
-            {overview.recent_activity.slice(0, 5).map((activity, index) => (
+            {overview.recentActivity.slice(0, 5).map((activity, index) => (
               <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
@@ -184,19 +184,19 @@ const Dashboard = () => {
       )}
 
       {/* AI Insights */}
-      {overview?.ai_insights && (
+      {overview?.aiInsights && (
         <div className="card">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">AI Insights</h2>
           <div className="space-y-4">
             <div className="p-4 bg-blue-50 rounded-lg">
-              <p className="text-sm text-gray-700">{overview.ai_insights.summary}</p>
+              <p className="text-sm text-gray-700">{overview.aiInsights.summary}</p>
             </div>
             
-            {overview.ai_insights.recommendations && overview.ai_insights.recommendations.length > 0 && (
+            {overview.aiInsights.recommendations && overview.aiInsights.recommendations.length > 0 && (
               <div>
                 <h3 className="text-sm font-medium text-gray-900 mb-3">Recommendations</h3>
                 <div className="space-y-2">
-                  {overview.ai_insights.recommendations.map((rec, index) => (
+                  {overview.aiInsights.recommendations.map((rec, index) => (
                     <div key={index} className="flex items-center space-x-2 p-3 bg-green-50 rounded-lg">
                       <CheckCircle className="w-4 h-4 text-green-600" />
                       <span className="text-sm text-gray-700">{rec}</span>
@@ -218,7 +218,7 @@ const Dashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-700">Total Applications</p>
-                  <p className="text-2xl font-bold text-orange-600">{overview.total_applications}</p>
+                  <p className="text-2xl font-bold text-orange-600">{overview.totalApplications}</p>
                 </div>
                 <FileText className="w-8 h-8 text-orange-600" />
               </div>
@@ -229,7 +229,7 @@ const Dashboard = () => {
                 <div>
                   <p className="text-sm font-medium text-gray-700">Status</p>
                   <p className="text-lg font-semibold text-gray-900">
-                    {overview.total_applications > 0 ? 'Active' : 'No Applications'}
+                    {overview.totalApplications > 0 ? 'Active' : 'No Applications'}
                   </p>
                 </div>
                 <CheckCircle className="w-8 h-8 text-gray-600" />

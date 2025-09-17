@@ -30,6 +30,7 @@ export const apiRequest = async (url, method = 'GET', body = null, headers = {})
 
   try {
     const response = await fetch(url, config);
+    console.log("this is the response")
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));

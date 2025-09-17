@@ -24,10 +24,6 @@ import Toast from '../components/ui/Toast';
 const PublicJobApplication = () => {
   const { jobId } = useParams();
   
-  // Temporary workaround: Define the endpoint directly
-  const PUBLIC_FORM_ENDPOINT = (jobId) => `http://localhost:8000/api/v1/job-applications/public/forms/${jobId}`;
-  const PUBLIC_APPLY_ENDPOINT = (jobId) => `http://localhost:8000/api/v1/job-applications/public/apply/${jobId}`;
-  
   const [job, setJob] = useState(null);
   const [applicationForm, setApplicationForm] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -51,16 +47,18 @@ const PublicJobApplication = () => {
       
       // Fetch job details
       const jobResponse = await apiRequest(API_ENDPOINTS.JOBS.PUBLIC_DETAIL(jobId));
-      
-      if (jobResponse) {
-        setJob(jobResponse);
+      console.log({jobResponse})
+      if (jobResponse && jobResponse.success && jobResponse.data) {
+        console.log("jobResponse found")
+        setJob(jobResponse.data);
       } else {
         throw new Error('Failed to fetch job details');
       }
       
       // Fetch application form - use temporary workaround
-      const formResponse = await apiRequest(PUBLIC_FORM_ENDPOINT(jobId));
-      
+      console.log("about to hit")
+      const formResponse = await apiRequest(API_ENDPOINTS.JOBS.PUBLIC_FORM_ENDPOINT(jobId));
+      console.log({formResponse})
       if (formResponse && formResponse.success && formResponse.data) {
         setApplicationForm(formResponse.data);
       } else {
@@ -171,9 +169,9 @@ const PublicJobApplication = () => {
       };
       
       console.log('Submitting data:', submitData);
-      console.log('Using endpoint:', PUBLIC_APPLY_ENDPOINT(jobId));
+      console.log('Using endpoint:', API_ENDPOINTS.JOBS.PUBLIC_APPLY_ENDPOINT(jobId));
       
-      const response = await apiRequest(PUBLIC_APPLY_ENDPOINT(jobId), 'POST', submitData);
+      const response = await apiRequest(API_ENDPOINTS.JOBS.PUBLIC_APPLY_ENDPOINT(jobId), 'POST', submitData);
       
       console.log('Submit response:', response);
       
@@ -409,7 +407,9 @@ const PublicJobApplication = () => {
                 </div>
                 <div className="ml-3">
                   <p className="text-sm font-medium text-gray-500">Type</p>
-                  <p className="text-lg font-semibold text-gray-900">{job.job_type}</p>
+                  <p className="text-lg font-semibold text-gray-900">
+                    {job.jobType ? job.jobType.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Not specified'}
+                  </p>
                 </div>
               </div>
             </div>
@@ -422,7 +422,7 @@ const PublicJobApplication = () => {
                 <div className="ml-3">
                   <p className="text-sm font-medium text-gray-500">Salary</p>
                   <p className="text-lg font-semibold text-gray-900">
-                    {job.salary_range || 'Not specified'}
+                    {job.salaryRange || 'Not specified'}
                   </p>
                 </div>
               </div>

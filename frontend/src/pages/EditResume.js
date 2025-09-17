@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { authenticatedFetch } from '../utils/api';
+import { API_ENDPOINTS } from '../config/api';
 
 const EditResume = () => {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ const EditResume = () => {
 
   const fetchResume = async () => {
     try {
-      const response = await authenticatedFetch(`http://localhost:8000/api/v1/resume-bank/${id}`);
+      const response = await authenticatedFetch(API_ENDPOINTS.RESUME_BANK.DETAIL(id));
       if (response.ok) {
         const data = await response.json();
         setResume(data);
@@ -85,7 +86,7 @@ const EditResume = () => {
         status: candidateInfo.status || 'active'
       };
 
-      const response = await authenticatedFetch(`http://localhost:8000/api/v1/resume-bank/${id}`, {
+      const response = await authenticatedFetch(API_ENDPOINTS.RESUME_BANK.UPDATE(id), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

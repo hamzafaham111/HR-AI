@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Users, MapPin, Calendar, Star } from 'lucide-react';
 import { authenticatedFetch } from '../utils/api';
+import { API_ENDPOINTS } from '../config/api';
 
 const SearchCandidates = () => {
   const { jobId } = useParams();
@@ -33,7 +34,7 @@ const SearchCandidates = () => {
   const fetchJobAndCandidates = async () => {
     try {
       // Fetch job details
-      const jobResponse = await authenticatedFetch(`http://localhost:8000/api/v1/jobs/${jobId}`);
+      const jobResponse = await authenticatedFetch(API_ENDPOINTS.JOBS.DETAIL(jobId));
       if (jobResponse.ok) {
         const jobData = await jobResponse.json();
         setJob(jobData);
@@ -62,7 +63,7 @@ const SearchCandidates = () => {
       params.append('sort_by', sorting.sortBy);
       params.append('sort_order', sorting.sortOrder);
 
-      const response = await authenticatedFetch(`http://localhost:8000/api/v1/resume-bank/search-candidates/${jobId}?${params}`);
+      const response = await authenticatedFetch(API_ENDPOINTS.RESUME_BANK.SEARCH_CANDIDATES(jobId) + `?${params}`);
       if (response.ok) {
         const data = await response.json();
         setCandidates(data.candidates || []);
@@ -306,7 +307,7 @@ const SearchCandidates = () => {
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">{candidate.candidate_name}</h3>
+                      <h3 className="text-lg font-semibold text-gray-900">{candidate.candidateName}</h3>
                       <div className="flex items-center space-x-2">
                         <div className="flex items-center">
                           <Star className="w-4 h-4 text-yellow-500 mr-1" />
@@ -322,24 +323,24 @@ const SearchCandidates = () => {
                       </div>
                     </div>
                     
-                    <p className="text-sm text-gray-600 mb-3">{candidate.candidate_email}</p>
+                    <p className="text-sm text-gray-600 mb-3">{candidate.candidateEmail}</p>
                     
                     <div className="flex flex-wrap gap-2 mb-3">
-                      {candidate.current_role && (
+                      {candidate.currentRole && (
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {candidate.current_role}
+                          {candidate.currentRole}
                         </span>
                       )}
-                      {candidate.years_experience && (
+                      {candidate.yearsExperience && (
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                           <Calendar className="w-3 h-3 mr-1" />
-                          {candidate.years_experience} years
+                          {candidate.yearsExperience} years
                         </span>
                       )}
-                      {candidate.candidate_location && (
+                      {candidate.candidateLocation && (
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                           <MapPin className="w-3 h-3 mr-1" />
-                          {candidate.candidate_location}
+                          {candidate.candidateLocation}
                         </span>
                       )}
                     </div>

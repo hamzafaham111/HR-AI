@@ -38,7 +38,8 @@ const ResumeBank = () => {
       const response = await authenticatedFetch(API_ENDPOINTS.RESUME_BANK.LIST);
       if (response.ok) {
         const data = await response.json();
-        setResumes(data);
+        // Backend returns { success: true, data: [...] }
+        setResumes(data.data || []);
       } else {
         throw new Error('Failed to fetch resume bank');
       }
@@ -55,7 +56,8 @@ const ResumeBank = () => {
       const response = await authenticatedFetch(API_ENDPOINTS.RESUME_BANK.STATS);
       if (response.ok) {
         const data = await response.json();
-        setStats(data);
+        // Backend returns { success: true, data: {...} }
+        setStats(data.data || {});
       }
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -135,9 +137,9 @@ const ResumeBank = () => {
 
   const filteredResumes = resumes.filter(resume => {
     const matchesSearch = 
-      resume.candidate_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      resume.candidate_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (resume.current_role && resume.current_role.toLowerCase().includes(searchTerm.toLowerCase()));
+      (resume.candidateName?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
+      (resume.candidateEmail?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
+      (resume.currentRole && resume.currentRole.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesSkills = !filters.skills || 
       (resume.skills && resume.skills.some(skill => 
@@ -145,7 +147,7 @@ const ResumeBank = () => {
       ));
     
     const matchesLocation = !filters.location || 
-      (resume.candidate_location && resume.candidate_location.toLowerCase().includes(filters.location.toLowerCase()));
+      (resume.candidateLocation && resume.candidateLocation.toLowerCase().includes(filters.location.toLowerCase()));
     
     const matchesStatus = !filters.status || resume.status === filters.status;
     
@@ -316,7 +318,7 @@ const ResumeBank = () => {
                 <div className="p-6 border-b border-gray-100">
                   <div className="flex justify-between items-start mb-3">
                     <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
-                      {resume.candidate_name}
+                      {resume.candidateName}
                     </h3>
                     <div className="flex space-x-1">
                       <button
@@ -334,7 +336,7 @@ const ResumeBank = () => {
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => openDeleteModal(resume.id, resume.candidate_name)}
+                        onClick={() => openDeleteModal(resume.id, resume.candidateName)}
                         disabled={deletingResumeId === resume.id}
                         className="p-1 text-gray-400 hover:text-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
                         title="Delete resume"
@@ -348,18 +350,18 @@ const ResumeBank = () => {
                     </div>
                   </div>
                   
-                  <p className="text-gray-600 mb-2">{resume.candidate_email}</p>
-                  {resume.current_role && (
-                    <p className="text-gray-500 text-sm mb-3">{resume.current_role}</p>
+                  <p className="text-gray-600 mb-2">{resume.candidateEmail}</p>
+                  {resume.currentRole && (
+                    <p className="text-gray-500 text-sm mb-3">{resume.currentRole}</p>
                   )}
                   
                   <div className="flex flex-wrap gap-2">
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(resume.status)}`}>
                       {resume.status.charAt(0).toUpperCase() + resume.status.slice(1)}
                     </span>
-                    {resume.years_experience && (
+                    {resume.yearsExperience && (
                       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                        {resume.years_experience} years
+                        {resume.yearsExperience} years
                       </span>
                     )}
                   </div>
@@ -393,11 +395,11 @@ const ResumeBank = () => {
                   <div className="space-y-2 text-sm text-gray-500">
                     <div className="flex items-center">
                       <MapPin className="w-4 h-4 mr-2" />
-                      <span>{resume.candidate_location || 'Location not specified'}</span>
+                      <span>{resume.candidateLocation || 'Location not specified'}</span>
                     </div>
                     <div className="flex items-center">
                       <Calendar className="w-4 h-4 mr-2" />
-                      <span>Added {formatDate(resume.created_date)}</span>
+                      <span>Added {formatDate(resume.createdAt)}</span>
                     </div>
                     <div className="flex items-center">
                       <span className="font-medium text-gray-700">📋</span>
@@ -428,7 +430,7 @@ const ResumeBank = () => {
                       View Details
                     </button>
                     <button
-                      onClick={() => navigate(`/jobs?search=${resume.candidate_name}`)}
+                      onClick={() => navigate(`/jobs?search=${resume.candidateName}`)}
                       className="px-3 py-2 text-sm border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
                     >
                       Find Jobs

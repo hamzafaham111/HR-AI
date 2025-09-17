@@ -35,16 +35,17 @@ export const AuthProvider = ({ children }) => {
       });
 
       const data = await response.json();
+      const payload = data?.data || data; // Backend wraps in { success, data }
 
       if (response.ok) {
-        setUser(data.user);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        localStorage.setItem('accessToken', data.access_token);
-        localStorage.setItem('refreshToken', data.refresh_token);
-        localStorage.setItem('tokenExpiresAt', Date.now() + (data.expires_in * 1000));
+        setUser(payload.user);
+        localStorage.setItem('user', JSON.stringify(payload.user));
+        localStorage.setItem('accessToken', payload.access_token);
+        localStorage.setItem('refreshToken', payload.refresh_token);
+        localStorage.setItem('tokenExpiresAt', Date.now() + (payload.expires_in * 1000));
         return { success: true };
       } else {
-        return { success: false, error: data.detail || 'Login failed' };
+        return { success: false, error: data.message || data.detail || 'Login failed' };
       }
     } catch (error) {
       return { success: false, error: 'Network error. Please try again.' };
@@ -85,14 +86,15 @@ export const AuthProvider = ({ children }) => {
         });
 
         const loginData = await loginResponse.json();
+        const loginPayload = loginData?.data || loginData;
 
         if (loginResponse.ok) {
           // Set user data and tokens
-          setUser(loginData.user);
-          localStorage.setItem('user', JSON.stringify(loginData.user));
-          localStorage.setItem('accessToken', loginData.access_token);
-          localStorage.setItem('refreshToken', loginData.refresh_token);
-          localStorage.setItem('tokenExpiresAt', Date.now() + (loginData.expires_in * 1000));
+          setUser(loginPayload.user);
+          localStorage.setItem('user', JSON.stringify(loginPayload.user));
+          localStorage.setItem('accessToken', loginPayload.access_token);
+          localStorage.setItem('refreshToken', loginPayload.refresh_token);
+          localStorage.setItem('tokenExpiresAt', Date.now() + (loginPayload.expires_in * 1000));
           return { success: true, message: 'Registration successful! You are now logged in.' };
         } else {
           // Registration succeeded but auto-login failed
@@ -101,7 +103,7 @@ export const AuthProvider = ({ children }) => {
           return { success: true, message: 'Registration successful! Please log in to continue.' };
         }
       } else {
-        return { success: false, error: data.detail || 'Registration failed' };
+        return { success: false, error: data.message || data.detail || 'Registration failed' };
       }
     } catch (error) {
       return { success: false, error: 'Network error. Please try again.' };
@@ -157,10 +159,11 @@ export const AuthProvider = ({ children }) => {
 
       const data = await response.json();
 
+      const payload = data?.data || data;
       if (response.ok) {
-        localStorage.setItem('accessToken', data.access_token);
-        localStorage.setItem('tokenExpiresAt', Date.now() + (data.expires_in * 1000));
-        return { success: true, accessToken: data.access_token };
+        localStorage.setItem('accessToken', payload.access_token);
+        localStorage.setItem('tokenExpiresAt', Date.now() + (payload.expires_in * 1000));
+        return { success: true, accessToken: payload.access_token };
       } else {
         // Refresh token is invalid, logout user
         logout();

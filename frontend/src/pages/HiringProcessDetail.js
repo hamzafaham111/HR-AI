@@ -444,9 +444,11 @@ const HiringProcessDetail = () => {
       if (response.ok) {
         const data = await response.json();
         console.log('Process data received:', data);
-        console.log('Candidates:', data.candidates);
-        console.log('Stages:', data.stages);
-        setProcess(data);
+        // Backend returns { success: true, data: {...} }
+        const processData = data.data || data;
+        console.log('Candidates:', processData.candidates);
+        console.log('Stages:', processData.stages);
+        setProcess(processData);
       } else {
         console.error('Failed to fetch process details:', response.status);
         showToastMessage('Failed to load process details', 'error');

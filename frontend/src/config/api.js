@@ -52,6 +52,8 @@ export const API_ENDPOINTS = {
     CREATE: `${API_URL}/jobs/`,
     DETAIL: (id) => `${API_URL}/jobs/${id}`,
     PUBLIC_DETAIL: (id) => `${API_URL}/jobs/public/${id}`,
+    PUBLIC_FORM_ENDPOINT: (id) => `${API_URL}/jobs/public/forms/${id}`,
+    PUBLIC_APPLY_ENDPOINT: (id) => `${API_URL}/jobs/public/apply/${id}`,
     UPDATE: (id) => `${API_URL}/jobs/${id}`,
     DELETE: (id) => `${API_URL}/jobs/${id}`,
     PARSE_DOCUMENT: `${API_URL}/jobs/parse-document`,

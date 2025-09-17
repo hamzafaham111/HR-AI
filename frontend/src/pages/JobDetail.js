@@ -8,6 +8,7 @@ import ApplicationDetailModal from '../components/ApplicationDetailModal';
 import ProcessSelectionModal from '../components/ProcessSelectionModal';
 import Toast from '../components/ui/Toast';
 import { authenticatedFetch } from '../utils/api';
+import { API_ENDPOINTS } from '../config/api';
 import { DetailPageSkeleton } from '../components/ui/SkeletonLoader';
 
 const JobDetail = () => {
@@ -68,10 +69,11 @@ const JobDetail = () => {
 
   const fetchJob = async () => {
     try {
-      const response = await authenticatedFetch(`http://localhost:8000/api/v1/jobs/${id}`);
+      const response = await authenticatedFetch(API_ENDPOINTS.JOBS.DETAIL(id));
       if (response.ok) {
         const data = await response.json();
-        setJob(data);
+        // Backend returns { success: true, data: {...} }
+        setJob(data.data || data);
       } else {
         throw new Error('Failed to fetch job');
       }
@@ -86,10 +88,11 @@ const JobDetail = () => {
 
   const fetchApplicationForm = async () => {
     try {
-      const response = await authenticatedFetch(`http://localhost:8000/api/v1/job-applications/forms/${id}`);
+      const response = await authenticatedFetch(API_ENDPOINTS.JOB_APPLICATIONS.FORMS.DETAIL(id));
       if (response.ok) {
         const data = await response.json();
-        setApplicationForm(data.data);
+        // Backend returns { success: true, data: {...} }
+        setApplicationForm(data.data || data);
       } else if (response.status === 404) {
         setApplicationForm(null);
       } else {
@@ -104,10 +107,11 @@ const JobDetail = () => {
   const fetchApplications = async () => {
     try {
       setApplicationsLoading(true);
-      const response = await authenticatedFetch(`http://localhost:8000/api/v1/job-applications/${id}`);
+      const response = await authenticatedFetch(API_ENDPOINTS.JOB_APPLICATIONS.APPLICATIONS.LIST(id));
       if (response.ok) {
         const data = await response.json();
-        setApplications(data.data.applications || []);
+        // Backend returns { success: true, data: { applications: [...] } }
+        setApplications(data.data?.applications || data.applications || []);
       } else {
         console.error('Failed to fetch applications');
         setApplications([]);
@@ -135,7 +139,7 @@ const JobDetail = () => {
   const deleteJob = async () => {
     try {
       setDeletingJob(true);
-      const response = await authenticatedFetch(`http://localhost:8000/api/v1/jobs/${id}`, {
+      const response = await authenticatedFetch(API_ENDPOINTS.JOBS.DELETE(id), {
         method: 'DELETE',
       });
 
@@ -387,10 +391,10 @@ const JobDetail = () => {
                   <MapPin className="w-4 h-4 mr-1" />
                   <span>{job.location}</span>
                 </div>
-                {job.salary_range && (
+                {job.salaryRange && (
                   <div className="flex items-center">
                     <DollarSign className="w-4 h-4 mr-1" />
-                    <span>{job.salary_range}</span>
+                    <span>{job.salaryRange}</span>
                   </div>
                 )}
               </div>
@@ -434,8 +438,8 @@ const JobDetail = () => {
               <Calendar className="w-5 h-5 text-gray-400 mr-2" />
               <h3 className="font-semibold text-gray-900">Job Type</h3>
             </div>
-            <span className={`inline-flex items-center px-2 py-1 rounded-full text-sm font-medium ${getJobTypeColor(job.job_type)}`}>
-              {job.job_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+            <span className={`inline-flex items-center px-2 py-1 rounded-full text-sm font-medium ${getJobTypeColor(job.jobType)}`}>
+              {job.jobType?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Unknown'}
             </span>
           </div>
 

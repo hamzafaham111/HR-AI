@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, X, Save, ArrowLeft, Upload, FileText, Edit3, Settings, Users } from 'lucide-react';
 import Toast from '../components/ui/Toast';
 import { authenticatedFetch } from '../utils/api';
+import { API_ENDPOINTS } from '../config/api';
 
 const CreateJob = () => {
   const navigate = useNavigate();
@@ -12,10 +13,10 @@ const CreateJob = () => {
     title: '',
     company: '',
     location: '',
-    job_type: 'full_time',
-    experience_level: 'mid',
+    jobType: 'full_time',
+    experienceLevel: 'mid',
     description: '',
-    salary_range: '',
+    salaryRange: '',
     requirements: [],
     responsibilities: [],
     benefits: []
@@ -168,11 +169,11 @@ const CreateJob = () => {
         title: formData.title,
         requirements: formData.requirements,
         location: formData.location,
-        experience_level: formData.experience_level,
-        job_type: formData.job_type
+        experienceLevel: formData.experienceLevel,
+        jobType: formData.jobType
       };
 
-      const response = await authenticatedFetch('http://localhost:8000/api/v1/resume-bank/find-candidates?limit=10&use_semantic_search=true', {
+      const response = await authenticatedFetch(API_ENDPOINTS.RESUME_BANK.FIND_CANDIDATES + '?limit=10&use_semantic_search=true', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -246,7 +247,7 @@ const CreateJob = () => {
 
     setLoading(true);
     try {
-      const response = await authenticatedFetch('http://localhost:8000/api/v1/jobs/parse-text', {
+      const response = await authenticatedFetch(API_ENDPOINTS.JOBS.PARSE_TEXT, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -282,7 +283,7 @@ const CreateJob = () => {
       
       const token = localStorage.getItem('accessToken');
       
-      const response = await authenticatedFetch('http://localhost:8000/api/v1/jobs/', {
+      const response = await authenticatedFetch(API_ENDPOINTS.JOBS.CREATE, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -415,8 +416,8 @@ const CreateJob = () => {
                       Job Type *
                     </label>
                     <select
-                      name="job_type"
-                      value={formData.job_type}
+                      name="jobType"
+                      value={formData.jobType}
                       onChange={handleInputChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
@@ -452,8 +453,8 @@ const CreateJob = () => {
                     </label>
                     <input
                       type="text"
-                      name="salary_range"
-                      value={formData.salary_range}
+                      name="salaryRange"
+                      value={formData.salaryRange}
                       onChange={handleInputChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="e.g., $80,000 - $120,000"
