@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     
     # File upload settings
     max_file_size: int = 10 * 1024 * 1024  # 10MB
-    allowed_file_types: list = ["application/pdf"]
+    allowed_file_types: str = "application/pdf"  # Will be split into list when needed
     upload_folder: str = "uploads"
     
     # AI analysis settings
@@ -56,6 +56,10 @@ class Settings(BaseSettings):
     database_name: str = "resume_analysis"
     
 
+    
+    def get_allowed_file_types(self) -> list:
+        """Get allowed file types as a list."""
+        return [ft.strip() for ft in self.allowed_file_types.split(",")]
     
     class Config:
         """
