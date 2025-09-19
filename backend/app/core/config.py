@@ -24,8 +24,8 @@ class Settings(BaseSettings):
     debug: bool = False
     environment: str = "development"
     
-    # OpenAI API configuration (REQUIRED)
-    openai_api_key: str  # Must be provided via OPENAI_API_KEY env var
+    # OpenAI API configuration
+    openai_api_key: str = "your-openai-api-key-here"  # Set via OPENAI_API_KEY env var
     openai_api_base: str = "https://api.openai.com/v1"
     openai_model: str = "gpt-3.5-turbo"
     

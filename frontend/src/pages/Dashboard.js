@@ -89,10 +89,6 @@ const Dashboard = () => {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-600 mt-1">Overview of resume bank and job management</p>
         </div>
-        <Link to="/resume-bank/add" className="btn-primary self-start sm:self-auto flex items-center">
-          <FileText className="w-6 h-4 mr-2" />
-          <span className="hidden sm:inline">Add Resume</span>
-        </Link>
       </div>
 
       {/* Enhanced Statistics Cards */}

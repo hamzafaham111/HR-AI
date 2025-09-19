@@ -86,7 +86,7 @@ const AddResume = () => {
         },
         body: formData,
       });
-      
+      console.log({formData});
       if (response.ok) {
         showToast('Resume uploaded successfully!', 'success');
         setTimeout(() => {

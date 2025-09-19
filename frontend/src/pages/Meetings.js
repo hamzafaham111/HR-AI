@@ -320,44 +320,6 @@ const Meetings = () => {
           </div>
         </div>
 
-        {/* Summary Card */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">Meeting Overview</h3>
-              <p className="text-sm text-gray-600">Total meetings and their current status</p>
-            </div>
-            <div className="text-right">
-              <p className="text-3xl font-bold text-primary-600">{meetings.length}</p>
-              <p className="text-sm text-gray-500">Total Meetings</p>
-            </div>
-          </div>
-          
-          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-            {statusOptions.slice(1).map((status) => {
-              const count = meetings.filter(meeting => {
-                const meetingStatus = meeting.status?.toLowerCase() || '';
-                const expectedStatus = status.value.toLowerCase();
-                
-                if (meetingStatus === expectedStatus) return true;
-                if (meetingStatus.includes(expectedStatus)) return true;
-                
-                // Handle legacy status mappings
-                if (expectedStatus === 'draft' && (meetingStatus === 'scheduled' || meetingStatus === 'published')) return true;
-                if (expectedStatus === 'open' && meetingStatus === 'published') return true;
-                
-                return false;
-              }).length;
-              
-              return (
-                <div key={status.value} className="text-center">
-                  <p className="text-2xl font-bold text-gray-900">{count}</p>
-                  <p className="text-xs text-gray-500">{status.label}</p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
 
         {/* Statistics */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

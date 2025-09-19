@@ -100,112 +100,164 @@ class PDFProcessor:
         Returns:
             Extracted text from the PDF
         """
-        # Method 1: Try PyPDF2 with error handling
+        # Method 1: Try PyPDF2 with comprehensive error handling and fallbacks
+        pdf_reader = None
+        text = ""
+        successful_pages = 0
+        failed_pages = 0
+        
         try:
             pdf_reader = PyPDF2.PdfReader(io.BytesIO(pdf_content))
-            text = ""
+            total_pages = len(pdf_reader.pages)
+            logger.info(f"PDF has {total_pages} pages")
             
             for page_num, page in enumerate(pdf_reader.pages):
+                page_text = ""
+                page_success = False
+                
+                # Try PyPDF2 first
                 try:
                     page_text = page.extract_text()
-                    if page_text:
+                    if page_text and len(page_text.strip()) > 10:  # Ensure meaningful content
+                        logger.info(f"Page {page_num + 1} extracted {len(page_text)} characters (PyPDF2)")
+                        logger.info(f"Page {page_num + 1} preview: {page_text[:200]}...")
                         text += page_text + "\n"
+                        page_success = True
+                        successful_pages += 1
+                    else:
+                        logger.warning(f"Page {page_num + 1} extracted empty or minimal text from PyPDF2")
                 except Exception as page_error:
-                    logger.warning(f"Failed to extract text from page {page_num + 1}: {page_error}")
-                    # Try alternative extraction method for this page
+                    logger.warning(f"PyPDF2 failed for page {page_num + 1}: {page_error}")
+                
+                # If PyPDF2 failed, try alternative PyPDF2 methods
+                if not page_success:
                     try:
-                        # Try to extract text using a different approach
                         if hasattr(page, 'get_text'):
                             page_text = page.get_text()
-                            if page_text:
+                            if page_text and len(page_text.strip()) > 10:
+                                logger.info(f"Page {page_num + 1} extracted {len(page_text)} characters (PyPDF2 alt method)")
+                                logger.info(f"Page {page_num + 1} preview: {page_text[:200]}...")
                                 text += page_text + "\n"
-                    except:
-                        logger.warning(f"Alternative extraction also failed for page {page_num + 1}")
-                        continue
-            
-            if text.strip():
-                return text.strip()
+                                page_success = True
+                                successful_pages += 1
+                    except Exception as alt_error:
+                        logger.warning(f"PyPDF2 alternative method failed for page {page_num + 1}: {alt_error}")
                 
-        except Exception as e:
-            logger.warning(f"PyPDF2 extraction failed: {e}")
-        
-        # Method 2: Try with different PyPDF2 settings
-        try:
-            pdf_reader = PyPDF2.PdfReader(io.BytesIO(pdf_content))
-            text = ""
-            
-            for page in pdf_reader.pages:
-                try:
-                    # Try with different extraction parameters
-                    page_text = page.extract_text(layout_mode_space_vertically=True)
-                    if page_text:
-                        text += page_text + "\n"
-                except:
+                # If still failed, try pdfplumber for this specific page
+                if not page_success and HAS_PDFPLUMBER:
                     try:
-                        # Try without layout mode
-                        page_text = page.extract_text()
-                        if page_text:
-                            text += page_text + "\n"
-                    except:
-                        continue
+                        with pdfplumber.open(io.BytesIO(pdf_content)) as pdf_plumber:
+                            if page_num < len(pdf_plumber.pages):
+                                page_text = pdf_plumber.pages[page_num].extract_text()
+                                if page_text and len(page_text.strip()) > 10:
+                                    logger.info(f"Page {page_num + 1} extracted {len(page_text)} characters (pdfplumber)")
+                                    logger.info(f"Page {page_num + 1} preview: {page_text[:200]}...")
+                                    text += page_text + "\n"
+                                    page_success = True
+                                    successful_pages += 1
+                                else:
+                                    logger.warning(f"Page {page_num + 1} extracted empty text from pdfplumber")
+                    except Exception as pdfplumber_error:
+                        logger.warning(f"pdfplumber failed for page {page_num + 1}: {pdfplumber_error}")
+                
+                if not page_success:
+                    failed_pages += 1
+                    logger.error(f"All extraction methods failed for page {page_num + 1}")
             
-            if text.strip():
+            logger.info(f"Extraction summary: {successful_pages}/{total_pages} pages successful, {failed_pages} failed")
+            logger.info(f"Total extracted text length: {len(text)} characters")
+            
+            # If we got some text, return it
+            if text.strip() and len(text.strip()) > 50:
+                logger.info(f"Successfully extracted text from {successful_pages} pages")
                 return text.strip()
+            else:
+                logger.warning(f"Extracted text too short ({len(text)} chars), trying fallback methods")
                 
         except Exception as e:
-            logger.warning(f"PyPDF2 with layout mode failed: {e}")
+            logger.error(f"PyPDF2 reader creation failed: {e}")
+            pdf_reader = None
         
-        # Method 3: Try to extract raw text content
-        try:
-            pdf_reader = PyPDF2.PdfReader(io.BytesIO(pdf_content))
-            text = ""
-            
-            for page in pdf_reader.pages:
-                try:
-                    # Try to access raw content
-                    if hasattr(page, 'get_contents'):
-                        contents = page.get_contents()
-                        if contents:
-                            # Try to decode content
-                            if hasattr(contents, 'get_data'):
-                                raw_data = contents.get_data()
-                                # Basic text extraction from raw data
-                                text += str(raw_data) + "\n"
-                except:
-                    continue
-            
-            if text.strip():
-                # Clean up the raw text
-                cleaned_text = re.sub(r'[^\x00-\x7F]+', '', text)  # Remove non-ASCII
-                cleaned_text = re.sub(r'\s+', ' ', cleaned_text)   # Normalize whitespace
-                return cleaned_text.strip()
-                
-        except Exception as e:
-            logger.warning(f"Raw content extraction failed: {e}")
-        
-        # Method 4: Try pdfplumber as a fallback
-        if HAS_PDFPLUMBER:
+        # Method 2: Try pdfplumber as primary fallback if PyPDF2 had issues
+        if HAS_PDFPLUMBER and (failed_pages > 0 or not text.strip()):
+            logger.info("Trying pdfplumber as fallback for failed pages")
             try:
-                with pdfplumber.open(io.BytesIO(pdf_content)) as pdf:
-                    text = ""
-                    for page in pdf.pages:
+                with pdfplumber.open(io.BytesIO(pdf_content)) as pdf_plumber:
+                    pdfplumber_text = ""
+                    pdfplumber_successful = 0
+                    
+                    for page_num, page in enumerate(pdf_plumber.pages):
                         try:
                             page_text = page.extract_text()
-                            if page_text:
-                                text += page_text + "\n"
+                            if page_text and len(page_text.strip()) > 10:
+                                logger.info(f"Page {page_num + 1} extracted {len(page_text)} characters (pdfplumber fallback)")
+                                logger.info(f"Page {page_num + 1} preview: {page_text[:200]}...")
+                                pdfplumber_text += page_text + "\n"
+                                pdfplumber_successful += 1
                         except Exception as page_error:
-                            logger.warning(f"pdfplumber failed for page: {page_error}")
+                            logger.warning(f"pdfplumber failed for page {page_num + 1}: {page_error}")
                             continue
                     
-                    if text.strip():
-                        return text.strip()
+                    if pdfplumber_text.strip() and len(pdfplumber_text.strip()) > 50:
+                        logger.info(f"pdfplumber fallback successful: {pdfplumber_successful} pages extracted")
+                        return pdfplumber_text.strip()
+                    else:
+                        logger.warning(f"pdfplumber fallback extracted insufficient text: {len(pdfplumber_text)} chars")
                         
             except Exception as e:
-                logger.warning(f"pdfplumber extraction failed: {e}")
+                logger.error(f"pdfplumber fallback failed: {e}")
         
-        # Method 5: Return a minimal text to prevent complete failure
-        logger.error("All PDF text extraction methods failed")
-        return "PDF content could not be extracted. Please check the file format."
+        # Method 3: Try with different PyPDF2 settings as last resort
+        if not text.strip() or len(text.strip()) < 100:
+            logger.info("Trying PyPDF2 with different settings as last resort")
+            try:
+                pdf_reader = PyPDF2.PdfReader(io.BytesIO(pdf_content))
+                alt_text = ""
+                
+                for page_num, page in enumerate(pdf_reader.pages):
+                    try:
+                        # Try with different extraction parameters
+                        page_text = page.extract_text(layout_mode_space_vertically=True)
+                        if page_text and len(page_text.strip()) > 10:
+                            logger.info(f"Page {page_num + 1} extracted {len(page_text)} characters (PyPDF2 alt settings)")
+                            alt_text += page_text + "\n"
+                    except:
+                        try:
+                            # Try without layout mode
+                            page_text = page.extract_text()
+                            if page_text and len(page_text.strip()) > 10:
+                                logger.info(f"Page {page_num + 1} extracted {len(page_text)} characters (PyPDF2 basic)")
+                                alt_text += page_text + "\n"
+                        except:
+                            continue
+                
+                if alt_text.strip() and len(alt_text.strip()) > 50:
+                    logger.info("PyPDF2 alternative settings successful")
+                    return alt_text.strip()
+                    
+            except Exception as e:
+                logger.warning(f"PyPDF2 alternative settings failed: {e}")
+        
+        # Method 4: Try raw content extraction as absolute last resort
+        if not text.strip() or len(text.strip()) < 50:
+            logger.info("Trying raw content extraction as last resort")
+            try:
+                # Try to extract raw content and clean it
+                raw_text = pdf_content.decode('utf-8', errors='ignore')
+                # Clean up the raw text
+                cleaned_text = re.sub(r'[^\x00-\x7F]+', ' ', raw_text)  # Remove non-ASCII
+                cleaned_text = re.sub(r'\s+', ' ', cleaned_text)  # Normalize whitespace
+                
+                if len(cleaned_text) > 100:  # Ensure we have meaningful content
+                    logger.info(f"Raw content extraction successful: {len(cleaned_text)} characters")
+                    return cleaned_text.strip()
+                    
+            except Exception as e:
+                logger.warning(f"Raw content extraction failed: {e}")
+        
+        # Method 5: Return error message if all methods failed
+        logger.error(f"All PDF text extraction methods failed. Final text length: {len(text)}")
+        return "PDF content could not be extracted. Please check the file format or try a different PDF file."
     
     @staticmethod
     async def extract_candidate_info_from_text(resume_text: str, filename: str = "unknown.pdf") -> Dict[str, Any]:

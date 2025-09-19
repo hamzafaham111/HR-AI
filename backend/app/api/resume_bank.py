@@ -44,6 +44,7 @@ from app.repositories.mongodb_repository import MongoDBRepository  # Database op
 from app.models.mongodb_models import COLLECTIONS       # Collection names
 from app.services.openai_service import openai_service  # AI processing
 from app.utils.pdf_processor import PDFProcessor        # PDF text extraction
+from app.utils.ai_extractor import ai_extractor         # AI-powered extraction
 from app.core.logger import logger                      # Logging utility
 from app.api.auth import get_current_user              # Authentication
 from app.models.mongodb_models import UserDocument      # User data model
@@ -70,6 +71,22 @@ async def upload_resume_to_bank(
     database = Depends(get_database)
 ):
     logger.warning(f"Resume upload attempt by user: {current_user.email if current_user else 'No user'}")
+    
+    # Debug: Print all form data received
+    print("====> FORM DATA RECEIVED:")
+    print(f"====> candidate_name: '{candidate_name}'")
+    print(f"====> candidate_email: '{candidate_email}'")
+    print(f"====> candidate_phone: '{candidate_phone}'")
+    print(f"====> candidate_location: '{candidate_location}'")
+    print(f"====> years_experience: '{years_experience}'")
+    print(f"====> current_role: '{current_role}'")
+    print(f"====> desired_role: '{desired_role}'")
+    print(f"====> salary_expectation: '{salary_expectation}'")
+    print(f"====> availability: '{availability}'")
+    print(f"====> tags: '{tags}'")
+    print(f"====> notes: '{notes}'")
+    print("====> END FORM DATA")
+    
     """
     Upload a resume directly to the resume bank.
     
@@ -99,16 +116,53 @@ async def upload_resume_to_bank(
             )
         
         # Process PDF file
-        resume_text, filename = await PDFProcessor.process_pdf(file)
+        try:
+            resume_text, filename = await PDFProcessor.process_pdf(file)
+            print("====> PDF processed successfully:")
+            print(f"====> Filename: {filename}")
+            print(f"====> Text length: {len(resume_text)}")
+            print(f"====> Full text content:")
+            print(resume_text)
+            print("====> End of PDF text")
+
+            logger.info(f"PDF processed successfully: {filename}")
+            logger.info(f"PDF text length: {len(resume_text)}")
+            logger.info(f"PDF text content: {resume_text}")
+        except Exception as pdf_error:
+            logger.error(f"PDF processing failed: {pdf_error}")
+            raise pdf_error
         
         # Extract candidate information from resume text using AI-powered extraction
-        extracted_info = await PDFProcessor.extract_candidate_info_from_text(resume_text, filename)
-        
+        try:
+            print("====> Starting AI extraction...")
+            print(f"====> Input text length: {len(resume_text)}")
+            print(f"====> Input filename: {filename}")
+            
+            extracted_info = await ai_extractor.extract_candidate_info(resume_text, filename)
+            
+            print("====> AI extraction completed:")
+            print(f"====> Extracted info: {extracted_info}")
+            for key, value in extracted_info.items():
+                print(f"====> {key}: {value}")
+            
+            logger.info(f"AI extraction completed: {extracted_info}")
+        except Exception as ai_error:
+            logger.error(f"AI extraction failed: {ai_error}")
+            raise ai_error
         # Use extracted info if form data is empty (no fallback values)
+        print("====> MERGING FORM DATA WITH EXTRACTED INFO:")
+        print(f"====> Original candidate_name: '{candidate_name}'")
+        print(f"====> Extracted name: '{extracted_info.get('name', '')}'")
+        
         candidate_name = candidate_name if candidate_name else extracted_info.get("name", "")
         candidate_email = candidate_email if candidate_email else extracted_info.get("email", "")
         candidate_phone = candidate_phone if candidate_phone else extracted_info.get("phone", "")
         candidate_location = candidate_location if candidate_location else extracted_info.get("location", "")
+        
+        print(f"====> Final candidate_name: '{candidate_name}'")
+        print(f"====> Final candidate_email: '{candidate_email}'")
+        print(f"====> Final candidate_phone: '{candidate_phone}'")
+        print(f"====> Final candidate_location: '{candidate_location}'")
         
         # Handle years_experience conversion
         years_exp = None
@@ -198,86 +252,76 @@ async def upload_resume_to_bank(
         
         # Create resume bank entry with all parsed data
         from bson import ObjectId
+        
+        # Clean and prepare data for MongoDB
         entry_data = {
             "user_id": ObjectId(current_user.id),
-            "filename": filename,
+            "filename": filename or "unknown.pdf",
             "candidate_name": candidate_name or "Unknown Candidate",
             "candidate_email": candidate_email or "no-email@example.com",
-            "candidate_phone": candidate_phone,
-            "candidate_location": candidate_location,
+            "candidate_phone": candidate_phone or "",
+            "candidate_location": candidate_location or "",
             "years_experience": years_exp,
-            "current_role": current_role,
-            "desired_role": desired_role,
-            "salary_expectation": salary_expectation,
-            "availability": availability,
+            "current_role": current_role or "",
+            "desired_role": desired_role or "",
+            "salary_expectation": salary_expectation or "",
+            "availability": availability or "",
             "tags": tags.split(',') if tags else [],
-            "notes": notes,
-            # No resume_analysis_id needed
+            "notes": notes or "",
             "status": "active",
-            # Include AI analysis results directly
-            "summary": summary,
-            "skills": extracted_skills,
-            "education": extracted_info.get("education"),
+            "summary": summary or "Professional resume",
+            "skills": extracted_skills or [],
+            "education": extracted_info.get("education") or "Not specified",
             "experience_level": "Senior" if years_exp and years_exp >= 5 else "Mid" if years_exp and years_exp >= 2 else "Junior" if years_exp else "Unknown",
-            "overall_assessment": overall_assessment
+            "overall_assessment": overall_assessment or "Qualified candidate"
         }
         
-        created_entry = await repo.create_resume_bank_entry(entry_data)
+        # Remove None values to avoid serialization issues
+        entry_data = {k: v for k, v in entry_data.items() if v is not None}
         
-        # Add to Qdrant for vector search
         try:
-            from app.services.openai_service import openai_service
-            
-            
-            # Generate embedding for the resume text
-            embedding = await openai_service.generate_embedding(resume_text)
-            
-            # Add to Qdrant collection
-            await qdrant_service.store_resume_embedding(
-                analysis_id=str(created_entry.id),
-                embedding=embedding,
-                metadata={
-                    "resume_id": str(created_entry.id),
-                    "filename": filename,
-                    "candidate_name": candidate_name or "Unknown",
-                    "skills": extracted_skills,
-                    "experience_years": years_exp or 0,
-                    "current_role": current_role or "",
-                    "location": candidate_location or ""
-                }
-            )
-            
-            logger.info(f"Successfully added resume to Qdrant vector database: {filename}")
-        except Exception as e:
-            logger.warning(f"Failed to add resume to Qdrant: {e}")
+            created_entry = await repo.create_resume_bank_entry(entry_data)
+        except Exception as create_error:
+            logger.error(f"Failed to create resume bank entry: {create_error}")
+            logger.error(f"Entry data: {entry_data}")
+            raise create_error
+        
+        # Resume successfully stored in MongoDB
+        logger.info(f"Resume successfully stored in MongoDB: {filename}")
         
         logger.info(f"Successfully uploaded resume to bank: {filename}")
         
         # Convert MongoDB document to response model
-        return ResumeBankEntry(
-            id=str(created_entry.id),
-            filename=created_entry.filename,
-            candidate_name=created_entry.candidate_name,
-            candidate_email=created_entry.candidate_email,
-            candidate_phone=created_entry.candidate_phone,
-            candidate_location=created_entry.candidate_location,
-            years_experience=created_entry.years_experience,
-            current_role=created_entry.current_role,
-            desired_role=created_entry.desired_role,
-            salary_expectation=created_entry.salary_expectation,
-            availability=created_entry.availability,
-            tags=created_entry.tags,
-            notes=created_entry.notes,
-            summary=created_entry.summary,
-            skills=created_entry.skills,
-            education=created_entry.education,
-            experience_level=created_entry.experience_level,
-            overall_assessment=created_entry.overall_assessment,
-            status=created_entry.status,
-            last_contact_date=created_entry.last_contact_date,
-            created_date=created_entry.created_at,
-            updated_date=created_entry.updated_at
-        )
+        try:
+            response_data = ResumeBankEntry(
+                id=str(created_entry.id),
+                filename=created_entry.filename,
+                candidate_name=created_entry.candidate_name,
+                candidate_email=created_entry.candidate_email,
+                candidate_phone=created_entry.candidate_phone,
+                candidate_location=created_entry.candidate_location,
+                years_experience=created_entry.years_experience,
+                current_role=created_entry.current_role,
+                desired_role=created_entry.desired_role,
+                salary_expectation=created_entry.salary_expectation,
+                availability=created_entry.availability,
+                tags=created_entry.tags,
+                notes=created_entry.notes,
+                summary=created_entry.summary,
+                skills=created_entry.skills,
+                education=created_entry.education,
+                experience_level=created_entry.experience_level,
+                overall_assessment=created_entry.overall_assessment,
+                status=created_entry.status,
+                last_contact_date=created_entry.last_contact_date,
+                created_date=created_entry.created_at,
+                updated_date=created_entry.updated_at
+            )
+            return response_data
+        except Exception as response_error:
+            logger.error(f"Failed to create response model: {response_error}")
+            logger.error(f"Created entry data: {created_entry}")
+            raise response_error
         
     except HTTPException:
         raise
@@ -443,7 +487,9 @@ async def get_resume_bank_stats(
 @router.post("/find-candidates", response_model=CandidateSearchResponse)
 async def find_candidates_for_job_criteria(
     job_criteria: dict,
-    limit: int = Query(10, ge=1, le=50, description="Maximum number of candidates")
+    limit: int = Query(10, ge=1, le=50, description="Maximum number of candidates"),
+    current_user: UserDocument = Depends(get_current_user),
+    database = Depends(get_database)
 ):
     """
     Find candidates based on job criteria using rule-based search.
@@ -489,12 +535,11 @@ async def find_candidates_for_job_criteria(
                 filters.years_experience_min = min_exp
                 filters.years_experience_max = max_exp
         
-        # Search candidates
-        candidates = await resume_bank_service.search_resumes(
-            filters,
-            1,  # page
-            limit
-        )
+        # Search candidates using MongoDB repository
+        repo = MongoDBRepository(database)
+        from bson import ObjectId
+        user_object_id = ObjectId(current_user.id)
+        candidates = await repo.get_resume_bank_entries_by_user(user_object_id, skip=0, limit=limit)
         search_time = (datetime.now() - start_time).total_seconds()
         
         # Build search criteria
@@ -1024,32 +1069,59 @@ async def update_resume_status(resume_id: str, status: ResumeStatus, database = 
     Args:
         resume_id: Resume ID
         status: New status
-        db: Database session
+        database: Database instance
         
     Returns:
         ResumeBankEntry: Updated resume
     """
     try:
-        resume_bank_service = ResumeBankService(db)
-        resume_entry = resume_bank_service.repository.get_resume_bank_entry_by_id(resume_id)
+        repository = MongoDBRepository(database)
         
+        # Check if resume exists
+        resume_entry = await repository.get_resume_bank_entry_by_id(resume_id)
         if not resume_entry:
             raise HTTPException(
                 status_code=404,
                 detail="Resume not found"
             )
         
-        resume_entry.status = status.value
-        resume_entry.updated_at = datetime.now()
+        # Update the status
+        update_data = {"status": status.value if hasattr(status, 'value') else status}
+        updated_resume = await repository.update_resume_bank_entry(resume_id, update_data)
         
-        db.commit()
-        db.refresh(resume_entry)
+        if not updated_resume:
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to update resume status"
+            )
         
-        logger.info(f"Resume status updated: {resume_entry.candidate_name} -> {status}")
+        logger.info(f"Resume status updated: {updated_resume.candidate_name} -> {status}")
         
-        # Convert database model to Pydantic model for response
-        from app.utils.model_converter import convert_db_resume_bank_entry_to_pydantic
-        return convert_db_resume_bank_entry_to_pydantic(resume_entry)
+        # Convert MongoDB document to response model
+        return ResumeBankEntry(
+            id=str(updated_resume.id),
+            filename=updated_resume.filename,
+            candidate_name=updated_resume.candidate_name,
+            candidate_email=updated_resume.candidate_email,
+            candidate_phone=updated_resume.candidate_phone,
+            candidate_location=updated_resume.candidate_location,
+            years_experience=updated_resume.years_experience,
+            current_role=updated_resume.current_role,
+            desired_role=updated_resume.desired_role,
+            salary_expectation=updated_resume.salary_expectation,
+            availability=updated_resume.availability,
+            tags=updated_resume.tags,
+            notes=updated_resume.notes,
+            summary=updated_resume.summary,
+            skills=updated_resume.skills,
+            education=updated_resume.education,
+            experience_level=updated_resume.experience_level,
+            overall_assessment=updated_resume.overall_assessment,
+            status=updated_resume.status,
+            last_contact_date=updated_resume.last_contact_date,
+            created_date=updated_resume.created_at,
+            updated_date=updated_resume.updated_at
+        )
         
     except HTTPException:
         raise
