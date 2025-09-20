@@ -21,7 +21,8 @@ import {
   GitBranch,
   Search,
   MoreVertical,
-  ChevronRight
+  ChevronRight,
+  ChevronDown
 } from 'lucide-react';
 import { authenticatedFetch } from '../utils/api';
 import { API_ENDPOINTS } from '../config/api';
@@ -766,26 +767,35 @@ const HiringProcessDetail = () => {
                                     )}
                                   </div>
                                   
-                                  {/* Expandable Details Section */}
+                                  {/* Action Buttons */}
                                   <div className="border-t border-gray-100 pt-3">
-                                    <button
-                                      onClick={() => {
-                                        const detailsId = `details-${candidate.resume_bank_entry_id || candidate.job_application_id || candidate.candidate_email}-${stage.id}-${index}`;
-                                        setCandidateMenus(prev => ({
-                                          ...prev,
-                                          [detailsId]: !prev[detailsId]
-                                        }));
-                                      }}
-                                      className="w-full flex items-center justify-between text-sm text-gray-600 hover:text-gray-900 transition-colors py-2"
-                                    >
-                                      <span className="flex items-center">
-                                        <Eye className="w-4 h-4 mr-2" />
-                                        View Details
-                                      </span>
-                                      <ChevronRight className={`w-4 h-4 transition-transform ${
-                                        candidateMenus[`details-${candidate.resume_bank_entry_id || candidate.job_application_id || candidate.candidate_email}-${stage.id}-${index}`] ? 'rotate-90' : ''
-                                      }`} />
-                                    </button>
+                                    <div className="flex space-x-2 mb-3">
+                                      {candidate.resume_bank_entry_id && (
+                                        <button
+                                          onClick={() => {
+                                            console.log('Navigating to candidate:', candidate.resume_bank_entry_id, 'Full candidate:', candidate);
+                                            navigate(`/resume-bank/${candidate.resume_bank_entry_id}`);
+                                          }}
+                                          className="flex-1 flex items-center justify-center px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                                        >
+                                          <Eye className="w-4 h-4 mr-2" />
+                                          View Resume
+                                        </button>
+                                      )}
+                                      <button
+                                        onClick={() => {
+                                          const detailsId = `details-${candidate.resume_bank_entry_id || candidate.job_application_id || candidate.candidate_email}-${stage.id}-${index}`;
+                                          setCandidateMenus(prev => ({
+                                            ...prev,
+                                            [detailsId]: !prev[detailsId]
+                                          }));
+                                        }}
+                                        className="flex-1 flex items-center justify-center px-3 py-2 border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50 transition-colors"
+                                      >
+                                        <ChevronDown className="w-4 h-4 mr-2" />
+                                        Details
+                                      </button>
+                                    </div>
                                     
                                     {/* Collapsible Details */}
                                     {candidateMenus[`details-${candidate.resume_bank_entry_id || candidate.job_application_id || candidate.candidate_email}-${stage.id}-${index}`] && (

@@ -15,6 +15,7 @@ import JobDetail from './pages/JobDetail';
 import ResumeBank from './pages/ResumeBank';
 import AddResume from './pages/AddResume';
 import EditResume from './pages/EditResume';
+import CandidateDetail from './pages/CandidateDetail';
 import SearchCandidates from './pages/SearchCandidates';
 import Settings from './pages/Settings';
 import HiringProcesses from './pages/HiringProcesses';
@@ -93,6 +94,14 @@ function App() {
             <ProtectedRoute>
               <Layout showSidebar={true}>
                 <EditResume />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/resume-bank/:candidateId" element={
+            <ProtectedRoute>
+              <Layout showSidebar={true}>
+                <CandidateDetail />
               </Layout>
             </ProtectedRoute>
           } />

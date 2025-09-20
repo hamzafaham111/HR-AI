@@ -140,6 +140,7 @@ class MongoDBRepository:
         
         result = await self.resume_bank_entries.insert_one(entry_data)
         entry_data["_id"] = result.inserted_id
+        entry_data["id"] = str(result.inserted_id)
         
         return ResumeBankEntryDocument(**entry_data)
     
@@ -148,6 +149,9 @@ class MongoDBRepository:
         try:
             entry_data = await self.resume_bank_entries.find_one({"_id": ObjectId(entry_id)})
             if entry_data:
+                # Ensure the _id field is properly mapped to id
+                if "_id" in entry_data:
+                    entry_data["id"] = str(entry_data["_id"])
                 return ResumeBankEntryDocument(**entry_data)
             return None
         except Exception as e:
@@ -159,6 +163,9 @@ class MongoDBRepository:
         cursor = self.resume_bank_entries.find().skip(skip).limit(limit).sort("created_at", -1)
         entries = []
         async for entry_data in cursor:
+            # Ensure the _id field is properly mapped to id
+            if "_id" in entry_data:
+                entry_data["id"] = str(entry_data["_id"])
             entries.append(ResumeBankEntryDocument(**entry_data))
         return entries
     
@@ -174,6 +181,9 @@ class MongoDBRepository:
         }).skip(skip).limit(limit).sort("created_at", -1)
         entries = []
         async for entry_data in cursor:
+            # Ensure the _id field is properly mapped to id
+            if "_id" in entry_data:
+                entry_data["id"] = str(entry_data["_id"])
             entries.append(ResumeBankEntryDocument(**entry_data))
         return entries
     

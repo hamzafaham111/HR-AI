@@ -21,6 +21,15 @@ class ResumeStatus(str, Enum):
     REJECTED = "rejected"
 
 
+class CandidateStatus(str, Enum):
+    AVAILABLE = "available"  # Open for new roles
+    IN_PROCESS = "in_process"  # Currently in hiring process
+    NOT_AVAILABLE = "not_available"  # Not looking for roles
+    HIRED = "hired"  # Successfully hired
+    REJECTED = "rejected"  # Not selected
+    ON_HOLD = "on_hold"  # Process paused
+
+
 class ResumeSource(str, Enum):
     DIRECT_UPLOAD = "direct_upload"
     JOB_APPLICATION = "job_application"
@@ -41,9 +50,15 @@ class ResumeBankEntry(BaseModel):
     salary_expectation: Optional[str] = Field(None, description="Salary expectation")
     availability: Optional[str] = Field(None, description="Availability status")
     status: ResumeStatus = Field(ResumeStatus.ACTIVE, description="Resume status")
+    candidate_status: CandidateStatus = Field(CandidateStatus.AVAILABLE, description="Candidate availability status")
     source: ResumeSource = Field(ResumeSource.DIRECT_UPLOAD, description="How resume was added")
     tags: List[str] = Field(default_factory=list, description="Custom tags for categorization")
     notes: Optional[str] = Field(None, description="Additional notes")
+    
+    # Hiring process tracking
+    current_processes: List[str] = Field(default_factory=list, description="Current hiring process IDs")
+    process_history: List[Dict[str, Any]] = Field(default_factory=list, description="Hiring process history")
+    pdf_file_path: Optional[str] = Field(None, description="Path to stored PDF file")
     
     # AI Analysis Results (simplified)
     summary: Optional[str] = Field(None, description="AI-generated summary")
@@ -192,5 +207,15 @@ class ResumeBankEntryUpdate(BaseModel):
     salary_expectation: Optional[str] = Field(None, description="Salary expectation")
     availability: Optional[str] = Field(None, description="Availability status")
     status: Optional[ResumeStatus] = Field(None, description="Resume status")
+    candidate_status: Optional[CandidateStatus] = Field(None, description="Candidate availability status")
     tags: Optional[List[str]] = Field(None, description="Custom tags")
-    notes: Optional[str] = Field(None, description="Additional notes") 
+    notes: Optional[str] = Field(None, description="Additional notes")
+    current_processes: Optional[List[str]] = Field(None, description="Current hiring process IDs")
+
+
+class CandidateDetailResponse(BaseModel):
+    """Detailed response for candidate profile page."""
+    candidate: ResumeBankEntry = Field(..., description="Candidate information")
+    current_processes: List[Dict[str, Any]] = Field(default_factory=list, description="Current hiring processes")
+    process_history: List[Dict[str, Any]] = Field(default_factory=list, description="Hiring process history")
+    pdf_url: Optional[str] = Field(None, description="URL to access PDF file") 

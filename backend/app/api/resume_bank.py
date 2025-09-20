@@ -35,7 +35,7 @@ from bson import ObjectId  # MongoDB's unique identifier
 from app.models.resume_bank import (
     ResumeBankEntry, ResumeSearchFilters, CandidateMatch, ResumeBankStats,
     ResumeBankResponse, CandidateSearchResponse, ResumeBankEntryCreate,
-    ResumeBankEntryUpdate, ResumeStatus, ResumeSource
+    ResumeBankEntryUpdate, ResumeStatus, ResumeSource, CandidateStatus
 )
 
 # Import core services
@@ -115,9 +115,35 @@ async def upload_resume_to_bank(
                 detail="Only PDF files are allowed"
             )
         
-        # Process PDF file
+        # Initialize file_path variable
+        file_path = None
+        
+        # Process PDF file and save it
         try:
+            # Read file content first (before it gets consumed by PDFProcessor)
+            content = await file.read()
+            
+            # Reset file position for PDFProcessor
+            await file.seek(0)
+            
+            # Process PDF to extract text and get filename
             resume_text, filename = await PDFProcessor.process_pdf(file)
+            print(f"====> PDFProcessor returned filename: {filename}")
+            
+            # Create user-specific directory
+            import os
+            # Use a path relative to the backend directory where the server runs
+            user_dir = f"uploads/resumes/{current_user.id}"
+            os.makedirs(user_dir, exist_ok=True)
+            print(f"====> Created directory: {user_dir}")
+            print(f"====> Current working directory: {os.getcwd()}")
+            
+            # Save PDF file
+            file_path = os.path.join(user_dir, filename)
+            print(f"====> Saving file to: {file_path}")
+            with open(file_path, "wb") as buffer:
+                buffer.write(content)
+            print(f"====> File saved successfully, size: {len(content)} bytes")
             print("====> PDF processed successfully:")
             print(f"====> Filename: {filename}")
             print(f"====> Text length: {len(resume_text)}")
@@ -254,6 +280,7 @@ async def upload_resume_to_bank(
         from bson import ObjectId
         
         # Clean and prepare data for MongoDB
+        print(f"====> Creating database entry with file_path: {file_path}")
         entry_data = {
             "user_id": ObjectId(current_user.id),
             "filename": filename or "unknown.pdf",
@@ -269,6 +296,10 @@ async def upload_resume_to_bank(
             "tags": tags.split(',') if tags else [],
             "notes": notes or "",
             "status": "active",
+            "candidate_status": "available",  # Default status
+            "current_processes": [],  # Empty initially
+            "process_history": [],  # Empty initially
+            "pdf_file_path": file_path,  # Store actual PDF file path
             "summary": summary or "Professional resume",
             "skills": extracted_skills or [],
             "education": extracted_info.get("education") or "Not specified",
@@ -881,6 +912,11 @@ async def search_candidates_for_job(
         )
 
 
+@router.get("/test")
+async def test_endpoint():
+    """Test endpoint to verify server is working."""
+    return {"message": "Server is working", "timestamp": datetime.utcnow().isoformat()}
+
 @router.get("/{resume_id}", response_model=ResumeBankEntry)
 async def get_resume_from_bank(resume_id: str, database = Depends(get_database)):
     """
@@ -1133,4 +1169,279 @@ async def update_resume_status(resume_id: str, status: ResumeStatus, database = 
         )
 
 
-# Removed duplicate function - using the one from utils/ai_extractor.py 
+# Removed duplicate function - using the one from utils/ai_extractor.py
+
+
+
+@router.get("/candidate/{candidate_id}")
+async def get_candidate_detail(
+    candidate_id: str,
+    current_user: UserDocument = Depends(get_current_user),
+    database = Depends(get_database)
+):
+    """
+    Get detailed candidate information for the profile page.
+    
+    This endpoint provides comprehensive candidate data including:
+    - Basic candidate information
+    - Current hiring processes
+    - Process history
+    - PDF file access URL
+    """
+    try:
+        # Validate candidate ID
+        if not ObjectId.is_valid(candidate_id):
+            raise HTTPException(status_code=400, detail="Invalid candidate ID")
+        
+        logger.info(f"Fetching candidate details for ID: {candidate_id}")
+        logger.info(f"Current user ID: {current_user.id}")
+        
+        # Get candidate from database
+        repository = MongoDBRepository(database)
+        candidate_doc = await repository.get_resume_bank_entry_by_id(candidate_id)
+        
+        logger.info(f"Candidate document found: {candidate_doc is not None}")
+        if candidate_doc:
+            logger.info(f"Candidate user_id: {candidate_doc.user_id}")
+            logger.info(f"Candidate name: {candidate_doc.candidate_name}")
+        
+        if not candidate_doc:
+            raise HTTPException(status_code=404, detail="Candidate not found")
+        
+        # Check if user owns this candidate
+        candidate_user_id = candidate_doc.user_id
+        if isinstance(candidate_user_id, ObjectId):
+            candidate_user_id = str(candidate_user_id)
+        
+        if candidate_user_id != str(current_user.id):
+            logger.warning(f"Access denied: user {current_user.id} trying to access candidate owned by {candidate_user_id}")
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        # Return raw candidate data without model validation for now
+        candidate = {
+            "id": str(candidate_doc.id),
+            "filename": candidate_doc.filename or "",
+            "candidate_name": candidate_doc.candidate_name or "",
+            "candidate_email": candidate_doc.candidate_email,
+            "candidate_phone": candidate_doc.candidate_phone,
+            "candidate_location": candidate_doc.candidate_location,
+            "years_experience": candidate_doc.years_experience,
+            "current_role": candidate_doc.current_role,
+            "desired_role": candidate_doc.desired_role,
+            "salary_expectation": candidate_doc.salary_expectation,
+            "availability": candidate_doc.availability,
+            "status": candidate_doc.status or "active",
+            "candidate_status": candidate_doc.candidate_status or "available",
+            "source": candidate_doc.source or "direct_upload",
+            "tags": candidate_doc.tags or [],
+            "notes": candidate_doc.notes,
+            "current_processes": candidate_doc.current_processes or [],
+            "process_history": candidate_doc.process_history or [],
+            "pdf_file_path": candidate_doc.pdf_file_path,
+            "summary": candidate_doc.summary,
+            "skills": candidate_doc.skills or [],
+            "education": candidate_doc.education,
+            "experience_level": candidate_doc.experience_level,
+            "overall_assessment": candidate_doc.overall_assessment,
+            "created_date": candidate_doc.created_at or candidate_doc.created_date,
+            "updated_date": candidate_doc.updated_at or candidate_doc.updated_date,
+            "last_contact_date": candidate_doc.last_contact_date
+        }
+        
+        logger.info(f"Candidate data prepared: {candidate}")
+        
+        # Get current hiring processes (placeholder - will be implemented with hiring process module)
+        current_processes = []
+        process_history = candidate_doc.process_history or []
+        
+        # Generate PDF URL
+        pdf_url = None
+        if candidate_doc.pdf_file_path:
+            pdf_url = f"/api/v1/resume-bank/pdf/{candidate_id}"
+        
+        return {
+            "candidate": candidate,
+            "current_processes": current_processes,
+            "process_history": process_history,
+            "pdf_url": pdf_url
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get candidate detail {candidate_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to get candidate details"
+        )
+
+
+@router.get("/pdf/{candidate_id}")
+async def get_candidate_pdf(
+    candidate_id: str,
+    database = Depends(get_database)
+):
+    """
+    Serve the PDF file for a candidate.
+    
+    This endpoint provides secure access to candidate PDF files.
+    """
+    try:
+        # Validate candidate ID
+        if not ObjectId.is_valid(candidate_id):
+            raise HTTPException(status_code=400, detail="Invalid candidate ID")
+        
+        # Get candidate from database
+        repository = MongoDBRepository(database)
+        candidate_doc = await repository.get_resume_bank_entry_by_id(candidate_id)
+        
+        if not candidate_doc:
+            raise HTTPException(status_code=404, detail="Candidate not found")
+        
+        # Note: No authentication required for PDF viewing
+        # This allows iframes to load PDFs without Authorization headers
+        
+        # Get PDF file path
+        pdf_file_path = candidate_doc.pdf_file_path
+        if not pdf_file_path:
+            raise HTTPException(status_code=404, detail="PDF file not found")
+        
+        # Check if file exists
+        import os
+        if not os.path.exists(pdf_file_path):
+            raise HTTPException(status_code=404, detail="PDF file not found on disk")
+        
+        # Return the PDF file for inline viewing (not download)
+        from fastapi.responses import FileResponse
+        return FileResponse(
+            path=pdf_file_path,
+            media_type="application/pdf",
+            filename=candidate_doc.filename,
+            headers={"Content-Disposition": "inline"}  # Display in browser instead of downloading
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get candidate PDF {candidate_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to get candidate PDF"
+        )
+
+
+@router.get("/pdf/{candidate_id}/download")
+async def download_candidate_pdf(
+    candidate_id: str,
+    database = Depends(get_database)
+):
+    """
+    Download the PDF file for a candidate (forces download).
+    
+    This endpoint forces the browser to download the PDF file
+    instead of displaying it inline.
+    """
+    try:
+        # Validate candidate ID
+        if not ObjectId.is_valid(candidate_id):
+            raise HTTPException(status_code=400, detail="Invalid candidate ID")
+        
+        # Get candidate from database
+        repository = MongoDBRepository(database)
+        candidate_doc = await repository.get_resume_bank_entry_by_id(candidate_id)
+        
+        if not candidate_doc:
+            raise HTTPException(status_code=404, detail="Candidate not found")
+        
+        # Get PDF file path
+        pdf_file_path = candidate_doc.pdf_file_path
+        if not pdf_file_path:
+            raise HTTPException(status_code=404, detail="PDF file not found")
+        
+        # Check if file exists
+        import os
+        if not os.path.exists(pdf_file_path):
+            raise HTTPException(status_code=404, detail="PDF file not found on disk")
+        
+        # Return the PDF file for download
+        from fastapi.responses import FileResponse
+        return FileResponse(
+            path=pdf_file_path,
+            media_type="application/pdf",
+            filename=candidate_doc.filename,
+            headers={"Content-Disposition": "attachment"}  # Force download
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to download candidate PDF {candidate_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to download candidate PDF"
+        )
+
+
+@router.put("/candidate/{candidate_id}/status")
+async def update_candidate_status(
+    candidate_id: str,
+    status_update: dict,
+    current_user: UserDocument = Depends(get_current_user),
+    database = Depends(get_database)
+):
+    """
+    Update candidate status (available, in_process, hired, etc.).
+    
+    This endpoint allows updating the candidate's availability status
+    and managing their hiring process state.
+    """
+    try:
+        # Validate candidate ID
+        if not ObjectId.is_valid(candidate_id):
+            raise HTTPException(status_code=400, detail="Invalid candidate ID")
+        
+        # Validate status
+        new_status = status_update.get('candidate_status')
+        if new_status and new_status not in [status.value for status in CandidateStatus]:
+            raise HTTPException(status_code=400, detail="Invalid candidate status")
+        
+        # Get candidate from database
+        repository = MongoDBRepository(database)
+        candidate_doc = await repository.find_by_id(COLLECTIONS.RESUME_BANK, candidate_id)
+        
+        if not candidate_doc:
+            raise HTTPException(status_code=404, detail="Candidate not found")
+        
+        # Check if user owns this candidate
+        if candidate_doc.get('user_id') != current_user.id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        # Update candidate status
+        update_data = {
+            **status_update,
+            'updated_at': datetime.utcnow()
+        }
+        
+        updated_candidate = await repository.update_by_id(
+            COLLECTIONS.RESUME_BANK, 
+            candidate_id, 
+            update_data
+        )
+        
+        if not updated_candidate:
+            raise HTTPException(status_code=404, detail="Candidate not found")
+        
+        return {
+            "message": "Candidate status updated successfully",
+            "candidate_id": candidate_id,
+            "new_status": new_status
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to update candidate status {candidate_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to update candidate status"
+        ) 

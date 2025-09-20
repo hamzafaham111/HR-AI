@@ -105,10 +105,16 @@ class ResumeBankEntryDocument(BaseModel):
     notes: Optional[str] = Field(None, description="Additional notes")
     resume_analysis_id: Optional[PyObjectId] = Field(None, description="ID of the resume analysis")
     status: str = Field(default="active", description="Resume status")
+    candidate_status: str = Field(default="available", description="Candidate availability status")
     source: str = Field(default="direct_upload", description="Source of the resume: direct_upload, job_application")
     job_id: Optional[str] = Field(None, description="Job ID if from job application")
     application_id: Optional[str] = Field(None, description="Application ID if from job application")
     last_contact_date: Optional[datetime] = Field(None, description="Last contact date")
+    
+    # Hiring process tracking
+    current_processes: List[str] = Field(default_factory=list, description="Current hiring process IDs")
+    process_history: List[Dict[str, Any]] = Field(default_factory=list, description="Hiring process history")
+    pdf_file_path: Optional[str] = Field(None, description="Path to stored PDF file")
     
     # AI Analysis Results (simplified)
     summary: Optional[str] = Field(None, description="AI-generated summary")

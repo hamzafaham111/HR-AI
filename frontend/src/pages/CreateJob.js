@@ -861,7 +861,7 @@ Benefits:
                   </div>
                   
                   {candidates.map((candidate, index) => (
-                    <div key={candidate.id || index} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+                    <div key={candidate.resume_id || index} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
                           <h4 className="font-semibold text-gray-900">{candidate.candidate_name}</h4>
@@ -904,13 +904,16 @@ Benefits:
 
                         <div className="flex space-x-2">
                           <button
-                            onClick={() => navigate(`/resume-bank/${candidate.id}`)}
+                            onClick={() => {
+                              console.log('Navigating to candidate:', candidate.resume_id, 'Full candidate:', candidate);
+                              navigate(`/resume-bank/${candidate.resume_id}`);
+                            }}
                             className="px-3 py-1 text-sm border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
                           >
                             View
                           </button>
                           <button
-                            onClick={() => navigate(`/resume-bank/${candidate.id}/edit`)}
+                            onClick={() => navigate(`/resume-bank/${candidate.resume_id}/edit`)}
                             className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
                           >
                             Edit
