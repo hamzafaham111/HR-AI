@@ -43,7 +43,7 @@ security = HTTPBearer()
 SECRET_KEY = settings.secret_key  # Used for access tokens
 REFRESH_SECRET_KEY = settings.refresh_secret_key or "your-refresh-secret-key-here"  # Used for refresh tokens
 ALGORITHM = settings.algorithm  # Encryption algorithm (usually HS256)
-ACCESS_TOKEN_EXPIRE_MINUTES = 15  # Short-lived for security (like session timeout)
+ACCESS_TOKEN_EXPIRE_MINUTES = 25  # Short-lived for security (like session timeout)
 REFRESH_TOKEN_EXPIRE_DAYS = 7     # Longer-lived for convenience
 
 # JWT Token Creation Functions

@@ -99,9 +99,6 @@ const Dashboard = () => {
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Resumes</p>
                 <p className="text-2xl font-bold text-gray-900">{overview.total_resumes}</p>
-                <p className="text-xs text-gray-500 mt-1">
-                  {overview.statistics?.resume_stats?.recent || 0} recent
-                </p>
               </div>
               <FileText className="w-8 h-8 text-primary-600" />
             </div>
@@ -113,9 +110,6 @@ const Dashboard = () => {
                 <p className="text-sm font-medium text-gray-600">Total Jobs</p>
                 <p className="text-2xl font-bold text-green-600">
                   {overview.total_jobs}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  {overview.statistics?.job_stats?.recent || 0} recent
                 </p>
               </div>
               <BarChart3 className="w-8 h-8 text-green-600" />

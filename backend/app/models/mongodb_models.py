@@ -301,7 +301,8 @@ COLLECTIONS = {
     "users": "users",
     "hiring_processes": "hiring_processes",
     "job_applications": "job_applications",
-    "job_application_forms": "job_application_forms"
+    "job_application_forms": "job_application_forms",
+    "meetings": "meetings"
 } 
 
 

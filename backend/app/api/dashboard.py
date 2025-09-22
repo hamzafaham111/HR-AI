@@ -53,12 +53,7 @@ async def get_dashboard_overview(
         total_jobs = await database[COLLECTIONS["job_postings"]].count_documents({"user_id": current_user.id})
         total_hiring_processes = await database[COLLECTIONS["hiring_processes"]].count_documents({"user_id": current_user.id})
         total_applications = await database[COLLECTIONS["job_applications"]].count_documents({"user_id": current_user.id})
-        
-        # Meetings count (with error handling)
-        try:
-            total_meetings = await database["meetings"].count_documents({"user_id": current_user.id})
-        except:
-            total_meetings = 0
+        total_meetings = await database[COLLECTIONS["meetings"]].count_documents({"user_id": current_user.id})
         
         # Simple statistics (minimal queries)
         week_ago = datetime.now() - timedelta(days=7)
