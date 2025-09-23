@@ -72,21 +72,6 @@ async def upload_resume_to_bank(
 ):
     logger.warning(f"Resume upload attempt by user: {current_user.email if current_user else 'No user'}")
     
-    # Debug: Print all form data received
-    print("====> FORM DATA RECEIVED:")
-    print(f"====> candidate_name: '{candidate_name}'")
-    print(f"====> candidate_email: '{candidate_email}'")
-    print(f"====> candidate_phone: '{candidate_phone}'")
-    print(f"====> candidate_location: '{candidate_location}'")
-    print(f"====> years_experience: '{years_experience}'")
-    print(f"====> current_role: '{current_role}'")
-    print(f"====> desired_role: '{desired_role}'")
-    print(f"====> salary_expectation: '{salary_expectation}'")
-    print(f"====> availability: '{availability}'")
-    print(f"====> tags: '{tags}'")
-    print(f"====> notes: '{notes}'")
-    print("====> END FORM DATA")
-    
     """
     Upload a resume directly to the resume bank.
     

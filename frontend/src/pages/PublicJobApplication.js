@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { 
-  Briefcase, 
   Building, 
   MapPin, 
   Clock, 
@@ -25,8 +24,8 @@ const PublicJobApplication = () => {
   const { jobId } = useParams();
   
   // Temporary workaround: Define the endpoint directly
-  const PUBLIC_FORM_ENDPOINT = (jobId) => `http://localhost:8000/api/v1/job-applications/public/forms/${jobId}`;
-  const PUBLIC_APPLY_ENDPOINT = (jobId) => `http://localhost:8000/api/v1/job-applications/public/apply/${jobId}`;
+  const PUBLIC_FORM_ENDPOINT = (jobId) => `${API_ENDPOINTS.JOB_APPLICATIONS.FORMS.PUBLIC_FORM(jobId)}`;
+  const PUBLIC_APPLY_ENDPOINT = (jobId) => `${API_ENDPOINTS.JOB_APPLICATIONS.APPLICATIONS.PUBLIC_APPLY(jobId)}`;
   
   const [job, setJob] = useState(null);
   const [applicationForm, setApplicationForm] = useState(null);
@@ -37,13 +36,11 @@ const PublicJobApplication = () => {
   const [copied, setCopied] = useState(false);
   
   const [applicationData, setApplicationData] = useState({
-    applicant_name: '',
-    applicant_email: '',
-    applicant_phone: '',
     form_data: {}
   });
   
   const [resumeFiles, setResumeFiles] = useState([]);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const fetchJobAndForm = async () => {
     try {
@@ -102,6 +99,14 @@ const PublicJobApplication = () => {
       ...prev,
       [field]: value
     }));
+    
+    // Clear field error when user starts typing
+    if (fieldErrors[field]) {
+      setFieldErrors(prev => ({
+        ...prev,
+        [field]: null
+      }));
+    }
   };
 
   const handleFormFieldChange = (fieldName, value) => {
@@ -113,12 +118,71 @@ const PublicJobApplication = () => {
         [fieldName]: value
       }
     }));
+    
+    // Clear field error when user starts typing
+    if (fieldErrors[fieldName]) {
+      setFieldErrors(prev => ({
+        ...prev,
+        [fieldName]: null
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    let isValid = true;
+
+    // Validate Basic Information fields - always required
+    if (!applicationData.applicant_name || applicationData.applicant_name.trim() === '') {
+      errors.applicant_name = 'Full Name is required';
+      isValid = false;
+    }
+
+    if (!applicationData.applicant_email || applicationData.applicant_email.trim() === '') {
+      errors.applicant_email = 'Email Address is required';
+      isValid = false;
+    } else if (!/\S+@\S+\.\S+/.test(applicationData.applicant_email)) {
+      errors.applicant_email = 'Please enter a valid email address';
+      isValid = false;
+    }
+
+    // Phone is optional, no validation needed
+
+    // Validate custom form fields
+    if (applicationForm?.fields) {
+      applicationForm.fields.forEach(field => {
+        if (field.required) {
+          const value = applicationData.form_data[field.name];
+          if (!value || value.trim() === '') {
+            errors[field.name] = `${field.label} is required`;
+            isValid = false;
+          }
+        }
+      });
+    }
+
+    // Validate resume upload if required
+    if (applicationForm?.requires_resume && resumeFiles.length === 0) {
+      errors.resume = 'Resume upload is required';
+      isValid = false;
+    }
+
+    setFieldErrors(errors);
+    return isValid;
   };
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
     console.log('File change:', files);
     setResumeFiles(files);
+    
+    // Clear resume error when files are selected
+    if (files.length > 0 && fieldErrors.resume) {
+      setFieldErrors(prev => ({
+        ...prev,
+        resume: null
+      }));
+    }
   };
 
   const copyApplicationLink = async () => {
@@ -144,19 +208,12 @@ const PublicJobApplication = () => {
     console.log('Submit function called');
     console.log('Application data:', applicationData);
     console.log('Resume files:', resumeFiles);
-    
-    if (!applicationData.applicant_name || !applicationData.applicant_email) {
+
+    // Validate form before submission
+    if (!validateForm()) {
       setToast({
         type: 'error',
         message: 'Please fill in all required fields'
-      });
-      return;
-    }
-
-    if (applicationForm?.requires_resume && resumeFiles.length === 0) {
-      setToast({
-        type: 'error',
-        message: 'Resume upload is required'
       });
       return;
     }
@@ -195,6 +252,7 @@ const PublicJobApplication = () => {
 
   const renderFormField = (field) => {
     const { type, label, required, options, placeholder } = field;
+    const hasError = fieldErrors[field.name];
     
     switch (type) {
       case 'text':
@@ -209,10 +267,20 @@ const PublicJobApplication = () => {
               type={type}
               value={applicationData.form_data[field.name] || ''}
               onChange={(e) => handleFormFieldChange(field.name, e.target.value)}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                hasError 
+                  ? 'border-red-300 bg-red-50' 
+                  : 'border-gray-200'
+              }`}
               placeholder={placeholder}
-              required={required}
+              // required={required}
             />
+            {hasError && (
+              <p className="mt-1 text-sm text-red-600 flex items-center">
+                <XCircle className="w-4 h-4 mr-1" />
+                {hasError}
+              </p>
+            )}
           </div>
         );
       
@@ -226,10 +294,20 @@ const PublicJobApplication = () => {
               value={applicationData.form_data[field.name] || ''}
               onChange={(e) => handleFormFieldChange(field.name, e.target.value)}
               rows={4}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
+              className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none ${
+                hasError 
+                  ? 'border-red-300 bg-red-50' 
+                  : 'border-gray-200'
+              }`}
               placeholder={placeholder}
-              required={required}
+              // required={required}
             />
+            {hasError && (
+              <p className="mt-1 text-sm text-red-600 flex items-center">
+                <XCircle className="w-4 h-4 mr-1" />
+                {hasError}
+              </p>
+            )}
           </div>
         );
       
@@ -242,7 +320,11 @@ const PublicJobApplication = () => {
             <select
               value={applicationData.form_data[field.name] || ''}
               onChange={(e) => handleFormFieldChange(field.name, e.target.value)}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                hasError 
+                  ? 'border-red-300 bg-red-50' 
+                  : 'border-gray-200'
+              }`}
               required={required}
             >
               <option value="">Select an option</option>
@@ -252,6 +334,12 @@ const PublicJobApplication = () => {
                 </option>
               ))}
             </select>
+            {hasError && (
+              <p className="mt-1 text-sm text-red-600 flex items-center">
+                <XCircle className="w-4 h-4 mr-1" />
+                {hasError}
+              </p>
+            )}
           </div>
         );
       
@@ -442,7 +530,7 @@ const PublicJobApplication = () => {
           </div>
           
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            {/* Basic Information */}
+            {/* Basic Information - Always displayed */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center">
                 <User className="w-5 h-5 mr-2 text-blue-600" />
@@ -456,12 +544,21 @@ const PublicJobApplication = () => {
                   </label>
                   <input
                     type="text"
-                    value={applicationData.applicant_name}
+                    value={applicationData.applicant_name || ''}
                     onChange={(e) => handleInputChange('applicant_name', e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                      fieldErrors.applicant_name 
+                        ? 'border-red-300 bg-red-50' 
+                        : 'border-gray-200'
+                    }`}
                     placeholder="Enter your full name"
-                    required
                   />
+                  {fieldErrors.applicant_name && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center">
+                      <XCircle className="w-4 h-4 mr-1" />
+                      {fieldErrors.applicant_name}
+                    </p>
+                  )}
                 </div>
                 
                 <div>
@@ -470,12 +567,21 @@ const PublicJobApplication = () => {
                   </label>
                   <input
                     type="email"
-                    value={applicationData.applicant_email}
+                    value={applicationData.applicant_email || ''}
                     onChange={(e) => handleInputChange('applicant_email', e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                      fieldErrors.applicant_email 
+                        ? 'border-red-300 bg-red-50' 
+                        : 'border-gray-200'
+                    }`}
                     placeholder="Enter your email address"
-                    required
                   />
+                  {fieldErrors.applicant_email && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center">
+                      <XCircle className="w-4 h-4 mr-1" />
+                      {fieldErrors.applicant_email}
+                    </p>
+                  )}
                 </div>
               </div>
               
@@ -485,11 +591,21 @@ const PublicJobApplication = () => {
                 </label>
                 <input
                   type="tel"
-                  value={applicationData.applicant_phone}
+                  value={applicationData.applicant_phone || ''}
                   onChange={(e) => handleInputChange('applicant_phone', e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                    fieldErrors.applicant_phone 
+                      ? 'border-red-300 bg-red-50' 
+                      : 'border-gray-200'
+                  }`}
                   placeholder="Enter your phone number"
                 />
+                {fieldErrors.applicant_phone && (
+                  <p className="mt-1 text-sm text-red-600 flex items-center">
+                    <XCircle className="w-4 h-4 mr-1" />
+                    {fieldErrors.applicant_phone}
+                  </p>
+                )}
               </div>
             </div>
             
@@ -498,22 +614,26 @@ const PublicJobApplication = () => {
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center">
                   <FileText className="w-5 h-5 mr-2 text-blue-600" />
-                  Additional Information
+                  Candidate Information
                 </h3>
                 
                 {applicationForm.fields.map(renderFormField)}
               </div>
             )}
             
-            {/* Resume Upload */}
-            {applicationForm.requires_resume && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <Upload className="w-5 h-5 mr-2 text-blue-600" />
-                  Resume Upload
-                </h3>
+            {/* Resume Upload - Always visible */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                <Upload className="w-5 h-5 mr-2 text-blue-600" />
+                Resume Upload
+                {applicationForm.requires_resume && <span className="text-red-500 ml-1">*</span>}
+              </h3>
                 
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+                <div className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                  fieldErrors.resume 
+                    ? 'border-red-300 bg-red-50' 
+                    : 'border-gray-300 hover:border-blue-400'
+                }`}>
                   <input
                     type="file"
                     multiple={applicationForm.allow_multiple_files}
@@ -521,7 +641,7 @@ const PublicJobApplication = () => {
                     onChange={handleFileChange}
                     className="hidden"
                     id="resume-upload"
-                    required={applicationForm.requires_resume}
+                    // required={applicationForm.requires_resume}
                   />
                   <label htmlFor="resume-upload" className="cursor-pointer">
                     <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -530,12 +650,20 @@ const PublicJobApplication = () => {
                     </p>
                     <p className="text-sm text-gray-500">
                       {applicationForm.allow_multiple_files ? 'You can upload multiple files' : 'Single file upload'}
+                      {!applicationForm.requires_resume && ' (Optional)'}
                     </p>
                     <p className="text-xs text-gray-400 mt-2">
                       Allowed formats: {applicationForm.allowed_file_types.join(', ').toUpperCase()}
                     </p>
                   </label>
                 </div>
+                
+                {fieldErrors.resume && (
+                  <p className="text-sm text-red-600 flex items-center">
+                    <XCircle className="w-4 h-4 mr-1" />
+                    {fieldErrors.resume}
+                  </p>
+                )}
                 
                 {resumeFiles.length > 0 && (
                   <div className="space-y-2">
@@ -553,7 +681,6 @@ const PublicJobApplication = () => {
                   </div>
                 )}
               </div>
-            )}
             
             {/* Submit Button */}
             <div className="pt-6">

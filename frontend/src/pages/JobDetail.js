@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Edit, Trash2, Users, Calendar, MapPin, Building, DollarSign, Copy, ExternalLink, FileText, Settings } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Users, Calendar, MapPin, Building, DollarSign, Copy, ExternalLink, FileText, Settings, EditIcon} from 'lucide-react';
 import ConfirmationModal from '../components/ui/ConfirmationModal';
 import ApplicationFormBuilder from '../components/ApplicationFormBuilder';
 import ApplicationsDataTable from '../components/ApplicationsDataTable';
@@ -9,6 +9,7 @@ import ProcessSelectionModal from '../components/ProcessSelectionModal';
 import Toast from '../components/ui/Toast';
 import { authenticatedFetch } from '../utils/api';
 import { DetailPageSkeleton } from '../components/ui/SkeletonLoader';
+import { API_ENDPOINTS } from '../config/api';
 
 const JobDetail = () => {
   const { id } = useParams();
@@ -98,6 +99,23 @@ const JobDetail = () => {
     } catch (error) {
       console.error('Error fetching application form:', error);
       setApplicationForm(null);
+    }
+  };
+
+  const deleteApplicationForm = async () => {
+    try {
+      const response = await authenticatedFetch(`${API_ENDPOINTS.JOB_APPLICATIONS.FORMS.DELETE(applicationForm.id)}`, {
+        method: 'DELETE',
+      });
+      if (response.ok) {
+        showToast('Application form deleted successfully', 'success');
+        setApplicationForm(null);
+      } else {
+        throw new Error('Failed to delete application form');
+      }
+    } catch (error) {
+      console.error('Error deleting application form:', error);
+      showToast('Failed to delete application form', 'error');
     }
   };
 
@@ -539,13 +557,14 @@ const JobDetail = () => {
               <FileText className="w-5 h-5 mr-2 text-blue-600" />
               Application Form
             </h2>
-            <button
-              onClick={() => setShowFormModal(true)}
-              className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-            >
-              <Settings className="w-4 h-4 mr-2" />
-              {applicationForm ? 'Edit Form' : 'Create Form'}
-            </button>
+      {applicationForm ?
+          <button
+          onClick={() => setShowFormModal(true)}
+          className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+        >
+          {applicationForm && <span><EditIcon className="w-4 h-4 mr-2" /> Edit Form</span>}
+        </button>:<></>  
+    }
           </div>
 
           {applicationForm ? (
@@ -577,6 +596,14 @@ const JobDetail = () => {
                   >
                     <ExternalLink className="w-4 h-4 mr-2" />
                     Preview
+                  </button>
+                  <button
+                    onClick={deleteApplicationForm}
+                    className="flex items-center px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                    title="Delete application form"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete
                   </button>
                 </div>
               </div>
