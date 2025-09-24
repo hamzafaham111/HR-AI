@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Toast from '../components/ui/Toast';
+import ProgressLoader from '../components/ui/ProgressLoader';
 import { authenticatedFetch } from '../utils/api';
 import { API_ENDPOINTS } from '../config/api';
 
 const AddResume = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [showProgress, setShowProgress] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
   const [showCandidateForm, setShowCandidateForm] = useState(false);
   const [toast, setToast] = useState({
@@ -117,6 +119,7 @@ const AddResume = () => {
     }
 
     setLoading(true);
+    setShowProgress(true);
 
     try {
       // Create FormData with file and candidate info
@@ -158,11 +161,16 @@ const AddResume = () => {
       showToast('Failed to add resume to bank. Please try again.', 'error');
     } finally {
       setLoading(false);
+      setShowProgress(false);
     }
   };
 
   return (
     <>
+      <ProgressLoader 
+        isVisible={showProgress} 
+        onComplete={() => setShowProgress(false)}
+      />
       <div className="space-y-6">
         {/* Header */}
         <div className="mb-8">

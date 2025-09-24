@@ -19,6 +19,7 @@ import {
 import { API_ENDPOINTS } from '../config/api';
 import { apiRequest } from '../utils/api';
 import Toast from '../components/ui/Toast';
+import ProgressLoader from '../components/ui/ProgressLoader';
 
 const PublicJobApplication = () => {
   const { jobId } = useParams();
@@ -31,6 +32,7 @@ const PublicJobApplication = () => {
   const [applicationForm, setApplicationForm] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [showProgress, setShowProgress] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [toast, setToast] = useState(null);
   const [copied, setCopied] = useState(false);
@@ -50,6 +52,8 @@ const PublicJobApplication = () => {
       const jobResponse = await apiRequest(API_ENDPOINTS.JOBS.PUBLIC_DETAIL(jobId));
       
       if (jobResponse) {
+        console.log('Job data received:', jobResponse);
+        console.log('Job user_id:', jobResponse.user_id);
         setJob(jobResponse);
       } else {
         throw new Error('Failed to fetch job details');
@@ -202,6 +206,47 @@ const PublicJobApplication = () => {
     }
   };
 
+  const uploadResumeFiles = async (applicationId) => {
+    const uploadedResumes = [];
+    
+    // Get user_id from job data, fallback to default
+    const userId = job?.user_id || '689743f2d1e90b173d1669f2';
+    console.log('Using user_id for resume upload:', userId);
+    console.log('Job data:', job);
+    
+    for (const file of resumeFiles) {
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('applicant_name', applicationData.applicant_name);
+        formData.append('applicant_email', applicationData.applicant_email);
+        formData.append('applicant_phone', applicationData.applicant_phone || '');
+        formData.append('user_id', userId);
+        formData.append('application_id', applicationId);
+
+        const response = await fetch(API_ENDPOINTS.RESUME_BANK.PUBLIC_UPLOAD, {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          uploadedResumes.push({
+            filename: file.name,
+            resume_id: result.data.resume_id,
+            ...result.data
+          });
+        } else {
+          console.error(`Failed to upload ${file.name}:`, await response.text());
+        }
+      } catch (error) {
+        console.error(`Error uploading ${file.name}:`, error);
+      }
+    }
+    
+    return uploadedResumes;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -220,11 +265,13 @@ const PublicJobApplication = () => {
 
     try {
       setSubmitting(true);
+      setShowProgress(true);
       
-      // Prepare application data with resume file names
+      // First, submit the application without resume files
       const submitData = {
         ...applicationData,
-        resume_files: resumeFiles.map(file => file.name) // Send file names for now
+        resume_files: [], // Start with empty array
+        user_id: job?.user_id || '689743f2d1e90b173d1669f2' // Use job's user_id or fallback
       };
       
       console.log('Submitting data:', submitData);
@@ -235,6 +282,15 @@ const PublicJobApplication = () => {
       console.log('Submit response:', response);
       
       if (response && response.success) {
+        const applicationId = response.data.application_id;
+        
+        // Now upload resume files if any
+        if (resumeFiles.length > 0) {
+          console.log('Uploading resume files...');
+          const uploadedResumes = await uploadResumeFiles(applicationId);
+          console.log('Uploaded resumes:', uploadedResumes);
+        }
+        
         setSubmitted(true);
       } else {
         throw new Error(response?.message || 'Failed to submit application');
@@ -247,6 +303,7 @@ const PublicJobApplication = () => {
       });
     } finally {
       setSubmitting(false);
+      setShowProgress(false);
     }
   };
 

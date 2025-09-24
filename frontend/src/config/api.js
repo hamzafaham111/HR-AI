@@ -38,6 +38,7 @@ export const API_ENDPOINTS = {
   RESUME_BANK: {
     LIST: `${API_URL}/resume-bank/`,
     UPLOAD: `${API_URL}/resume-bank/upload`,
+    PUBLIC_UPLOAD: `${API_URL}/resume-bank/public/upload-resume`,
     STATS: `${API_URL}/resume-bank/stats`,
     SEARCH_CANDIDATES: (jobId) => `${API_URL}/resume-bank/search-candidates/${jobId}`,
     FIND_CANDIDATES: `${API_URL}/resume-bank/find-candidates`,
@@ -56,6 +57,7 @@ export const API_ENDPOINTS = {
     DELETE: (id) => `${API_URL}/jobs/${id}`,
     PARSE_DOCUMENT: `${API_URL}/jobs/parse-document`,
     PARSE_TEXT: `${API_URL}/jobs/parse-text`,
+    GET: (id) => `${API_URL}/jobs/${id}`,
   },
   
   // Dashboard
@@ -111,6 +113,9 @@ export const API_ENDPOINTS = {
       UPDATE: (formId) => `${API_URL}/job-applications/forms/${formId}`,
       DELETE: (formId) => `${API_URL}/job-applications/forms/${formId}`,
       PUBLIC_FORM: (jobId) => `${API_URL}/job-applications/public/forms/${jobId}`,
+      GET: (id) => `${API_URL}/job-applications/forms/${id}`,
+      UPDATE: (id) => `${API_URL}/job-applications/forms/${id}`,
+      DELETE: (id) => `${API_URL}/job-applications/forms/${id}`,
     },
     APPLICATIONS: {
       LIST: (jobId) => `${API_URL}/job-applications/${jobId}`,
@@ -118,6 +123,7 @@ export const API_ENDPOINTS = {
       PUBLIC_APPLY: (jobId) => `${API_URL}/job-applications/public/apply/${jobId}`,
       WITH_SCORES: (jobId) => `${API_URL}/job-applications/${jobId}/applications-with-scores`,
       UPDATE_STATUS: (applicationId) => `${API_URL}/job-applications/applications/${applicationId}/status`,
+      APPROVE_AND_ADD_TO_PROCESS: (applicationId) => `${API_URL}/job-applications/applications/${applicationId}/approve-and-add-to-process`,
     }
   },
 };

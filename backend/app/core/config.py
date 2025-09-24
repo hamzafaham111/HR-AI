@@ -24,10 +24,18 @@ class Settings(BaseSettings):
     debug: bool = False
     environment: str = "development"
     
-    # OpenAI API configuration
+    # AI API configuration (supports both OpenAI and DeepSeek)
     openai_api_key: str = "your-openai-api-key-here"  # Set via OPENAI_API_KEY env var
     openai_api_base: str = "https://api.openai.com/v1"
     openai_model: str = "gpt-3.5-turbo"
+    
+    # DeepSeek API configuration (alternative to OpenAI)
+    deepseek_api_key: str = "your_deepseek_api_key_here"  # Set via DEEPSEEK_API_KEY env var
+    deepseek_api_base: str = "https://api.deepseek.com/v1"
+    deepseek_model: str = "deepseek-chat"
+    
+    # AI Provider selection
+    ai_provider: str = "openai"  # Options: "openai" or "deepseek"
     
 
     

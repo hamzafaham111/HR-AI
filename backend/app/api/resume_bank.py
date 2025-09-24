@@ -53,6 +53,338 @@ from app.models.mongodb_models import UserDocument      # User data model
 router = APIRouter()
 
 
+@router.post("/public/upload-resume", response_model=ResumeBankEntry)
+async def upload_resume_to_bank_public(
+    file: UploadFile = File(...),
+    candidate_name: str = Form(""),
+    candidate_email: str = Form(""),
+    candidate_phone: str = Form(""),
+    candidate_location: str = Form(""),
+    years_experience: str = Form(""),
+    current_role: str = Form(""),
+    desired_role: str = Form(""),
+    salary_expectation: str = Form(""),
+    availability: str = Form(""),
+    tags: str = Form(""),
+    notes: str = Form(""),
+    user_id: str = Form(...),  # Required for public uploads
+    job_id: str = Form(""),
+    application_id: str = Form(""),
+    database = Depends(get_database)
+):
+    """
+    Public endpoint to upload a resume to the resume bank.
+    This endpoint doesn't require authentication and is used for public job applications.
+    
+    Args:
+        file: Resume PDF file
+        candidate_name: Candidate's full name
+        candidate_email: Candidate's email address
+        candidate_phone: Candidate's phone number (optional)
+        candidate_location: Candidate's location (optional)
+        years_experience: Years of experience (optional)
+        current_role: Current role (optional)
+        desired_role: Desired role (optional)
+        salary_expectation: Salary expectation (optional)
+        availability: Availability (optional)
+        tags: Comma-separated tags (optional)
+        notes: Additional notes (optional)
+        user_id: User ID to associate the resume with
+        job_id: Job ID if uploading from job application
+        application_id: Application ID if uploading from job application
+        
+    Returns:
+        ResumeBankEntry: Created resume bank entry
+    """
+    logger.warning(f"Public resume upload attempt for user: {user_id}")
+    
+    try:
+        # Validate file type
+        if not file.content_type or not file.content_type.startswith('application/pdf'):
+            raise HTTPException(
+                status_code=400,
+                detail="Only PDF files are allowed"
+            )
+        
+        # Initialize file_path variable
+        file_path = None
+        
+        # Process PDF file and save it
+        try:
+            # Read file content first (before it gets consumed by PDFProcessor)
+            content = await file.read()
+            
+            # Reset file position for PDFProcessor
+            await file.seek(0)
+            
+            # Process PDF to extract text and get filename
+            resume_text, filename = await PDFProcessor.process_pdf(file)
+            print(f"====> PDFProcessor returned filename: {filename}")
+            
+            # Create user-specific directory
+            import os
+            # Use a path relative to the backend directory where the server runs
+            user_dir = f"uploads/resumes/{user_id}"
+            os.makedirs(user_dir, exist_ok=True)
+            print(f"====> Created directory: {user_dir}")
+            print(f"====> Current working directory: {os.getcwd()}")
+            
+            # Save PDF file
+            file_path = os.path.join(user_dir, filename)
+            print(f"====> Saving file to: {file_path}")
+            with open(file_path, "wb") as buffer:
+                buffer.write(content)
+            print(f"====> File saved successfully, size: {len(content)} bytes")
+            print("====> PDF processed successfully:")
+            print(f"====> Filename: {filename}")
+            print(f"====> Text length: {len(resume_text)}")
+            print(f"====> Full text content:")
+            print(resume_text)
+            print("====> End of PDF text")
+
+            logger.info(f"PDF processed successfully: {filename}")
+            logger.info(f"PDF text length: {len(resume_text)}")
+            logger.info(f"PDF text content: {resume_text}")
+        except Exception as pdf_error:
+            logger.error(f"PDF processing failed: {pdf_error}")
+            raise pdf_error
+        
+        # Extract candidate information from resume text using AI-powered extraction
+        extracted_info = {}
+        try:
+            print("====> Starting AI extraction...")
+            print(f"====> Input text length: {len(resume_text)}")
+            print(f"====> Input filename: {filename}")
+            
+            extracted_info = await ai_extractor.extract_candidate_info(resume_text, filename)
+            
+            print("====> AI extraction completed:")
+            print(f"====> Extracted info: {extracted_info}")
+            for key, value in extracted_info.items():
+                print(f"====> {key}: {value}")
+            
+            logger.info(f"AI extraction completed: {extracted_info}")
+        except Exception as ai_error:
+            logger.error(f"AI extraction failed: {ai_error}")
+            logger.info("Using fallback extraction...")
+            
+            # Fallback: Try basic extraction
+            try:
+                extracted_info = ai_extractor._fallback_extraction(resume_text, filename)
+                logger.info(f"Fallback extraction completed: {extracted_info}")
+            except Exception as fallback_error:
+                logger.error(f"Fallback extraction also failed: {fallback_error}")
+                # Ultimate fallback: minimal extraction
+                extracted_info = {
+                    'name': 'Unknown Candidate',
+                    'email': '',
+                    'phone': '',
+                    'location': '',
+                    'current_role': '',
+                    'experience_years': None,
+                    'education': '',
+                    'skills': [],
+                    'summary': '',
+                    'work_history': [],
+                    'projects': [],
+                    'certifications': [],
+                    'languages': [],
+                    'interests': []
+                }
+                logger.warning("Using minimal extraction as last resort")
+        
+        # Use extracted info if form data is empty (no fallback values)
+        print("====> MERGING FORM DATA WITH EXTRACTED INFO:")
+        print(f"====> Original candidate_name: '{candidate_name}'")
+        print(f"====> Extracted name: '{extracted_info.get('name', '')}'")
+        
+        candidate_name = candidate_name if candidate_name else extracted_info.get("name", "")
+        candidate_email = candidate_email if candidate_email else extracted_info.get("email", "")
+        candidate_phone = candidate_phone if candidate_phone else extracted_info.get("phone", "")
+        candidate_location = candidate_location if candidate_location else extracted_info.get("location", "")
+        
+        print(f"====> Final candidate_name: '{candidate_name}'")
+        print(f"====> Final candidate_email: '{candidate_email}'")
+        print(f"====> Final candidate_phone: '{candidate_phone}'")
+        print(f"====> Final candidate_location: '{candidate_location}'")
+        
+        # Handle years_experience conversion
+        years_exp = None
+        if years_experience:
+            try:
+                years_exp = int(years_experience)
+            except ValueError:
+                years_exp = None
+        elif extracted_info.get("experience_years"):
+            years_exp = extracted_info["experience_years"]
+        
+        # Use extracted current role if not provided
+        current_role = current_role if current_role else extracted_info.get("current_role")
+        
+        # Extract skills and create summary from extracted information
+        extracted_skills = extracted_info.get("skills", [])
+        
+        # Create summary from extracted information
+        summary_parts = []
+        if candidate_name and candidate_name != "Unknown":
+            summary_parts.append(f"Professional resume for {candidate_name}")
+        if current_role:
+            summary_parts.append(f"Current role: {current_role}")
+        if years_exp:
+            summary_parts.append(f"Experience: {years_exp} years")
+        if extracted_skills:
+            summary_parts.append(f"Key skills: {', '.join(extracted_skills[:3])}")
+        
+        summary = ". ".join(summary_parts) if summary_parts else "Professional resume with relevant experience and skills"
+        
+        # Create overall assessment
+        assessment_parts = []
+        if years_exp and years_exp >= 3:
+            assessment_parts.append("Experienced professional")
+        if extracted_skills:
+            assessment_parts.append(f"Skilled in {len(extracted_skills)} technologies")
+        if extracted_info.get("education"):
+            assessment_parts.append("Educated candidate")
+        
+        overall_assessment = ". ".join(assessment_parts) if assessment_parts else "Qualified candidate with relevant experience"
+        
+        # Determine experience level
+        experience_level = "Entry"
+        if years_exp:
+            if years_exp >= 5:
+                experience_level = "Senior"
+            elif years_exp >= 3:
+                experience_level = "Mid"
+            elif years_exp >= 1:
+                experience_level = "Junior"
+        
+        # Get education information
+        education = extracted_info.get("education", "Not specified")
+        
+        # Prepare candidate info - only include fields that have actual data
+        candidate_info = {
+            "filename": filename,
+            "tags": tags.split(',') if tags else [],  # Convert string to list
+            "notes": notes,
+            "skills": extracted_skills  # Add extracted skills
+        }
+        
+        # Only add fields that have actual data (no fallback values)
+        if candidate_name:
+            candidate_info["candidate_name"] = candidate_name
+        if candidate_email:
+            candidate_info["candidate_email"] = candidate_email
+        if candidate_phone:
+            candidate_info["candidate_phone"] = candidate_phone
+        if candidate_location:
+            candidate_info["candidate_location"] = candidate_location
+        if years_exp:
+            candidate_info["years_experience"] = years_exp
+        if current_role:
+            candidate_info["current_role"] = current_role
+        if desired_role:
+            candidate_info["desired_role"] = desired_role
+        if salary_expectation:
+            candidate_info["salary_expectation"] = salary_expectation
+        if availability:
+            candidate_info["availability"] = availability
+        
+        # Add to resume bank using MongoDB
+        repo = MongoDBRepository(database)
+        
+        # Create resume bank entry directly without analysis
+        
+        # Create resume bank entry with all parsed data
+        from bson import ObjectId
+        
+        # Clean and prepare data for MongoDB
+        print(f"====> Creating database entry with file_path: {file_path}")
+        entry_data = {
+            "user_id": ObjectId(user_id),
+            "filename": filename or "unknown.pdf",
+            "candidate_name": candidate_name or "Unknown Candidate",
+            "candidate_email": candidate_email or "no-email@example.com",
+            "candidate_phone": candidate_phone or "",
+            "candidate_location": candidate_location or "",
+            "years_experience": years_exp,
+            "current_role": current_role or "",
+            "desired_role": desired_role or "",
+            "salary_expectation": salary_expectation or "",
+            "availability": availability or "",
+            "tags": tags.split(',') if tags else [],
+            "notes": notes or "",
+            "status": "active",
+            "candidate_status": "available",  # Default status
+            "current_processes": [],  # Empty initially
+            "process_history": [],  # Empty initially
+            "pdf_file_path": file_path,  # Store actual PDF file path
+            "summary": summary or "Professional resume",
+            "skills": extracted_skills or [],
+            "education": extracted_info.get("education") or "Not specified",
+            "experience_level": "Senior" if years_exp and years_exp >= 5 else "Mid" if years_exp and years_exp >= 2 else "Junior" if years_exp else "Unknown",
+            "overall_assessment": overall_assessment or "Qualified candidate",
+            "source": "job_application",  # Mark as from job application
+            "job_id": job_id if job_id else None,
+            "application_id": application_id if application_id else None
+        }
+        
+        # Remove None values to avoid serialization issues
+        entry_data = {k: v for k, v in entry_data.items() if v is not None}
+        
+        try:
+            created_entry = await repo.create_resume_bank_entry(entry_data)
+        except Exception as create_error:
+            logger.error(f"Failed to create resume bank entry: {create_error}")
+            logger.error(f"Entry data: {entry_data}")
+            raise create_error
+        
+        # Resume successfully stored in MongoDB
+        logger.info(f"Resume successfully stored in MongoDB: {filename}")
+        
+        logger.info(f"Successfully uploaded resume to bank: {filename}")
+        
+        # Convert MongoDB document to response model
+        try:
+            response_data = ResumeBankEntry(
+                id=str(created_entry.id),
+                filename=created_entry.filename,
+                candidate_name=created_entry.candidate_name,
+                candidate_email=created_entry.candidate_email,
+                candidate_phone=created_entry.candidate_phone,
+                candidate_location=created_entry.candidate_location,
+                years_experience=created_entry.years_experience,
+                current_role=created_entry.current_role,
+                desired_role=created_entry.desired_role,
+                salary_expectation=created_entry.salary_expectation,
+                availability=created_entry.availability,
+                tags=created_entry.tags,
+                notes=created_entry.notes,
+                summary=created_entry.summary,
+                skills=created_entry.skills,
+                education=created_entry.education,
+                experience_level=created_entry.experience_level,
+                overall_assessment=created_entry.overall_assessment,
+                status=created_entry.status,
+                last_contact_date=created_entry.last_contact_date,
+                created_date=created_entry.created_at,
+                updated_date=created_entry.updated_at
+            )
+            return response_data
+        except Exception as response_error:
+            logger.error(f"Failed to create response model: {response_error}")
+            logger.error(f"Created entry data: {created_entry}")
+            raise response_error
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to upload resume to bank: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to upload resume to bank"
+        )
+
+
 @router.post("/upload", response_model=ResumeBankEntry)
 async def upload_resume_to_bank(
     file: UploadFile = File(...),

@@ -67,21 +67,37 @@ class OpenAIService:
     
     def __init__(self):
         """
-        Initialize the OpenAI service with API configuration.
+        Initialize the AI service with API configuration.
         
         Sets up the async client and model parameters.
-        Think of this like configuring your connection to a smart AI assistant.
+        Supports both OpenAI and DeepSeek APIs.
         """
-        # Create async client for OpenAI API calls
+        # Determine which AI provider to use
+        self.ai_provider = settings.ai_provider.lower()
+        
+        if self.ai_provider == "deepseek":
+            # Use DeepSeek API
+            api_key = settings.deepseek_api_key
+            base_url = settings.deepseek_api_base
+            model = settings.deepseek_model
+        else:
+            # Use OpenAI API (default)
+            api_key = settings.openai_api_key
+            base_url = settings.openai_api_base
+            model = settings.openai_model
+        
+        # Create async client for AI API calls
         self.client = AsyncOpenAI(
-            api_key=settings.openai_api_key,      # Your API key for authentication
-            base_url=settings.openai_api_base     # API endpoint (can be customized)
+            api_key=api_key,      # Your API key for authentication
+            base_url=base_url     # API endpoint (can be customized)
         )
         
         # Model configuration
-        self.model = settings.openai_model           # Usually "gpt-3.5-turbo" or "gpt-4"
+        self.model = model
         self.max_tokens = settings.max_tokens        # Maximum response length
         self.temperature = settings.temperature      # Creativity level (0.0 = focused, 1.0 = creative)
+        
+        logger.info(f"Initialized AI service with provider: {self.ai_provider}")
         
     async def extract_candidate_info(self, resume_text: str) -> Dict[str, any]:
         """
@@ -159,6 +175,33 @@ class OpenAIService:
             return response.choices[0].message.content
         except Exception as e:
             logger.error(f"OpenAI API call failed: {e}")
+            raise e
+    
+    async def _call_openai_vision_api(self, image_base64: str, prompt: str) -> str:
+        """Make API call to OpenAI Vision API for image text extraction."""
+        try:
+            response = await self.client.chat.completions.create(
+                model="gpt-4-vision-preview",  # Use vision model
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": prompt},
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/png;base64,{image_base64}"
+                                }
+                            }
+                        ]
+                    }
+                ],
+                max_tokens=4000,  # Higher limit for text extraction
+                temperature=0.1   # Low temperature for accurate extraction
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            logger.error(f"OpenAI Vision API call failed: {e}")
             raise e
     
     def _parse_extraction_response(self, response: str) -> Dict[str, any]:

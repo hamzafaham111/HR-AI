@@ -15,13 +15,29 @@ import os
 from app.core.config import settings
 from app.core.logger import logger
 
-# Try to import pdfplumber for better PDF processing
+# Try to import multiple PDF processing libraries
 try:
     import pdfplumber
     HAS_PDFPLUMBER = True
 except ImportError:
     HAS_PDFPLUMBER = False
-    logger.warning("pdfplumber not available, using PyPDF2 only")
+    logger.warning("pdfplumber not available")
+
+try:
+    import pymupdf  # PyMuPDF (fitz)
+    HAS_PYMUPDF = True
+except ImportError:
+    HAS_PYMUPDF = False
+    logger.warning("PyMuPDF not available")
+
+try:
+    import pdf2image
+    from PIL import Image
+    import pytesseract
+    HAS_OCR = True
+except ImportError:
+    HAS_OCR = False
+    logger.warning("OCR libraries not available")
 
 
 class PDFProcessor:
@@ -65,11 +81,11 @@ class PDFProcessor:
                     detail=f"File size exceeds maximum limit of {settings.max_file_size} bytes"
                 )
             
-            # Extract text from PDF with error handling
+            # Extract text from PDF with multiple methods and error handling
             try:
-                text = PDFProcessor._extract_text_from_pdf(content)
+                text = await PDFProcessor._extract_text_with_multiple_methods(content, file.filename)
             except Exception as extract_error:
-                logger.error(f"Text extraction failed for {file.filename}: {extract_error}")
+                logger.error(f"All text extraction methods failed for {file.filename}: {extract_error}")
                 text = f"PDF file: {file.filename}\nContent could not be extracted automatically.\nPlease review this resume manually."
             
             # If no text was extracted, create a minimal placeholder
@@ -88,6 +104,303 @@ class PDFProcessor:
                 status_code=500,
                 detail="Failed to process PDF file"
             )
+    
+    @staticmethod
+    async def _extract_text_with_multiple_methods(pdf_content: bytes, filename: str) -> str:
+        """
+        Extract text from PDF using multiple methods and return the best result.
+        
+        Args:
+            pdf_content: PDF file content as bytes
+            filename: Original filename for logging
+            
+        Returns:
+            Best extracted text from the PDF
+        """
+        extraction_results = []
+        
+        # Method 1: PyPDF2
+        try:
+            text1 = PDFProcessor._extract_with_pypdf2(pdf_content)
+            if text1 and len(text1.strip()) > 50:
+                extraction_results.append(("PyPDF2", text1, len(text1)))
+                logger.info(f"PyPDF2 extracted {len(text1)} characters from {filename}")
+        except Exception as e:
+            logger.warning(f"PyPDF2 extraction failed for {filename}: {e}")
+        
+        # Method 2: pdfplumber
+        if HAS_PDFPLUMBER:
+            try:
+                text2 = PDFProcessor._extract_with_pdfplumber(pdf_content)
+                if text2 and len(text2.strip()) > 50:
+                    extraction_results.append(("pdfplumber", text2, len(text2)))
+                    logger.info(f"pdfplumber extracted {len(text2)} characters from {filename}")
+            except Exception as e:
+                logger.warning(f"pdfplumber extraction failed for {filename}: {e}")
+        
+        # Method 3: PyMuPDF (fitz)
+        if HAS_PYMUPDF:
+            try:
+                text3 = PDFProcessor._extract_with_pymupdf(pdf_content)
+                if text3 and len(text3.strip()) > 50:
+                    extraction_results.append(("PyMuPDF", text3, len(text3)))
+                    logger.info(f"PyMuPDF extracted {len(text3)} characters from {filename}")
+            except Exception as e:
+                logger.warning(f"PyMuPDF extraction failed for {filename}: {e}")
+        
+        # Method 4: OCR (if other methods fail)
+        if HAS_OCR and len(extraction_results) == 0:
+            try:
+                text4 = PDFProcessor._extract_with_ocr(pdf_content)
+                if text4 and len(text4.strip()) > 50:
+                    extraction_results.append(("OCR", text4, len(text4)))
+                    logger.info(f"OCR extracted {len(text4)} characters from {filename}")
+            except Exception as e:
+                logger.warning(f"OCR extraction failed for {filename}: {e}")
+        
+        # Method 5: OpenAI Vision API (if other methods fail or give poor results)
+        if len(extraction_results) == 0 or (extraction_results and max(extraction_results, key=lambda x: x[2])[2] < 200):
+            try:
+                text5 = await PDFProcessor._extract_with_openai_vision(pdf_content, filename)
+                if text5 and len(text5.strip()) > 50:
+                    extraction_results.append(("OpenAI Vision", text5, len(text5)))
+                    logger.info(f"OpenAI Vision extracted {len(text5)} characters from {filename}")
+            except Exception as e:
+                logger.warning(f"OpenAI Vision extraction failed for {filename}: {e}")
+        
+        # Method 6: OpenAI Vision API with PyPDF2 page images (fallback if OCR libraries not available)
+        if len(extraction_results) == 0 and not HAS_OCR:
+            try:
+                text6 = await PDFProcessor._extract_with_openai_vision_pypdf2(pdf_content, filename)
+                if text6 and len(text6.strip()) > 50:
+                    extraction_results.append(("OpenAI Vision (PyPDF2)", text6, len(text6)))
+                    logger.info(f"OpenAI Vision (PyPDF2) extracted {len(text6)} characters from {filename}")
+            except Exception as e:
+                logger.warning(f"OpenAI Vision (PyPDF2) extraction failed for {filename}: {e}")
+        
+        # Choose the best result
+        if extraction_results:
+            # Sort by text length (longer is usually better)
+            best_method, best_text, best_length = max(extraction_results, key=lambda x: x[2])
+            logger.info(f"Best extraction method for {filename}: {best_method} ({best_length} characters)")
+            return best_text
+        else:
+            logger.error(f"All extraction methods failed for {filename}")
+            # Final fallback: Try to extract at least the filename
+            return f"PDF file: {filename}\nFilename suggests candidate: {PDFProcessor._extract_name_from_filename(filename)}\nContent could not be extracted automatically.\nPlease review this resume manually."
+    
+    @staticmethod
+    def _extract_name_from_filename(filename: str) -> str:
+        """Extract candidate name from filename as absolute last resort."""
+        if not filename:
+            return "Unknown"
+        
+        # Remove file extension
+        name_part = filename.replace('.pdf', '').replace('.PDF', '')
+        
+        # Remove common CV keywords
+        cleaned_name = re.sub(r'\b(cv|resume|curriculum|vitae|europass)\b', '', name_part, flags=re.IGNORECASE)
+        cleaned_name = re.sub(r'\(\d+\)', '', cleaned_name)  # Remove (1), (2), etc.
+        cleaned_name = cleaned_name.strip()
+        
+        # Take first two words as name
+        words = cleaned_name.split()
+        if len(words) >= 2:
+            return ' '.join(words[:2]).title()
+        elif len(words) == 1:
+            return words[0].title()
+        else:
+            return "Unknown"
+    
+    @staticmethod
+    def _extract_with_pypdf2(pdf_content: bytes) -> str:
+        """Extract text using PyPDF2."""
+        text = ""
+        try:
+            pdf_reader = PyPDF2.PdfReader(io.BytesIO(pdf_content))
+            for page in pdf_reader.pages:
+                page_text = page.extract_text()
+                if page_text:
+                    text += page_text + "\n"
+        except Exception as e:
+            logger.warning(f"PyPDF2 extraction error: {e}")
+        return text
+    
+    @staticmethod
+    def _extract_with_pdfplumber(pdf_content: bytes) -> str:
+        """Extract text using pdfplumber."""
+        text = ""
+        try:
+            with pdfplumber.open(io.BytesIO(pdf_content)) as pdf:
+                for page in pdf.pages:
+                    page_text = page.extract_text()
+                    if page_text:
+                        text += page_text + "\n"
+        except Exception as e:
+            logger.warning(f"pdfplumber extraction error: {e}")
+        return text
+    
+    @staticmethod
+    def _extract_with_pymupdf(pdf_content: bytes) -> str:
+        """Extract text using PyMuPDF (fitz)."""
+        text = ""
+        try:
+            import fitz  # PyMuPDF
+            doc = fitz.open(stream=pdf_content, filetype="pdf")
+            for page_num in range(doc.page_count):
+                page = doc[page_num]
+                page_text = page.get_text()
+                if page_text:
+                    text += page_text + "\n"
+            doc.close()
+        except Exception as e:
+            logger.warning(f"PyMuPDF extraction error: {e}")
+        return text
+    
+    @staticmethod
+    def _extract_with_ocr(pdf_content: bytes) -> str:
+        """Extract text using OCR (Optical Character Recognition)."""
+        text = ""
+        try:
+            # Convert PDF to images
+            images = pdf2image.convert_from_bytes(pdf_content)
+            for i, image in enumerate(images):
+                # Use OCR to extract text from image
+                page_text = pytesseract.image_to_string(image)
+                if page_text:
+                    text += page_text + "\n"
+        except Exception as e:
+            logger.warning(f"OCR extraction error: {e}")
+        return text
+    
+    @staticmethod
+    async def _extract_with_openai_vision(pdf_content: bytes, filename: str) -> str:
+        """Extract text using OpenAI Vision API."""
+        try:
+            # Convert PDF to images first
+            if not HAS_OCR:
+                logger.warning("OCR libraries not available for OpenAI Vision extraction")
+                return ""
+            
+            # Convert PDF to images
+            images = pdf2image.convert_from_bytes(pdf_content, dpi=300)  # High DPI for better quality
+            
+            extracted_texts = []
+            
+            for i, image in enumerate(images):
+                try:
+                    # Convert PIL image to base64
+                    import base64
+                    from io import BytesIO
+                    
+                    buffer = BytesIO()
+                    image.save(buffer, format='PNG')
+                    image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+                    
+                    # Call OpenAI Vision API
+                    from app.services.openai_service import openai_service
+                    
+                    # Create a prompt for text extraction
+                    prompt = f"""
+                    Extract ALL text content from this resume image. This appears to be page {i+1} of a resume/CV.
+                    
+                    Instructions:
+                    1. Extract ALL visible text including:
+                       - Candidate name (usually at the top)
+                       - Contact information (email, phone, address)
+                       - Work experience and job titles
+                       - Education details
+                       - Skills and technologies
+                       - Any other text content
+                    
+                    2. Preserve the structure and formatting as much as possible
+                    3. Include line breaks where appropriate
+                    4. Do not interpret or summarize - just extract the raw text
+                    5. If text is unclear or partially visible, include what you can see
+                    
+                    Return ONLY the extracted text, no explanations or formatting.
+                    """
+                    
+                    # Call OpenAI Vision API
+                    response = await openai_service._call_openai_vision_api(image_base64, prompt)
+                    
+                    if response:
+                        extracted_texts.append(response)
+                        logger.info(f"OpenAI Vision extracted text from page {i+1} of {filename}")
+                    
+                except Exception as page_error:
+                    logger.warning(f"OpenAI Vision failed for page {i+1} of {filename}: {page_error}")
+                    continue
+            
+            # Combine all pages
+            if extracted_texts:
+                combined_text = "\n\n".join(extracted_texts)
+                logger.info(f"OpenAI Vision successfully extracted {len(combined_text)} characters from {filename}")
+                return combined_text
+            else:
+                logger.warning(f"OpenAI Vision failed to extract any text from {filename}")
+                return ""
+                
+        except Exception as e:
+            logger.error(f"OpenAI Vision extraction error for {filename}: {e}")
+            return ""
+    
+    @staticmethod
+    async def _extract_with_openai_vision_pypdf2(pdf_content: bytes, filename: str) -> str:
+        """Extract text using OpenAI Vision API with PyPDF2 page rendering (fallback method)."""
+        try:
+            # Try to render PDF pages as images using PyPDF2
+            pdf_reader = PyPDF2.PdfReader(io.BytesIO(pdf_content))
+            extracted_texts = []
+            
+            for i, page in enumerate(pdf_reader.pages):
+                try:
+                    # Try to get page as image (this might not work for all PDFs)
+                    # For now, we'll use the text extraction as a fallback
+                    page_text = page.extract_text()
+                    
+                    if page_text and len(page_text.strip()) > 10:
+                        # Use OpenAI to clean and enhance the extracted text
+                        from app.services.openai_service import openai_service
+                        
+                        prompt = f"""
+                        Clean and enhance this extracted text from page {i+1} of a resume PDF:
+                        
+                        Original text:
+                        {page_text}
+                        
+                        Instructions:
+                        1. Clean up formatting issues and artifacts
+                        2. Preserve the structure and content
+                        3. Fix any character encoding issues
+                        4. Ensure names, contact info, and job details are clearly readable
+                        5. Return the cleaned text without any explanations
+                        
+                        Return ONLY the cleaned text.
+                        """
+                        
+                        response = await openai_service._call_openai_api(prompt)
+                        
+                        if response:
+                            extracted_texts.append(response)
+                            logger.info(f"OpenAI enhanced text from page {i+1} of {filename}")
+                    
+                except Exception as page_error:
+                    logger.warning(f"OpenAI enhancement failed for page {i+1} of {filename}: {page_error}")
+                    continue
+            
+            # Combine all pages
+            if extracted_texts:
+                combined_text = "\n\n".join(extracted_texts)
+                logger.info(f"OpenAI Vision (PyPDF2) successfully processed {len(combined_text)} characters from {filename}")
+                return combined_text
+            else:
+                logger.warning(f"OpenAI Vision (PyPDF2) failed to process any text from {filename}")
+                return ""
+                
+        except Exception as e:
+            logger.error(f"OpenAI Vision (PyPDF2) processing error for {filename}: {e}")
+            return ""
     
     @staticmethod
     def _extract_text_from_pdf(pdf_content: bytes) -> str:

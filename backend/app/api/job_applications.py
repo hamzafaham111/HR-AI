@@ -62,6 +62,7 @@ class SubmitApplicationRequest(BaseModel):
     applicant_phone: Optional[str] = None
     form_data: dict = {}
     resume_files: Optional[List[str]] = []  # File names for now, will be enhanced for actual file uploads
+    user_id: Optional[str] = None  # User ID for resume bank association
 
 class UpdateApplicationStatusRequest(BaseModel):
     status: str
@@ -298,9 +299,14 @@ async def submit_public_application(
         # If resume files are provided, add them to the resume bank
         resume_entries = []
         if application_data.resume_files and len(application_data.resume_files) > 0:
+            # Use the provided user_id or fallback to default
+            user_id = application_data.user_id or "689743f2d1e90b173d1669f2"
+            
             for resume_file in application_data.resume_files:
                 try:
-                    # Create resume bank entry
+                    # Create resume bank entry using the basic service method
+                    # Note: This creates a basic entry without AI processing
+                    # For full AI processing, we need to use the public upload endpoint
                     resume_entry = await resume_bank_service.create_resume_entry(
                         file_name=resume_file,
                         applicant_name=application_data.applicant_name,
@@ -308,7 +314,7 @@ async def submit_public_application(
                         source="job_application",
                         job_id=job_id,
                         application_id=str(application.id),
-                        user_id="689743f2d1e90b173d1669f2"  # Default user ID for job applications
+                        user_id=user_id
                     )
                     if resume_entry:
                         resume_entries.append(str(resume_entry.get('id')))

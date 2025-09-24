@@ -83,6 +83,7 @@ class JobPosting(BaseModel):
 class JobPostingResponse(BaseModel):
     """Response model for job postings."""
     id: str
+    user_id: Optional[str] = None  # Add user_id field
     title: str
     company: str
     location: str

@@ -37,12 +37,23 @@ class AIExtractor:
         """
         try:
             # Check if API key is properly configured
-            if not settings.openai_api_key or settings.openai_api_key == "your-openai-api-key-here":
-                logger.warning("OpenAI API key not configured, using fallback extraction")
+            ai_provider = settings.ai_provider.lower()
+            if ai_provider == "deepseek":
+                api_key = settings.deepseek_api_key
+                api_key_placeholder = "your_deepseek_api_key_here"
+            else:
+                api_key = settings.openai_api_key
+                api_key_placeholder = "your-openai-api-key-here"
+            
+            if not api_key or api_key == api_key_placeholder:
+                logger.warning(f"{ai_provider.upper()} API key not configured, using fallback extraction")
                 return self._fallback_extraction(pdf_text, filename)
             
+            # Clean and prepare the PDF text for better AI processing
+            cleaned_text = self._clean_pdf_text_for_ai(pdf_text, filename)
+            
             # Create a comprehensive prompt for AI extraction
-            prompt = self._create_extraction_prompt(pdf_text, filename)
+            prompt = self._create_extraction_prompt(cleaned_text, filename)
             
             # Get AI response using the correct method
             response = await self.openai_service._call_openai_api(prompt)
@@ -62,56 +73,90 @@ class AIExtractor:
             
         except Exception as e:
             logger.error(f"AI extraction failed: {e}")
-            return self._fallback_extraction(pdf_text, filename)
+            logger.info("Attempting enhanced fallback extraction...")
+            return self._enhanced_fallback_extraction(pdf_text, filename)
     
     def _create_extraction_prompt(self, pdf_text: str, filename: str) -> str:
         """Create a comprehensive prompt for AI extraction."""
         
         return f"""
-You are an expert at extracting candidate information from any type of PDF content. 
-Extract all available candidate information from the following text and return it in JSON format.
+You are an expert HR analyst and resume parser with 10+ years of experience. Your task is to extract candidate information from resume text with 100% accuracy.
 
 PDF Filename: {filename}
-Text Content:
-{pdf_text}
+Resume Text Content:
+{pdf_text[:4000]}  # Limit to first 4000 characters for better processing
 
-Please extract the following information if available (return null for missing information):
+CRITICAL TASK: Extract the candidate's FULL NAME as the #1 priority.
 
-1. **name**: Full name of the candidate
-2. **email**: Email address
-3. **phone**: Phone number (any format)
-4. **location**: Current location (city, state, country)
-5. **current_role**: Current job title/position
-6. **experience_years**: Years of experience (numeric)
-7. **education**: Highest education level or degree
-8. **skills**: List of technical skills, programming languages, tools, etc.
-9. **summary**: Brief professional summary (2-3 sentences)
-10. **work_history**: List of recent work experiences (company, role, duration)
-11. **projects**: Notable projects or achievements
-12. **certifications**: Any certifications mentioned
-13. **languages**: Programming languages or spoken languages
-14. **interests**: Professional interests or hobbies (if relevant)
+ANALYSIS APPROACH:
+1. **NAME EXTRACTION (MOST IMPORTANT)**:
+   - Look at the VERY FIRST line or top section of the resume
+   - Names typically appear as: "FirstName LastName", "FIRSTNAME LASTNAME", "First Middle Last"
+   - Common patterns: "Hamza Faham", "JOHN DOE", "Sarah A. Johnson"
+   - Ignore titles (Mr., Ms., Dr., Prof.) - extract only the name
+   - If name appears with job title, extract ONLY the name part
+   - Names are usually 2-4 words, all letters, proper capitalization
 
-Guidelines:
-- Be intelligent and context-aware
-- Extract information even from rough or informal content
-- For skills, include both technical and soft skills
-- For experience, try to calculate total years from work history
-- Clean and format the data appropriately
-- If information is unclear or missing, return null
-- Do not make up information - only extract what's actually present
+2. **CONTACT INFORMATION**:
+   - Email: Look for patterns like "name@domain.com"
+   - Phone: Look for numbers with country codes, formats like +1-xxx-xxx-xxxx
+   - Location: City, State/Country combinations
 
-Return the result as a valid JSON object with these exact field names.
+3. **PROFESSIONAL INFORMATION**:
+   - Current role: Most recent job title
+   - Experience: Calculate total years from work history
+   - Skills: Technical skills, programming languages, tools
+   - Education: Highest degree or qualification
+
+EXTRACTION RULES:
+- Be extremely precise and accurate
+- Only extract information that is clearly present
+- For names, prioritize the first clear name pattern you find
+- Clean and format data appropriately
+- Return null for missing information
+- Do not guess or make assumptions
+
+REQUIRED OUTPUT FORMAT (JSON only):
+{{
+    "name": "Extracted full name or null",
+    "email": "Email address or null", 
+    "phone": "Phone number or null",
+    "location": "Location or null",
+    "current_role": "Current job title or null",
+    "experience_years": "Number of years or null",
+    "education": "Education level or null",
+    "skills": ["skill1", "skill2", "skill3"] or null,
+    "summary": "Brief professional summary or null",
+    "work_history": ["Company - Role - Duration"] or null,
+    "projects": ["Project1", "Project2"] or null,
+    "certifications": ["Cert1", "Cert2"] or null,
+    "languages": ["Language1", "Language2"] or null,
+    "interests": ["Interest1", "Interest2"] or null
+}}
+
+IMPORTANT: Return ONLY valid JSON. No additional text or explanations.
 """
     
     def _parse_ai_response(self, response: str) -> Dict[str, Any]:
         """Parse the AI response and extract JSON data."""
         try:
-            # Try to find JSON in the response
-            json_match = re.search(r'\{.*\}', response, re.DOTALL)
-            if json_match:
-                json_str = json_match.group()
-                return json.loads(json_str)
+            # Clean the response first
+            response = response.strip()
+            
+            # Try to find JSON in the response (more robust pattern)
+            json_patterns = [
+                r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}',  # Nested JSON
+                r'\{.*\}',  # Simple JSON
+            ]
+            
+            for pattern in json_patterns:
+                json_match = re.search(pattern, response, re.DOTALL)
+                if json_match:
+                    json_str = json_match.group()
+                    try:
+                        return json.loads(json_str)
+                    except json.JSONDecodeError:
+                        continue
             
             # If no JSON found, try to parse the entire response
             return json.loads(response)
@@ -119,6 +164,12 @@ Return the result as a valid JSON object with these exact field names.
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse AI response as JSON: {e}")
             logger.debug(f"AI Response: {response}")
+            
+            # Try to extract name manually from response text
+            name_match = re.search(r'"name":\s*"([^"]+)"', response)
+            if name_match:
+                return {"name": name_match.group(1)}
+            
             return {}
     
     def _clean_extracted_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
@@ -132,6 +183,9 @@ Return the result as a valid JSON object with these exact field names.
                     # Clean string values
                     cleaned_value = value.strip()
                     if cleaned_value and cleaned_value.lower() not in ['null', 'none', 'n/a', 'unknown']:
+                        # Special handling for name field
+                        if field == "name":
+                            cleaned_value = self._format_name(cleaned_value)
                         cleaned[field] = cleaned_value
                 elif isinstance(value, list):
                     # Clean list values - handle both strings and other types
@@ -154,6 +208,146 @@ Return the result as a valid JSON object with these exact field names.
                     cleaned[field] = value
         
         return cleaned
+    
+    def _format_name(self, name: str) -> str:
+        """Format name to proper case."""
+        if not name:
+            return name
+        
+        # Remove extra whitespace
+        name = re.sub(r'\s+', ' ', name.strip())
+        
+        # Handle different name formats
+        if name.isupper():
+            # Convert ALL CAPS to Title Case
+            return name.title()
+        elif name.islower():
+            # Convert all lowercase to Title Case
+            return name.title()
+        else:
+            # Already mixed case, just clean up
+            return name
+    
+    def _enhanced_fallback_extraction(self, pdf_text: str, filename: str) -> Dict[str, Any]:
+        """Enhanced fallback extraction with multiple strategies."""
+        logger.info("Starting enhanced fallback extraction...")
+        
+        # Strategy 1: Try the original fallback extraction
+        try:
+            result = self._fallback_extraction(pdf_text, filename)
+            if result.get('name') and result.get('name') != 'Unknown':
+                logger.info("Enhanced fallback: Original method succeeded")
+                return result
+        except Exception as e:
+            logger.warning(f"Enhanced fallback: Original method failed: {e}")
+        
+        # Strategy 2: Try filename-based extraction
+        try:
+            filename_result = self._extract_from_filename(filename)
+            if filename_result.get('name'):
+                logger.info(f"Enhanced fallback: Filename extraction succeeded: {filename_result.get('name')}")
+                return filename_result
+        except Exception as e:
+            logger.warning(f"Enhanced fallback: Filename extraction failed: {e}")
+        
+        # Strategy 3: Try simple pattern matching
+        try:
+            pattern_result = self._simple_pattern_extraction(pdf_text, filename)
+            if pattern_result.get('name'):
+                logger.info(f"Enhanced fallback: Pattern extraction succeeded: {pattern_result.get('name')}")
+                return pattern_result
+        except Exception as e:
+            logger.warning(f"Enhanced fallback: Pattern extraction failed: {e}")
+        
+        # Strategy 4: Return minimal result
+        logger.warning("Enhanced fallback: All methods failed, returning minimal result")
+        return {
+            'name': 'Unknown Candidate',
+            'email': '',
+            'phone': '',
+            'location': '',
+            'current_role': '',
+            'experience_years': None,
+            'education': '',
+            'skills': [],
+            'summary': '',
+            'work_history': [],
+            'projects': [],
+            'certifications': [],
+            'languages': [],
+            'interests': []
+        }
+    
+    def _simple_pattern_extraction(self, pdf_text: str, filename: str) -> Dict[str, Any]:
+        """Simple pattern-based extraction as last resort."""
+        extracted = {}
+        
+        # Extract email
+        email_pattern = r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}'
+        email_match = re.search(email_pattern, pdf_text)
+        if email_match:
+            extracted['email'] = email_match.group()
+        
+        # Extract phone
+        phone_patterns = [
+            r'\+?[1-9]\d{1,14}',  # International format
+            r'\(\d{3}\)\s?\d{3}-\d{4}',  # US format
+            r'\d{3}-\d{3}-\d{4}',  # Simple format
+        ]
+        for pattern in phone_patterns:
+            phone_match = re.search(pattern, pdf_text)
+            if phone_match:
+                extracted['phone'] = phone_match.group()
+                break
+        
+        # Extract name from first line (simple approach)
+        lines = pdf_text.split('\n')
+        for line in lines[:5]:
+            line = line.strip()
+            if line and len(line) < 50:
+                words = line.split()
+                if 2 <= len(words) <= 4:
+                    # Check if it looks like a name
+                    if all(re.match(r'^[A-Za-z]+$', word) for word in words):
+                        if not any(keyword in line.lower() for keyword in ['work', 'experience', 'education', 'skills', 'resume', 'cv']):
+                            extracted['name'] = line.title()
+                            break
+        
+        return extracted
+    
+    def _clean_pdf_text_for_ai(self, pdf_text: str, filename: str) -> str:
+        """Clean and prepare PDF text for better AI processing."""
+        if not pdf_text:
+            return pdf_text
+        
+        # Remove common PDF artifacts
+        cleaned_text = pdf_text
+        
+        # Remove excessive whitespace
+        cleaned_text = re.sub(r'\n\s*\n\s*\n+', '\n\n', cleaned_text)
+        
+        # Remove page numbers and headers/footers
+        cleaned_text = re.sub(r'^\s*\d+\s*$', '', cleaned_text, flags=re.MULTILINE)
+        cleaned_text = re.sub(r'Page \d+', '', cleaned_text)
+        
+        # Remove common PDF metadata
+        cleaned_text = re.sub(r'PDF file:.*?\n', '', cleaned_text)
+        cleaned_text = re.sub(r'Content could not be extracted.*?\n', '', cleaned_text)
+        
+        # Clean up bullet points and formatting
+        cleaned_text = re.sub(r'[•·▪▫]', '•', cleaned_text)
+        
+        # Remove excessive punctuation
+        cleaned_text = re.sub(r'[.]{3,}', '...', cleaned_text)
+        
+        # Ensure proper line breaks
+        cleaned_text = re.sub(r'([a-zA-Z])([A-Z])', r'\1 \2', cleaned_text)
+        
+        # Remove empty lines at start and end
+        cleaned_text = cleaned_text.strip()
+        
+        logger.info(f"Cleaned PDF text for {filename}: {len(cleaned_text)} characters")
+        return cleaned_text
     
     def _split_into_pages(self, pdf_text: str) -> List[str]:
         """Split PDF text into approximate pages based on common page break indicators."""
@@ -240,6 +434,11 @@ Return the result as a valid JSON object with these exact field names.
         name_part = filename.replace('.pdf', '').replace('.PDF', '')
         
         # Try to extract name from filename
+        # Remove common CV/resume keywords first
+        cleaned_name = re.sub(r'\b(cv|resume|curriculum|vitae|europass)\b', '', name_part, flags=re.IGNORECASE)
+        cleaned_name = re.sub(r'\(\d+\)', '', cleaned_name)  # Remove (1), (2), etc.
+        cleaned_name = cleaned_name.strip()
+        
         # Common patterns: "FirstName LastName", "FirstName_LastName", "FirstName-LastName"
         name_patterns = [
             r'^([A-Za-z]+)\s+([A-Za-z]+)',  # "FirstName LastName"
@@ -249,14 +448,24 @@ Return the result as a valid JSON object with these exact field names.
         ]
         
         for pattern in name_patterns:
-            match = re.search(pattern, name_part)
+            match = re.search(pattern, cleaned_name)
             if match:
                 first_name = match.group(1)
                 last_name = match.group(2)
                 extracted['name'] = f"{first_name} {last_name}"
                 break
         
-        # If no pattern matches, try to extract single name
+        # If no pattern matches, try to extract from cleaned name
+        if 'name' not in extracted:
+            words = cleaned_name.split()
+            if len(words) >= 2:
+                # Take first two words as name
+                extracted['name'] = ' '.join(words[:2])
+            elif len(words) == 1 and len(words[0]) > 3:
+                # Single word name
+                extracted['name'] = words[0]
+        
+        # If still no name found, try original filename
         if 'name' not in extracted:
             words = name_part.split()
             if len(words) >= 2:
@@ -306,51 +515,60 @@ Return the result as a valid JSON object with these exact field names.
         
         # Method 0: Check the first few lines for a name
         if not name_found and lines:
-            for i, line in enumerate(lines[:5]):  # Check first 5 lines
+            for i, line in enumerate(lines[:10]):  # Check first 10 lines
                 line = line.strip()
                 if line and len(line) > 3 and len(line) < 50:
                     words = line.split()
                     if 2 <= len(words) <= 4 and all(re.match(r'^[A-Za-z\.\-]+$', word) for word in words):
                         # Check if it's not a section header
-                        if not any(keyword in line.lower() for keyword in ['personal information', 'contact information', 'about me', 'profile', 'resume', 'cv', 'curriculum', 'vitae', 'education', 'experience', 'skills', 'objective', 'summary', 'professional', 'candidate', 'applicant', 'work experience', 'united arab emirates', 'uae', 'dubai', 'pakistan', 'india', 'usa', 'uk', 'canada', 'australia', 'germany', 'france', 'singapore']):
+                        if not any(keyword in line.lower() for keyword in ['personal information', 'contact information', 'about me', 'profile', 'resume', 'cv', 'curriculum', 'vitae', 'education', 'experience', 'skills', 'objective', 'summary', 'professional', 'candidate', 'applicant', 'work experience', 'work experience', 'futurenostics', 'islamabad', 'pakistan']):
                             # Additional validation - should not contain job-related keywords
                             if not any(keyword in line.lower() for keyword in ['engineer', 'developer', 'programmer', 'manager', 'analyst', 'consultant', 'specialist', 'technician', 'lead', 'senior', 'junior', 'principal', 'staff', 'software', 'web', 'full', 'front', 'back', 'devops', 'data', 'machine', 'learning', 'ai', 'mobile', 'game', 'qa', 'test', 'security', 'cloud', 'platform']):
-                                # Additional validation - should not be location names
-                                if not any(location in line.lower() for location in ['united arab emirates', 'uae', 'dubai', 'abu dhabi', 'sharjah', 'pakistan', 'india', 'usa', 'united states', 'uk', 'united kingdom', 'canada', 'australia', 'germany', 'france', 'singapore', 'islamabad', 'karachi', 'lahore', 'new york', 'london', 'toronto', 'sydney', 'berlin', 'paris']):
-                                    extracted['name'] = line.title()
-                                    name_found = True
+                                # Check if the line contains ONLY name-like words (no location mixed in)
+                                # Split by common separators and check each part
+                                name_parts = re.split(r'[,;|]', line)
+                                for part in name_parts:
+                                    part = part.strip()
+                                    if part and len(part.split()) >= 2:
+                                        # Check if this part looks like a pure name (no location keywords)
+                                        if not any(location in part.lower() for location in ['united arab emirates', 'uae', 'dubai', 'abu dhabi', 'sharjah', 'pakistan', 'india', 'usa', 'united states', 'uk', 'united kingdom', 'canada', 'australia', 'germany', 'france', 'singapore', 'islamabad', 'karachi', 'lahore', 'new york', 'london', 'toronto', 'sydney', 'berlin', 'paris']):
+                                            extracted['name'] = part.title()
+                                            name_found = True
+                                            break
+                                if name_found:
                                     break
         
         # Method 1: Look for the first line that contains an email and extract the name part
-        for line in lines[:5]:  # Check first 5 lines
-            if '@' in line and '.com' in line:  # Line contains email
-                # Find the email position
-                email_match = re.search(r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}', line)
-                if email_match:
-                    # Get the part before the email
-                    name_part = line[:email_match.start()].strip()
-                    # Clean up the name part (remove extra spaces and any trailing text)
-                    name_part = re.sub(r'\s+', ' ', name_part)
-                    # Remove any trailing text that might be part of the email (like usernames)
-                    # Look for the last occurrence of a proper name pattern
-                    words = name_part.split()
-                    # Find the last sequence of 2-4 words that look like a name
-                    for i in range(len(words), 0, -1):
-                        if i >= 2:  # At least 2 words
-                            potential_name = ' '.join(words[:i])
-                            # Check if all words are proper name words (capitalized or all caps, no numbers, no special chars)
-                            if all(re.match(r'^[A-Za-z\.\-]+$', word) and (word[0].isupper() or word.isupper()) for word in words[:i]):
-                                # Should not contain job-related keywords
-                                if not any(keyword in potential_name.lower() for keyword in ['engineer', 'developer', 'programmer', 'manager', 'analyst', 'consultant', 'specialist', 'technician', 'lead', 'senior', 'junior', 'principal', 'staff', 'software', 'web', 'full', 'front', 'back', 'devops', 'data', 'machine', 'learning', 'ai', 'mobile', 'game', 'qa', 'test', 'security', 'cloud', 'platform']):
-                                    # Convert all-caps names to proper case for better display
-                                    if potential_name.isupper() and len(potential_name.split()) >= 2:
-                                        extracted['name'] = potential_name.title()
-                                    else:
-                                        extracted['name'] = potential_name
-                                    name_found = True
-                                    break
-                    if name_found:
-                        break
+        if not name_found:
+            for line in lines[:5]:  # Check first 5 lines
+                if '@' in line and '.com' in line:  # Line contains email
+                    # Find the email position
+                    email_match = re.search(r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}', line)
+                    if email_match:
+                        # Get the part before the email
+                        name_part = line[:email_match.start()].strip()
+                        # Clean up the name part (remove extra spaces and any trailing text)
+                        name_part = re.sub(r'\s+', ' ', name_part)
+                        # Remove any trailing text that might be part of the email (like usernames)
+                        # Look for the last occurrence of a proper name pattern
+                        words = name_part.split()
+                        # Find the last sequence of 2-4 words that look like a name
+                        for i in range(len(words), 0, -1):
+                            if i >= 2:  # At least 2 words
+                                potential_name = ' '.join(words[:i])
+                                # Check if all words are proper name words (capitalized or all caps, no numbers, no special chars)
+                                if all(re.match(r'^[A-Za-z\.\-]+$', word) and (word[0].isupper() or word.isupper()) for word in words[:i]):
+                                    # Should not contain job-related keywords
+                                    if not any(keyword in potential_name.lower() for keyword in ['engineer', 'developer', 'programmer', 'manager', 'analyst', 'consultant', 'specialist', 'technician', 'lead', 'senior', 'junior', 'principal', 'staff', 'software', 'web', 'full', 'front', 'back', 'devops', 'data', 'machine', 'learning', 'ai', 'mobile', 'game', 'qa', 'test', 'security', 'cloud', 'platform']):
+                                        # Convert all-caps names to proper case for better display
+                                        if potential_name.isupper() and len(potential_name.split()) >= 2:
+                                            extracted['name'] = potential_name.title()
+                                        else:
+                                            extracted['name'] = potential_name
+                                        name_found = True
+                                        break
+                        if name_found:
+                            break
         
         # Method 2: Look for name in first few lines (fallback)
         if not name_found:
@@ -398,6 +616,22 @@ Return the result as a valid JSON object with these exact field names.
                         break
                 if name_found:
                     break
+        
+        # Method 4: Simple fallback - just take the first line that looks like a name
+        if not name_found:
+            for line in lines[:3]:  # Check first 3 lines only
+                line = line.strip()
+                if line and len(line) > 3 and len(line) < 50:
+                    words = line.split()
+                    # Simple check: 2-3 words, all letters, no numbers or special chars
+                    if 2 <= len(words) <= 3 and all(re.match(r'^[A-Za-z]+$', word) for word in words):
+                        # Check if words start with capital letters (likely a name)
+                        if all(word[0].isupper() for word in words):
+                            # Avoid obvious non-names
+                            if not any(word.lower() in ['personal', 'information', 'contact', 'about', 'profile', 'resume', 'cv', 'curriculum', 'vitae'] for word in words):
+                                extracted['name'] = line.title()
+                                name_found = True
+                                break
         
         # Enhanced email extraction - search ALL pages comprehensively
         email_found = False

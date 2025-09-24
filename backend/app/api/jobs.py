@@ -182,6 +182,7 @@ async def get_job_postings(
         for job in paginated_jobs:
             response_jobs.append(JobPostingResponse(
                 id=str(job.id),
+                user_id=str(job.user_id),  # Include user_id
                 title=job.title,
                 company=job.company,
                 location=job.location,
@@ -193,6 +194,8 @@ async def get_job_postings(
                 responsibilities=job.responsibilities,
                 benefits=job.benefits,
                 status=job.status,
+                allow_public_applications=getattr(job, 'allow_public_applications', False),
+                public_application_link=getattr(job, 'public_application_link', None),
                 created_at=job.created_at,
                 updated_at=job.updated_at
             ))
@@ -243,6 +246,7 @@ async def get_public_job_posting(
         # Convert MongoDB document to response model
         return JobPostingResponse(
             id=str(job.id),
+            user_id=str(job.user_id),  # Include user_id
             title=job.title,
             company=job.company,
             location=job.location,
@@ -254,6 +258,8 @@ async def get_public_job_posting(
             responsibilities=job.responsibilities,
             benefits=job.benefits,
             status=job.status,
+            allow_public_applications=getattr(job, 'allow_public_applications', False),
+            public_application_link=getattr(job, 'public_application_link', None),
             created_at=job.created_at,
             updated_at=job.updated_at
         )
@@ -304,6 +310,7 @@ async def get_job_posting(
         # Convert MongoDB document to response model
         return JobPostingResponse(
             id=str(job.id),
+            user_id=str(job.user_id),  # Include user_id
             title=job.title,
             company=job.company,
             location=job.location,
@@ -315,6 +322,8 @@ async def get_job_posting(
             responsibilities=job.responsibilities,
             benefits=job.benefits,
             status=job.status,
+            allow_public_applications=getattr(job, 'allow_public_applications', False),
+            public_application_link=getattr(job, 'public_application_link', None),
             created_at=job.created_at,
             updated_at=job.updated_at
         )
