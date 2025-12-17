@@ -1,19 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Toast from '../components/ui/Toast';
-import { authenticatedFetch } from '../utils/api';
-import { API_ENDPOINTS } from '../config/api';
+import { useToast } from '../hooks/useToast';
+import { resumesAPI } from '../services/api';
 
 const AddResume = () => {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
   const [showCandidateForm, setShowCandidateForm] = useState(false);
-  const [toast, setToast] = useState({
-    isVisible: false,
-    message: '',
-    type: 'info'
-  });
   const [candidateInfo, setCandidateInfo] = useState({
     candidate_name: '',
     candidate_email: '',
@@ -28,21 +24,6 @@ const AddResume = () => {
     notes: ''
   });
 
-  const showToast = (message, type = 'info') => {
-    setToast({
-      isVisible: true,
-      message,
-      type
-    });
-  };
-
-  const hideToast = () => {
-    setToast({
-      isVisible: false,
-      message: '',
-      type: 'info'
-    });
-  };
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
@@ -61,6 +42,7 @@ const AddResume = () => {
     }
 
     setUploadedFile(file);
+    setUploadSuccess(false); // Reset success state when new file is selected
   };
 
   const handleUploadOnly = async () => {
@@ -76,28 +58,20 @@ const AddResume = () => {
       const formData = new FormData();
       formData.append('file', uploadedFile);
 
-      // Get the access token
-      const token = localStorage.getItem('accessToken');
+      console.log('Uploading file:', uploadedFile.name, 'Size:', uploadedFile.size);
       
-      const response = await fetch(API_ENDPOINTS.RESUME_BANK.UPLOAD, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: formData,
-      });
-      console.log({formData});
-      if (response.ok) {
-        showToast('Resume uploaded successfully!', 'success');
-        setTimeout(() => {
-          navigate('/resume-bank');
-        }, 1000); // Navigate after 1 second to let user see the toast
-      } else {
-        throw new Error('Failed to upload resume');
-      }
+      // Use the new resumesAPI
+      await resumesAPI.uploadResume(uploadedFile);
+      setUploadSuccess(true);
+      showToast('Resume uploaded successfully!', 'success');
+      setTimeout(() => {
+        navigate('/resume-bank');
+      }, 1000);
     } catch (error) {
       console.error('Error uploading resume:', error);
-      showToast('Failed to upload resume. Please try again.', 'error');
+      setUploadSuccess(false);
+      const errorMessage = error.message || 'Failed to upload resume. Please try again.';
+      showToast(errorMessage, 'error');
     } finally {
       setLoading(false);
     }
@@ -134,28 +108,20 @@ const AddResume = () => {
       formData.append('tags', candidateInfo.tags || '');
       formData.append('notes', candidateInfo.notes || '');
 
-      // Get the access token
-      const token = localStorage.getItem('accessToken');
+      console.log('Uploading file with info:', uploadedFile.name, 'Size:', uploadedFile.size);
       
-      const response = await fetch(API_ENDPOINTS.RESUME_BANK.UPLOAD, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: formData,
-      });
-      
-      if (response.ok) {
-        showToast('Resume added to bank successfully!', 'success');
-        setTimeout(() => {
-          navigate('/resume-bank');
-        }, 1000); // Navigate after 1 second to let user see the toast
-      } else {
-        throw new Error('Failed to add resume to bank');
-      }
+      // Use the new resumesAPI with candidate info
+      await resumesAPI.uploadResume(uploadedFile, candidateInfo);
+      setUploadSuccess(true);
+      showToast('Resume added to bank successfully!', 'success');
+      setTimeout(() => {
+        navigate('/resume-bank');
+      }, 1000);
     } catch (error) {
       console.error('Error adding resume to bank:', error);
-      showToast('Failed to add resume to bank. Please try again.', 'error');
+      setUploadSuccess(false);
+      const errorMessage = error.message || 'Failed to add resume to bank. Please try again.';
+      showToast(errorMessage, 'error');
     } finally {
       setLoading(false);
     }
@@ -202,15 +168,24 @@ const AddResume = () => {
                 </div>
               ) : (
                 <div>
-                  <p className="text-lg font-medium text-green-600 mb-2">
-                    Resume uploaded successfully!
-                  </p>
+                  {uploadSuccess ? (
+                    <p className="text-lg font-medium text-green-600 mb-2">
+                      Resume uploaded successfully!
+                    </p>
+                  ) : (
+                    <p className="text-lg font-medium text-gray-700 mb-2">
+                      File selected
+                    </p>
+                  )}
                   <p className="text-sm text-gray-600 mb-4">
                     <strong>File:</strong> {uploadedFile.name}
                   </p>
                   <button
                     type="button"
-                    onClick={() => setUploadedFile(null)}
+                    onClick={() => {
+                      setUploadedFile(null);
+                      setUploadSuccess(false);
+                    }}
                     className="text-sm text-blue-600 hover:text-blue-800"
                   >
                     Change file
@@ -441,12 +416,6 @@ const AddResume = () => {
       </div>
 
       {/* Toast Notification */}
-      <Toast
-        isVisible={toast.isVisible}
-        message={toast.message}
-        type={toast.type}
-        onClose={hideToast}
-      />
     </>
   );
 };

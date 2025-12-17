@@ -12,10 +12,10 @@ import {
   CheckCircle,
   XCircle
 } from 'lucide-react';
-import { meetingsAPI } from '../services/api/api';
-import { ROUTES } from '../constants/routes';
+import { meetingsAPI } from '../services/api';
 import ConfirmationModal from '../components/ui/ConfirmationModal';
-import Toast from '../components/ui/Toast';
+import { useToast } from '../hooks/useToast';
+import logger from '../utils/logger';
 
 const MeetingDetail = () => {
   const { id } = useParams();
@@ -24,7 +24,7 @@ const MeetingDetail = () => {
   const [meeting, setMeeting] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [toast, setToast] = useState(null);
+  const { showToast } = useToast();
 
   const fetchMeetingDetails = useCallback(async () => {
     try {
@@ -35,18 +35,12 @@ const MeetingDetail = () => {
       if (response && response.success && response.data) {
         setMeeting(response.data);
       } else {
-        console.error('❌ Invalid response structure:', response);
-        setToast({
-          type: 'error',
-          message: 'Invalid response format from server'
-        });
+        logger.error('Invalid response structure:', response);
+        showToast('Invalid response format from server', 'error');
       }
     } catch (error) {
-      console.error('Error fetching meeting details:', error);
-      setToast({
-        type: 'error',
-        message: 'Failed to fetch meeting details'
-      });
+      logger.error('Error fetching meeting details:', error);
+      showToast('Failed to fetch meeting details', 'error');
     } finally {
       setLoading(false);
     }
@@ -59,17 +53,11 @@ const MeetingDetail = () => {
   const handleDeleteMeeting = async () => {
     try {
       await meetingsAPI.deleteMeeting(id);
-      setToast({
-        type: 'success',
-        message: 'Meeting deleted successfully'
-      });
+      showToast('Meeting deleted successfully', 'success');
       navigate('/meetings');
     } catch (error) {
-      console.error('Error deleting meeting:', error);
-      setToast({
-        type: 'error',
-        message: 'Failed to delete meeting'
-      });
+      logger.error('Error deleting meeting:', error);
+      showToast('Failed to delete meeting', 'error');
     } finally {
       setShowDeleteModal(false);
     }
@@ -85,10 +73,7 @@ const MeetingDetail = () => {
         // Try modern clipboard API first
         if (navigator.clipboard && window.isSecureContext) {
           await navigator.clipboard.writeText(fullLink);
-          setToast({
-            type: 'success',
-            message: 'Meeting link copied to clipboard!'
-          });
+          showToast('Meeting link copied to clipboard!', 'success');
         } else {
           // Fallback to old method
           const textArea = document.createElement('textarea');
@@ -104,10 +89,7 @@ const MeetingDetail = () => {
           const successful = document.execCommand('copy');
           
           if (successful) {
-            setToast({
-              type: 'success',
-              message: 'Meeting link copied to clipboard!'
-            });
+            showToast('Meeting link copied to clipboard!', 'success');
           } else {
             throw new Error('Copy command failed');
           }
@@ -115,17 +97,11 @@ const MeetingDetail = () => {
           document.body.removeChild(textArea);
         }
       } catch (error) {
-        console.error('❌ Copy failed:', error);
-        setToast({
-          type: 'error',
-          message: `Failed to copy link. Please copy manually: ${fullLink}`
-        });
+        logger.error('Copy failed:', error);
+        showToast(`Failed to copy link. Please copy manually: ${fullLink}`, 'error');
       }
     } else {
-      setToast({
-        type: 'error',
-        message: 'No meeting ID available'
-      });
+      showToast('No meeting ID available', 'error');
     }
   };
 
@@ -141,21 +117,15 @@ const MeetingDetail = () => {
       });
       
       if (response.ok) {
-        setToast({
-          type: 'success',
-          message: 'Booking approved successfully!'
-        });
+        showToast('Booking approved successfully!', 'success');
         // Refresh meeting data
         fetchMeetingDetails();
       } else {
         throw new Error('Failed to approve booking');
       }
     } catch (error) {
-      console.error('Error approving booking:', error);
-      setToast({
-        type: 'error',
-        message: 'Failed to approve booking'
-      });
+      logger.error('Error approving booking:', error);
+      showToast('Failed to approve booking', 'error');
     }
   };
 
@@ -171,21 +141,15 @@ const MeetingDetail = () => {
       });
       
       if (response.ok) {
-        setToast({
-          type: 'success',
-          message: 'Booking rejected successfully!'
-        });
+        showToast('Booking rejected successfully!', 'success');
         // Refresh meeting data
         fetchMeetingDetails();
       } else {
         throw new Error('Failed to reject booking');
       }
     } catch (error) {
-      console.error('Error rejecting booking:', error);
-      setToast({
-        type: 'error',
-        message: 'Failed to reject booking'
-      });
+      logger.error('Error rejecting booking:', error);
+      showToast('Failed to reject booking', 'error');
     }
   };
 
@@ -201,21 +165,15 @@ const MeetingDetail = () => {
       });
       
       if (response.ok) {
-        setToast({
-          type: 'success',
-          message: 'Booking marked as completed!'
-        });
+        showToast('Booking marked as completed!', 'success');
         // Refresh meeting data
         fetchMeetingDetails();
       } else {
         throw new Error('Failed to complete booking');
       }
     } catch (error) {
-      console.error('Error completing booking:', error);
-      setToast({
-        type: 'error',
-        message: 'Failed to complete booking'
-      });
+      logger.error('Error completing booking:', error);
+      showToast('Failed to complete booking', 'error');
     }
   };
 
@@ -599,14 +557,6 @@ const MeetingDetail = () => {
         confirmVariant="danger"
       />
 
-      {/* Toast */}
-      {toast && (
-        <Toast
-          type={toast.type}
-          message={toast.message}
-          onClose={() => setToast(null)}
-        />
-      )}
     </div>
   );
 };

@@ -94,7 +94,7 @@ const Layout = ({ children, showSidebar = true }) => {
   }, [sidebarOpen]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 mx-auto max-w-[1600px]">
       {/* Mobile sidebar overlay */}
       <div className={`fixed inset-0 z-50 lg:hidden transition-all duration-300 ease-in-out ${
         showSidebar && sidebarOpen ? 'visible opacity-100' : 'invisible opacity-0'
@@ -166,7 +166,7 @@ const Layout = ({ children, showSidebar = true }) => {
           {/* Main content */}
           <main className="flex-1 overflow-y-auto">
             <div className="py-6">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="px-4 sm:px-6 lg:px-8">
                 {children}
               </div>
             </div>

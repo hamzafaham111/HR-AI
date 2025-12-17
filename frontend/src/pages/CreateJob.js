@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, X, Save, ArrowLeft, Upload, FileText, Edit3, Settings, Users } from 'lucide-react';
-import Toast from '../components/ui/Toast';
-import { authenticatedFetch } from '../utils/api';
+import { useToast } from '../hooks/useToast';
+import { jobsAPI, resumesAPI } from '../services/api';
+import logger from '../utils/logger';
 
 const CreateJob = () => {
   const navigate = useNavigate();
@@ -44,29 +45,7 @@ const CreateJob = () => {
   const [candidatesLoading, setCandidatesLoading] = useState(false);
   const [candidatesError, setCandidatesError] = useState(null);
   const [searchType, setSearchType] = useState('rule_based'); // 'rule_based' or 'semantic'
-  
-  // Toast state
-  const [toast, setToast] = useState({
-    isVisible: false,
-    message: '',
-    type: 'info'
-  });
-
-  const showToast = (message, type = 'info') => {
-    setToast({
-      isVisible: true,
-      message,
-      type
-    });
-  };
-
-  const hideToast = () => {
-    setToast({
-      isVisible: false,
-      message: '',
-      type: 'info'
-    });
-  };
+  const { showToast } = useToast();
 
   const jobTypes = [
     { value: 'full_time', label: 'Full Time' },
@@ -172,23 +151,15 @@ const CreateJob = () => {
         job_type: formData.job_type
       };
 
-      const response = await authenticatedFetch('http://localhost:8000/api/v1/resume-bank/find-candidates?limit=10&use_semantic_search=true', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(jobCriteria),
+      const data = await resumesAPI.findCandidates({
+        ...jobCriteria,
+        limit: 10,
+        use_semantic_search: true
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        setCandidates(data.candidates || []);
-        setSearchType(data.search_criteria?.search_type || 'rule_based');
-      } else {
-        throw new Error('Failed to find candidates');
-      }
+      setCandidates(data.candidates || []);
+      setSearchType(data.search_criteria?.search_type || 'rule_based');
     } catch (error) {
-      console.error('Error finding candidates:', error);
+      logger.error('Error finding candidates:', error);
       setCandidatesError('Failed to find candidates. Please try again.');
       showToast('Failed to find candidates. Please try again.', 'error');
     } finally {
@@ -208,29 +179,14 @@ const CreateJob = () => {
       const formData = new FormData();
       formData.append('file', file);
 
-      // Get the access token for file upload
-      const token = localStorage.getItem('accessToken');
-      
-      const response = await fetch('http://localhost:8000/api/v1/jobs/parse-document', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      if (response.ok) {
-        const parsedData = await response.json();
-        setParsedJobData(parsedData);
-        setFormData(prev => ({
-          ...prev,
-          ...parsedData
-        }));
-      } else {
-        throw new Error('Failed to parse document');
-      }
+      const parsedData = await jobsAPI.parseDocument(file);
+      setParsedJobData(parsedData);
+      setFormData(prev => ({
+        ...prev,
+        ...parsedData
+      }));
     } catch (error) {
-      console.error('Error parsing document:', error);
+      logger.error('Error parsing document:', error);
       showToast('Failed to parse document. Please try again or use manual entry.', 'error');
     } finally {
       setUploadLoading(false);
@@ -246,27 +202,15 @@ const CreateJob = () => {
 
     setLoading(true);
     try {
-      const response = await authenticatedFetch('http://localhost:8000/api/v1/jobs/parse-text', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ content: richTextContent }),
-      });
-
-      if (response.ok) {
-        const parsedData = await response.json();
-        setParsedJobData(parsedData);
-        setFormData(prev => ({
-          ...prev,
-          ...parsedData
-        }));
-        setActiveTab('form'); // Switch to form to review and edit
-      } else {
-        throw new Error('Failed to parse text');
-      }
+      const parsedData = await jobsAPI.parseText(richTextContent);
+      setParsedJobData(parsedData);
+      setFormData(prev => ({
+        ...prev,
+        ...parsedData
+      }));
+      setActiveTab('form'); // Switch to form to review and edit
     } catch (error) {
-      console.error('Error parsing text:', error);
+      logger.error('Error parsing text:', error);
       showToast('Failed to parse text. Please try again.', 'error');
     } finally {
       setLoading(false);
@@ -280,29 +224,13 @@ const CreateJob = () => {
       setLoading(true);
       setCandidatesError(null); // Clear previous candidate search errors
       
-      const token = localStorage.getItem('accessToken');
-      
-      const response = await authenticatedFetch('http://localhost:8000/api/v1/jobs/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        const job = await response.json();
-        showToast('Job posting created successfully!', 'success');
-        setTimeout(() => {
-          navigate(`/jobs/${job.id}`);
-        }, 1500);
-      } else {
-        const errorData = await response.text();
-        console.error('Server error:', errorData);
-        throw new Error(`Failed to create job posting: ${response.status} ${errorData}`);
-      }
+      const job = await jobsAPI.createJob(formData);
+      showToast('Job posting created successfully!', 'success');
+      setTimeout(() => {
+        navigate(`/jobs/${job.id}`);
+      }, 1500);
     } catch (error) {
-      console.error('Error creating job:', error);
+      logger.error('Error creating job:', error);
       showToast(`Failed to create job posting: ${error.message}`, 'error');
     } finally {
       setLoading(false);
@@ -905,7 +833,7 @@ Benefits:
                         <div className="flex space-x-2">
                           <button
                             onClick={() => {
-                              console.log('Navigating to candidate:', candidate.resume_id, 'Full candidate:', candidate);
+                              logger.debug('Navigating to candidate:', candidate.resume_id);
                               navigate(`/resume-bank/${candidate.resume_id}`);
                             }}
                             className="px-3 py-1 text-sm border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
@@ -937,12 +865,6 @@ Benefits:
       </div>
 
       {/* Toast Notification */}
-      <Toast
-        isVisible={toast.isVisible}
-        message={toast.message}
-        type={toast.type}
-        onClose={hideToast}
-      />
     </>
   );
 };

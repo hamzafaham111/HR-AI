@@ -6,10 +6,11 @@ import ApplicationFormBuilder from '../components/ApplicationFormBuilder';
 import ApplicationsDataTable from '../components/ApplicationsDataTable';
 import ApplicationDetailModal from '../components/ApplicationDetailModal';
 import ProcessSelectionModal from '../components/ProcessSelectionModal';
-import Toast from '../components/ui/Toast';
-import { authenticatedFetch } from '../utils/api';
+import { useToast } from '../hooks/useToast';
+import { jobsAPI, jobApplicationsAPI } from '../services/api';
 import { DetailPageSkeleton } from '../components/ui/SkeletonLoader';
 import { API_ENDPOINTS } from '../config/api';
+import logger from '../utils/logger';
 
 const JobDetail = () => {
   const { id } = useParams();
@@ -27,11 +28,7 @@ const JobDetail = () => {
     isOpen: false
   });
   const [deletingJob, setDeletingJob] = useState(false);
-  const [toast, setToast] = useState({
-    isVisible: false,
-    message: '',
-    type: 'info'
-  });
+  const { showToast } = useToast();
   
   // Process selection modal state
   const [showProcessSelection, setShowProcessSelection] = useState(false);
@@ -51,33 +48,12 @@ const JobDetail = () => {
     }
   }, [location.state]);
 
-  const showToast = (message, type = 'info') => {
-    setToast({
-      isVisible: true,
-      message,
-      type
-    });
-  };
-
-  const hideToast = () => {
-    setToast({
-      isVisible: false,
-      message: '',
-      type: 'info'
-    });
-  };
-
   const fetchJob = async () => {
     try {
-      const response = await authenticatedFetch(`http://localhost:8000/api/v1/jobs/${id}`);
-      if (response.ok) {
-        const data = await response.json();
-        setJob(data);
-      } else {
-        throw new Error('Failed to fetch job');
-      }
+      const data = await jobsAPI.getJob(id);
+      setJob(data);
     } catch (error) {
-      console.error('Error fetching job:', error);
+      logger.error('Error fetching job:', error);
       setError('Failed to load job details');
       showToast('Failed to load job details', 'error');
     } finally {
@@ -87,34 +63,25 @@ const JobDetail = () => {
 
   const fetchApplicationForm = async () => {
     try {
-      const response = await authenticatedFetch(`http://localhost:8000/api/v1/job-applications/forms/${id}`);
-      if (response.ok) {
-        const data = await response.json();
-        setApplicationForm(data.data);
-      } else if (response.status === 404) {
+      const data = await jobApplicationsAPI.getForms(id);
+      setApplicationForm(data.data || data);
+    } catch (error) {
+      if (error.status === 404) {
         setApplicationForm(null);
       } else {
-        throw new Error('Failed to fetch application form');
+        logger.error('Error fetching application form:', error);
+        setApplicationForm(null);
       }
-    } catch (error) {
-      console.error('Error fetching application form:', error);
-      setApplicationForm(null);
     }
   };
 
   const deleteApplicationForm = async () => {
     try {
-      const response = await authenticatedFetch(`${API_ENDPOINTS.JOB_APPLICATIONS.FORMS.DELETE(applicationForm.id)}`, {
-        method: 'DELETE',
-      });
-      if (response.ok) {
-        showToast('Application form deleted successfully', 'success');
-        setApplicationForm(null);
-      } else {
-        throw new Error('Failed to delete application form');
-      }
+      await jobApplicationsAPI.deleteForm(applicationForm.id);
+      showToast('Application form deleted successfully', 'success');
+      setApplicationForm(null);
     } catch (error) {
-      console.error('Error deleting application form:', error);
+      logger.error('Error deleting application form:', error);
       showToast('Failed to delete application form', 'error');
     }
   };
@@ -122,16 +89,10 @@ const JobDetail = () => {
   const fetchApplications = async () => {
     try {
       setApplicationsLoading(true);
-      const response = await authenticatedFetch(`http://localhost:8000/api/v1/job-applications/${id}`);
-      if (response.ok) {
-        const data = await response.json();
-        setApplications(data.data.applications || []);
-      } else {
-        console.error('Failed to fetch applications');
-        setApplications([]);
-      }
+      const data = await jobApplicationsAPI.getApplications(id);
+      setApplications(data.data?.applications || data.applications || []);
     } catch (error) {
-      console.error('Error fetching applications:', error);
+      logger.error('Error fetching applications:', error);
       setApplications([]);
     } finally {
       setApplicationsLoading(false);
@@ -153,20 +114,13 @@ const JobDetail = () => {
   const deleteJob = async () => {
     try {
       setDeletingJob(true);
-      const response = await authenticatedFetch(`http://localhost:8000/api/v1/jobs/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        showToast('Job posting deleted successfully', 'success');
-        setTimeout(() => {
-          navigate('/jobs');
-        }, 1500);
-      } else {
-        throw new Error('Failed to delete job');
-      }
+      await jobsAPI.deleteJob(id);
+      showToast('Job posting deleted successfully', 'success');
+      setTimeout(() => {
+        navigate('/jobs');
+      }, 1500);
     } catch (error) {
-      console.error('Error deleting job:', error);
+      logger.error('Error deleting job:', error);
       showToast('Failed to delete job posting', 'error');
     } finally {
       setDeletingJob(false);
@@ -190,33 +144,20 @@ const JobDetail = () => {
 
   const handleSaveApplicationForm = async (formData) => {
     try {
-      const url = applicationForm 
-        ? `http://localhost:8000/api/v1/job-applications/forms/${applicationForm.id}`
-        : `http://localhost:8000/api/v1/job-applications/forms/${id}`;
-      
-      const method = applicationForm ? 'PUT' : 'POST';
-      
-      const response = await authenticatedFetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData)
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setApplicationForm(data.data);
-        setShowFormModal(false);
-        showToast(
-          applicationForm ? 'Application form updated successfully' : 'Application form created successfully',
-          'success'
-        );
+      let data;
+      if (applicationForm) {
+        data = await jobApplicationsAPI.updateForm(applicationForm.id, formData);
       } else {
-        throw new Error('Failed to save application form');
+        data = await jobApplicationsAPI.createForm(id, formData);
       }
+      setApplicationForm(data.data || data);
+      setShowFormModal(false);
+      showToast(
+        applicationForm ? 'Application form updated successfully' : 'Application form created successfully',
+        'success'
+      );
     } catch (error) {
-      console.error('Error saving application form:', error);
+      logger.error('Error saving application form:', error);
       showToast('Failed to save application form', 'error');
     }
   };
@@ -239,29 +180,12 @@ const JobDetail = () => {
   // Handle status updates
   const handleStatusUpdate = async (applicationId, newStatus, notes) => {
     try {
-      const response = await authenticatedFetch(
-        `http://localhost:8000/api/v1/job-applications/applications/${applicationId}/status`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            status: newStatus,
-            notes: notes
-          })
-        }
-      );
-
-      if (response.ok) {
-        showToast('Application status updated successfully', 'success');
-        fetchApplications();
-        setSelectedApplication(null);
-      } else {
-        throw new Error('Failed to update application status');
-      }
+      await jobApplicationsAPI.updateApplicationStatus(applicationId, newStatus);
+      showToast('Application status updated successfully', 'success');
+      fetchApplications();
+      setSelectedApplication(null);
     } catch (error) {
-      console.error('Error updating application status:', error);
+      logger.error('Error updating application status:', error);
       showToast('Failed to update application status', 'error');
     }
   };
@@ -273,34 +197,20 @@ const JobDetail = () => {
 
   const handleProcessSelected = async (processId) => {
     try {
-      const response = await authenticatedFetch(
-        `http://localhost:8000/api/v1/job-applications/applications/${selectedApplication.id}/approve-and-add-to-process`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            hiring_process_id: processId,
-            notes: `Approved and added to hiring process from job application`
-          })
-        }
+      await jobApplicationsAPI.approveAndAddToProcess(
+        selectedApplication.id,
+        processId,
+        'Approved and added to hiring process from job application'
       );
-
-      if (response.ok) {
-        showToast(`Candidate added to hiring process successfully!`, 'success');
-        
-        // Refresh applications list
-        fetchApplications();
-        
-        // Note: Don't close the modal yet - user might want to add to more processes
-        // Only close if this was the last process or user manually closes
-        
-      } else {
-        throw new Error('Failed to approve application and add to process');
-      }
+      showToast('Candidate added to hiring process successfully!', 'success');
+      
+      // Refresh applications list
+      fetchApplications();
+      
+      // Note: Don't close the modal yet - user might want to add to more processes
+      // Only close if this was the last process or user manually closes
     } catch (error) {
-      console.error('Error approving application:', error);
+      logger.error('Error approving application:', error);
       showToast('Failed to approve application', 'error');
     }
   };
@@ -557,14 +467,14 @@ const JobDetail = () => {
               <FileText className="w-5 h-5 mr-2 text-blue-600" />
               Application Form
             </h2>
-      {applicationForm ?
-          <button
-          onClick={() => setShowFormModal(true)}
-          className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-        >
-          {applicationForm && <span><EditIcon className="w-4 h-4 mr-2" /> Edit Form</span>}
-        </button>:<></>  
-    }
+            {applicationForm && (
+              <button
+                onClick={() => setShowFormModal(true)}
+                className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                <EditIcon className="w-4 h-4 mr-2" /> Edit Form
+              </button>
+            )}
           </div>
 
           {applicationForm ? (
@@ -678,12 +588,6 @@ const JobDetail = () => {
         newlyCreatedProcess={newlyCreatedProcess}
       />
       
-      <Toast
-        isVisible={toast.isVisible}
-        message={toast.message}
-        type={toast.type}
-        onClose={hideToast}
-      />
     </>
   );
 };

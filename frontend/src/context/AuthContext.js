@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { API_ENDPOINTS } from '../config/api';
 
 const AuthContext = createContext();
@@ -15,6 +15,47 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const logout = useCallback(() => {
+    setUser(null);
+    localStorage.removeItem('user');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('tokenExpiresAt');
+  }, []);
+
+  const refreshAccessToken = useCallback(async () => {
+    try {
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (!refreshToken) {
+        throw new Error('No refresh token available');
+      }
+
+      const response = await fetch(API_ENDPOINTS.AUTH.REFRESH, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        localStorage.setItem('accessToken', data.access_token);
+        localStorage.setItem('tokenExpiresAt', Date.now() + (data.expires_in * 1000));
+        return { success: true, accessToken: data.access_token };
+      } else {
+        // Refresh token is invalid, logout user
+        logout();
+        return { success: false, error: 'Session expired. Please login again.' };
+      }
+    } catch (error) {
+      // Don't logout on network errors - let the next request handle it
+      console.error('Token refresh error:', error);
+      return { success: false, error: 'Failed to refresh token.' };
+    }
+  }, [logout]);
+
   useEffect(() => {
     // Check if user is logged in on app start
     const savedUser = localStorage.getItem('user');
@@ -24,8 +65,44 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = async (email, password) => {
+  // Set up periodic token refresh separately to avoid dependency issues
+  useEffect(() => {
+    // Set up periodic token refresh to prevent expiration
+    const refreshInterval = setInterval(async () => {
+      const accessToken = localStorage.getItem('accessToken');
+      const refreshToken = localStorage.getItem('refreshToken');
+      const expiresAt = localStorage.getItem('tokenExpiresAt');
+
+      // Only refresh if we have tokens and user is logged in
+      if (accessToken && refreshToken && expiresAt) {
+        // Refresh if token expires in less than 5 minutes
+        const timeUntilExpiry = parseInt(expiresAt) - Date.now();
+        if (timeUntilExpiry < 5 * 60 * 1000) {
+          try {
+            await refreshAccessToken();
+            console.log('Token refreshed automatically');
+          } catch (error) {
+            console.error('Automatic token refresh failed:', error);
+            // If refresh fails, don't clear tokens immediately - let the next request handle it
+          }
+        }
+      } else {
+        // No tokens, clear interval
+        clearInterval(refreshInterval);
+      }
+    }, 2 * 60 * 1000); // Check every 2 minutes
+
+    // Cleanup on unmount
+    return () => {
+      clearInterval(refreshInterval);
+    };
+  }, [refreshAccessToken]);
+
+  const login = useCallback(async (email, password) => {
     try {
+      console.log('🔐 Attempting login to:', API_ENDPOINTS.AUTH.LOGIN);
+      console.log('📧 Email:', email);
+      
       const response = await fetch(API_ENDPOINTS.AUTH.LOGIN, {
         method: 'POST',
         headers: {
@@ -34,7 +111,21 @@ export const AuthProvider = ({ children }) => {
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await response.json();
+      console.log('📡 Response status:', response.status);
+      console.log('📡 Response ok:', response.ok);
+
+      // Check if response has content before trying to parse JSON
+      const contentType = response.headers.get('content-type');
+      let data;
+      
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+        console.log('📦 Response data:', data);
+      } else {
+        const text = await response.text();
+        console.log('📦 Response text:', text);
+        return { success: false, error: `Unexpected response format: ${text}` };
+      }
 
       if (response.ok) {
         setUser(data.user);
@@ -42,16 +133,36 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('accessToken', data.access_token);
         localStorage.setItem('refreshToken', data.refresh_token);
         localStorage.setItem('tokenExpiresAt', Date.now() + (data.expires_in * 1000));
+        console.log('✅ Login successful!');
         return { success: true };
       } else {
-        return { success: false, error: data.detail || 'Login failed' };
+        console.error('❌ Login failed:', data);
+        return { success: false, error: data.detail || data.message || 'Login failed' };
       }
     } catch (error) {
-      return { success: false, error: 'Network error. Please try again.' };
+      console.error('🚨 Network error:', error);
+      console.error('🚨 Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
+      
+      // More specific error messages
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        return { 
+          success: false, 
+          error: 'Cannot connect to backend. Please ensure the backend server is running on http://localhost:8000' 
+        };
+      }
+      
+      return { 
+        success: false, 
+        error: `Network error: ${error.message}. Please check if the backend is running on http://localhost:8000` 
+      };
     }
-  };
+  }, []);
 
-  const register = async (userData) => {
+  const register = useCallback(async (userData) => {
     try {
       setLoading(true);
       
@@ -108,17 +219,9 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('tokenExpiresAt');
-  };
-
-  const forgotPassword = async (email) => {
+  const forgotPassword = useCallback(async (email) => {
     try {
       const response = await fetch(API_ENDPOINTS.AUTH.FORGOT_PASSWORD, {
         method: 'POST',
@@ -138,41 +241,9 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       return { success: false, error: 'Network error. Please try again.' };
     }
-  };
+  }, []);
 
-  const refreshAccessToken = async () => {
-    try {
-      const refreshToken = localStorage.getItem('refreshToken');
-      if (!refreshToken) {
-        throw new Error('No refresh token available');
-      }
-
-      const response = await fetch(API_ENDPOINTS.AUTH.REFRESH, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ refresh_token: refreshToken }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        localStorage.setItem('accessToken', data.access_token);
-        localStorage.setItem('tokenExpiresAt', Date.now() + (data.expires_in * 1000));
-        return { success: true, accessToken: data.access_token };
-      } else {
-        // Refresh token is invalid, logout user
-        logout();
-        return { success: false, error: 'Session expired. Please login again.' };
-      }
-    } catch (error) {
-      logout();
-      return { success: false, error: 'Failed to refresh token.' };
-    }
-  };
-
-  const getValidAccessToken = async () => {
+  const getValidAccessToken = useCallback(async () => {
     const accessToken = localStorage.getItem('accessToken');
     const expiresAt = localStorage.getItem('tokenExpiresAt');
     
@@ -187,9 +258,10 @@ export const AuthProvider = ({ children }) => {
     }
 
     return accessToken;
-  };
+  }, [refreshAccessToken]);
 
-  const value = {
+  // Memoize context value to prevent unnecessary re-renders
+  const value = useMemo(() => ({
     user,
     loading,
     login,
@@ -198,7 +270,7 @@ export const AuthProvider = ({ children }) => {
     forgotPassword,
     refreshAccessToken,
     getValidAccessToken,
-  };
+  }), [user, loading, login, register, logout, forgotPassword, refreshAccessToken, getValidAccessToken]);
 
   return (
     <AuthContext.Provider value={value}>

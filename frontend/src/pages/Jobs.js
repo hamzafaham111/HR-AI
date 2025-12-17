@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Filter, Eye, Edit, Trash2, Users, Calendar } from 'lucide-react';
 import ConfirmationModal from '../components/ui/ConfirmationModal';
-import Toast from '../components/ui/Toast';
-import { authenticatedFetch } from '../utils/api';
+import { useToast } from '../hooks/useToast';
+import { jobsAPI } from '../services/api';
 import { JobsSkeleton } from '../components/ui/SkeletonLoader';
 
 const Jobs = () => {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -18,41 +19,15 @@ const Jobs = () => {
     jobTitle: ''
   });
   const [deletingJobId, setDeletingJobId] = useState(null);
-  const [toast, setToast] = useState({
-    isVisible: false,
-    message: '',
-    type: 'info'
-  });
 
   useEffect(() => {
     fetchJobs();
   }, []);
 
-  const showToast = (message, type = 'info') => {
-    setToast({
-      isVisible: true,
-      message,
-      type
-    });
-  };
-
-  const hideToast = () => {
-    setToast({
-      isVisible: false,
-      message: '',
-      type: 'info'
-    });
-  };
-
   const fetchJobs = async () => {
     try {
-      const response = await authenticatedFetch('http://localhost:8000/api/v1/jobs/');
-      if (response.ok) {
-        const data = await response.json();
-        setJobs(data);
-      } else {
-        throw new Error('Failed to fetch jobs');
-      }
+      const data = await jobsAPI.getJobs();
+      setJobs(data);
     } catch (error) {
       console.error('Error fetching jobs:', error);
       showToast('Failed to fetch jobs', 'error');
@@ -82,17 +57,10 @@ const Jobs = () => {
     
     try {
       setDeletingJobId(jobId);
-      const response = await authenticatedFetch(`http://localhost:8000/api/v1/jobs/${jobId}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        setJobs(jobs.filter(job => job.id !== jobId));
-        showToast('Job posting deleted successfully', 'success');
-        closeDeleteModal();
-      } else {
-        throw new Error('Failed to delete job');
-      }
+      await jobsAPI.deleteJob(jobId);
+      setJobs(jobs.filter(job => job.id !== jobId));
+      showToast('Job posting deleted successfully', 'success');
+      closeDeleteModal();
     } catch (error) {
       console.error('Error deleting job:', error);
       showToast('Failed to delete job posting', 'error');
@@ -332,12 +300,6 @@ const Jobs = () => {
         cancelText="Cancel"
         type="danger"
         isLoading={!!deletingJobId}
-      />
-      <Toast
-        isVisible={toast.isVisible}
-        message={toast.message}
-        type={toast.type}
-        onClose={hideToast}
       />
     </>
   );

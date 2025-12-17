@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Clock, Users, ArrowLeft } from 'lucide-react';
-import { ROUTES } from '../constants/routes';
-import { meetingsAPI } from '../services/api/api';
-import Toast from '../components/ui/Toast';
+import { meetingsAPI } from '../services/api';
+import { useToast } from '../hooks/useToast';
+import logger from '../utils/logger';
 
 const CreateMeeting = () => {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [toast, setToast] = useState(null);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -67,18 +67,12 @@ const CreateMeeting = () => {
     e.preventDefault();
     
     if (!formData.title || !formData.start_date || !formData.end_date) {
-      setToast({
-        type: 'error',
-        message: 'Please fill in all required fields'
-      });
+      showToast('Please fill in all required fields', 'error');
       return;
     }
 
     if (new Date(formData.start_date) > new Date(formData.end_date)) {
-      setToast({
-        type: 'error',
-        message: 'End date must be after start date'
-      });
+      showToast('End date must be after start date', 'error');
       return;
     }
 
@@ -89,32 +83,23 @@ const CreateMeeting = () => {
       
       // Check if response has the expected structure
       if (response && response.message) {
-        setToast({
-          type: 'success',
-          message: 'Meeting created successfully!'
-        });
+        showToast('Meeting created successfully!', 'success');
         
         // Redirect to meetings list after a short delay
         setTimeout(() => {
-          navigate(ROUTES.MEETINGS);
+          navigate('/meetings');
         }, 1500);
       } else {
         // Handle unexpected response format
-        setToast({
-          type: 'success',
-          message: 'Meeting created successfully!'
-        });
+        showToast('Meeting created successfully!', 'success');
         
         setTimeout(() => {
-          navigate(ROUTES.MEETINGS);
+          navigate('/meetings');
         }, 1500);
       }
     } catch (error) {
-      console.error('Error creating meeting:', error);
-      setToast({
-        type: 'error',
-        message: error.message || 'Failed to create meeting'
-      });
+      logger.error('Error creating meeting:', error);
+      showToast(error.message || 'Failed to create meeting', 'error');
     } finally {
       setLoading(false);
     }
@@ -125,7 +110,7 @@ const CreateMeeting = () => {
       {/* Header */}
       <div className="flex items-center space-x-4">
         <button
-          onClick={() => navigate(ROUTES.MEETINGS)}
+          onClick={() => navigate('/meetings')}
           className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
         >
           <ArrowLeft className="w-5 h-5 text-gray-600" />
@@ -372,7 +357,7 @@ const CreateMeeting = () => {
         <div className="flex justify-end space-x-4">
           <button
             type="button"
-            onClick={() => navigate(ROUTES.MEETINGS)}
+            onClick={() => navigate('/meetings')}
             className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
           >
             Cancel
@@ -388,14 +373,6 @@ const CreateMeeting = () => {
         </div>
       </form>
 
-      {/* Toast */}
-      {toast && (
-        <Toast
-          type={toast.type}
-          message={toast.message}
-          onClose={() => setToast(null)}
-        />
-      )}
     </div>
   );
 };

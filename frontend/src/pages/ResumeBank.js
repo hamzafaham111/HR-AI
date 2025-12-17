@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Filter, Users, Eye, Edit, Trash2, Plus, BarChart3, MapPin, Calendar, Star } from 'lucide-react';
 import ConfirmationModal from '../components/ui/ConfirmationModal';
-import Toast from '../components/ui/Toast';
-import { authenticatedFetch } from '../utils/api';
-import { API_ENDPOINTS } from '../config/api';
+import { useToast } from '../hooks/useToast';
+import { resumesAPI } from '../services/api';
 import { ResumeBankSkeleton } from '../components/ui/SkeletonLoader';
 
 const ResumeBank = () => {
@@ -26,7 +25,7 @@ const ResumeBank = () => {
   });
   const [deletingResumeId, setDeletingResumeId] = useState(null);
   const [statsLoading, setStatsLoading] = useState(true);
-  const [toast, setToast] = useState({ message: '', type: '', isVisible: false });
+  const { showToast } = useToast();
 
   useEffect(() => {
     fetchResumeBank();
@@ -35,15 +34,10 @@ const ResumeBank = () => {
 
   const fetchResumeBank = async () => {
     try {
-      const response = await authenticatedFetch(API_ENDPOINTS.RESUME_BANK.LIST);
-      if (response.ok) {
-        const data = await response.json();
-        setResumes(data);
-      } else {
-        throw new Error('Failed to fetch resume bank');
-      }
+      const data = await resumesAPI.getResumes();
+      setResumes(data);
     } catch (error) {
-      console.error('Error fetching resume bank:', error);
+      showToast('Failed to fetch resume bank', 'error');
     } finally {
       setLoading(false);
     }
@@ -52,13 +46,10 @@ const ResumeBank = () => {
   const fetchStats = async () => {
     try {
       setStatsLoading(true);
-      const response = await authenticatedFetch(API_ENDPOINTS.RESUME_BANK.STATS);
-      if (response.ok) {
-        const data = await response.json();
-        setStats(data);
-      }
+      const data = await resumesAPI.getStats();
+      setStats(data);
     } catch (error) {
-      console.error('Error fetching stats:', error);
+      // Silently fail for stats
     } finally {
       setStatsLoading(false);
     }
@@ -80,30 +71,17 @@ const ResumeBank = () => {
     });
   };
 
-  const showToast = (message, type = 'success') => {
-    setToast({ message, type, isVisible: true });
-    setTimeout(() => setToast(prev => ({ ...prev, isVisible: false })), 5000);
-  };
-
   const deleteResume = async () => {
     const { resumeId } = deleteModal;
     
     try {
       setDeletingResumeId(resumeId);
-      const response = await authenticatedFetch(API_ENDPOINTS.RESUME_BANK.DELETE(resumeId), {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        setResumes(resumes.filter(resume => resume.id !== resumeId));
-        fetchStats(); // Refresh stats
-        closeDeleteModal();
-        showToast('Resume deleted successfully');
-      } else {
-        throw new Error('Failed to delete resume');
-      }
+      await resumesAPI.deleteResume(resumeId);
+      setResumes(resumes.filter(resume => resume.id !== resumeId));
+      fetchStats(); // Refresh stats
+      closeDeleteModal();
+      showToast('Resume deleted successfully', 'success');
     } catch (error) {
-      console.error('Error deleting resume:', error);
       showToast('Failed to delete resume from bank', 'error');
     } finally {
       setDeletingResumeId(null);
@@ -454,13 +432,6 @@ const ResumeBank = () => {
         isLoading={!!deletingResumeId}
       />
 
-      {/* Toast Notification */}
-      <Toast
-        message={toast.message}
-        type={toast.type}
-        isVisible={toast.isVisible}
-        onClose={() => setToast(prev => ({ ...prev, isVisible: false }))}
-      />
     </>
   );
 };

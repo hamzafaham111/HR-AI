@@ -24,19 +24,18 @@ import {
   ChevronRight,
   ChevronDown
 } from 'lucide-react';
-import { authenticatedFetch } from '../utils/api';
+import { hiringProcessesAPI, resumesAPI } from '../services/api';
 import { API_ENDPOINTS } from '../config/api';
-import Toast from '../components/ui/Toast';
+import { useToast } from '../hooks/useToast';
 import ConfirmationModal from '../components/ui/ConfirmationModal';
+import logger from '../utils/logger';
 
 const HiringProcessDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [process, setProcess] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-  const [toastType, setToastType] = useState('success');
   const [deleting, setDeleting] = useState(false);
   const [showAddCandidateModal, setShowAddCandidateModal] = useState(false);
   const [resumes, setResumes] = useState([]);
@@ -56,11 +55,6 @@ const HiringProcessDetail = () => {
     isOpen: false
   });
 
-  const showToastMessage = (message, type = 'success') => {
-    setToastMessage(message);
-    setToastType(type);
-    setShowToast(true);
-  };
 
   const openDeleteProcessModal = () => {
     setDeleteProcessModal({ isOpen: true });
@@ -73,22 +67,15 @@ const HiringProcessDetail = () => {
   const deleteProcess = async () => {
     try {
       setDeleting(true);
-      const response = await authenticatedFetch(API_ENDPOINTS.HIRING_PROCESSES.DELETE(id), {
-        method: 'DELETE'
-      });
-      
-      if (response.ok) {
-        showToastMessage('Hiring process deleted successfully');
-        closeDeleteProcessModal();
-        setTimeout(() => {
-          navigate('/hiring-processes');
-        }, 1500);
-      } else {
-        throw new Error(`Delete failed with status: ${response.status}`);
-      }
+      await hiringProcessesAPI.deleteHiringProcess(id);
+      showToast('Hiring process deleted successfully', 'success');
+      closeDeleteProcessModal();
+      setTimeout(() => {
+        navigate('/hiring-processes');
+      }, 1500);
     } catch (error) {
-      console.error('Error deleting process:', error);
-      showToastMessage('Failed to delete hiring process', 'error');
+      logger.error('Error deleting process:', error);
+      showToast('Failed to delete hiring process', 'error');
     } finally {
       setDeleting(false);
     }
@@ -145,33 +132,19 @@ const HiringProcessDetail = () => {
         }
       }
       
-      const response = await authenticatedFetch(
-        API_ENDPOINTS.HIRING_PROCESSES.MOVE_CANDIDATE(id, candidateId),
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            new_stage_id: newStageId,
-            status: finalStatus,
-            notes: notes
-          })
-        }
-      );
+      await hiringProcessesAPI.moveCandidate(id, candidateId, {
+        new_stage_id: newStageId,
+        status: finalStatus,
+        notes: notes
+      });
       
-      if (response.ok) {
-        const action = targetStage?.is_final ? 'moved to final stage' : 'moved successfully';
-        showToastMessage(`Candidate ${action}`);
-        setCandidateMenus({}); // Close all menus
-        fetchProcessDetail(); // Refresh the process data
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `Failed to move candidate: ${response.status}`);
-      }
+      const action = targetStage?.is_final ? 'moved to final stage' : 'moved successfully';
+      showToast(`Candidate ${action}`, 'success');
+      setCandidateMenus({}); // Close all menus
+      fetchProcessDetail(); // Refresh the process data
     } catch (error) {
-      console.error('Error moving candidate:', error);
-      showToastMessage(error.message || 'Failed to move candidate', 'error');
+      logger.error('Error moving candidate:', error);
+      showToast(error.message || 'Failed to move candidate', 'error');
     } finally {
       setMovingCandidates(prev => ({ ...prev, [candidateId]: false }));
     }
@@ -211,24 +184,13 @@ const HiringProcessDetail = () => {
       
       const candidateIdToUse = candidate?.id || candidateId;
       
-      const response = await authenticatedFetch(
-        API_ENDPOINTS.HIRING_PROCESSES.REMOVE_CANDIDATE(id, candidateIdToUse),
-        {
-          method: 'PUT'
-        }
-      );
-      
-      if (response.ok) {
-        showToastMessage('Candidate removed from process successfully');
-        closeDeleteCandidateModal();
-        fetchProcessDetail(); // Refresh the process data
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `Failed to remove candidate: ${response.status}`);
-      }
+      await hiringProcessesAPI.removeCandidate(id, candidateIdToUse);
+      showToast('Candidate removed from process successfully', 'success');
+      closeDeleteCandidateModal();
+      fetchProcessDetail(); // Refresh the process data
     } catch (error) {
-      console.error('Error removing candidate:', error);
-      showToastMessage(error.message || 'Failed to remove candidate', 'error');
+      logger.error('Error removing candidate:', error);
+      showToast(error.message || 'Failed to remove candidate', 'error');
     } finally {
       setDeletingCandidates(prev => ({ ...prev, [candidateId]: false }));
     }
@@ -255,32 +217,18 @@ const HiringProcessDetail = () => {
         'accepted': 'Candidate accepted the position'
       };
       
-      const response = await authenticatedFetch(
-        API_ENDPOINTS.HIRING_PROCESSES.MOVE_CANDIDATE(id, candidateId),
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            new_stage_id: candidate.current_stage_id, // Keep same stage
-            status: newStatus,
-            notes: statusNotes[newStatus] || 'Status updated'
-          })
-        }
-      );
+      await hiringProcessesAPI.moveCandidate(id, candidateId, {
+        new_stage_id: candidate.current_stage_id, // Keep same stage
+        status: newStatus,
+        notes: statusNotes[newStatus] || 'Status updated'
+      });
       
-      if (response.ok) {
-        showToastMessage(`Candidate status updated to ${newStatus.replace('_', ' ')}`);
-        setCandidateMenus({}); // Close all menus
-        fetchProcessDetail(); // Refresh the process data
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `Failed to update status: ${response.status}`);
-      }
+      showToast(`Candidate status updated to ${newStatus.replace('_', ' ')}`, 'success');
+      setCandidateMenus({}); // Close all menus
+      fetchProcessDetail(); // Refresh the process data
     } catch (error) {
-      console.error('Error updating candidate status:', error);
-      showToastMessage(error.message || 'Failed to update status', 'error');
+      logger.error('Error updating candidate status:', error);
+      showToast(error.message || 'Failed to update status', 'error');
     } finally {
       setMovingCandidates(prev => ({ ...prev, [candidateId]: false }));
     }
@@ -289,20 +237,13 @@ const HiringProcessDetail = () => {
   const fetchResumes = async () => {
     try {
       setLoadingResumes(true);
-      const response = await authenticatedFetch(API_ENDPOINTS.RESUME_BANK.LIST);
-      
-      if (response.ok) {
-        const data = await response.json();
-        const resumeList = Array.isArray(data) ? data : [];
-        setResumes(resumeList);
-        setFilteredResumes(resumeList);
-      } else {
-        console.error('Failed to fetch resumes:', response.status);
-        showToastMessage('Failed to load resumes', 'error');
-      }
+      const data = await resumesAPI.getResumes();
+      const resumeList = Array.isArray(data) ? data : [];
+      setResumes(resumeList);
+      setFilteredResumes(resumeList);
     } catch (error) {
-      console.error('Error fetching resumes:', error);
-      showToastMessage('Failed to load resumes', 'error');
+      logger.error('Error fetching resumes:', error);
+      showToast('Failed to load resumes', 'error');
     } finally {
       setLoadingResumes(false);
     }
@@ -332,25 +273,19 @@ const HiringProcessDetail = () => {
     try {
       // Check if candidate is already in the process (enhanced frontend validation)
       if (isCandidateAlreadyInProcess(resumeId)) {
-        showToastMessage('This candidate is already in the process', 'error');
+        showToast('This candidate is already in the process', 'error');
         return;
       }
       
       // Set loading state for this specific candidate
       setAddingCandidates(prev => ({ ...prev, [resumeId]: true }));
       
-      const response = await authenticatedFetch(API_ENDPOINTS.HIRING_PROCESSES.ADD_CANDIDATE(id), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
+      try {
+        await hiringProcessesAPI.addCandidate(id, {
           resume_bank_entry_id: resumeId
-        })
-      });
-      
-      if (response.ok) {
-        showToastMessage('Candidate added successfully');
+        });
+        
+        showToast('Candidate added successfully', 'success');
         // Immediately update the process state to reflect the new candidate
         if (process) {
           const newCandidate = {
@@ -371,22 +306,18 @@ const HiringProcessDetail = () => {
         }
         closeAddCandidateModal();
         fetchProcessDetail(); // Refresh the process data
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        
+      } catch (error) {
         // Handle specific 400 error for already added candidate
-        if (response.status === 400 && errorData.detail && errorData.detail.includes('already in this process')) {
-          showToastMessage('This candidate is already in the process', 'error');
-          // Refresh the process data to ensure UI is up to date
+        if (error.status === 400 && error.data?.detail && error.data.detail.includes('already in this process')) {
+          showToast('This candidate is already in the process', 'error');
           fetchProcessDetail();
           return;
         }
-        
-        throw new Error(errorData.detail || `Failed to add candidate: ${response.status}`);
+        throw error;
       }
     } catch (error) {
-      console.error('Error adding candidate:', error);
-      showToastMessage(error.message || 'Failed to add candidate', 'error');
+      logger.error('Error adding candidate:', error);
+      showToast(error.message || 'Failed to add candidate', 'error');
     } finally {
       // Clear loading state for this candidate
       setAddingCandidates(prev => ({ ...prev, [resumeId]: false }));
@@ -437,26 +368,25 @@ const HiringProcessDetail = () => {
     };
   }, []);
 
-  const fetchProcessDetail = async () => {
+  const fetchProcessDetail = async (silentRefresh = false) => {
     try {
-      setLoading(true);
-      const response = await authenticatedFetch(API_ENDPOINTS.HIRING_PROCESSES.DETAIL(id));
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Process data received:', data);
-        console.log('Candidates:', data.candidates);
-        console.log('Stages:', data.stages);
-        setProcess(data);
-      } else {
-        console.error('Failed to fetch process details:', response.status);
-        showToastMessage('Failed to load process details', 'error');
+      if (!silentRefresh) {
+        setLoading(true);
       }
+      const data = await hiringProcessesAPI.getHiringProcess(id);
+      logger.debug('Process data received:', data);
+      logger.debug('Candidates:', data.candidates);
+      logger.debug('Stages:', data.stages);
+      setProcess(data);
     } catch (error) {
-      console.error('Error fetching process details:', error);
-      showToastMessage('Failed to load process details', 'error');
+      logger.error('Error fetching process details:', error);
+      if (!silentRefresh) {
+        showToast('Failed to load process details', 'error');
+      }
     } finally {
-      setLoading(false);
+      if (!silentRefresh) {
+        setLoading(false);
+      }
     }
   };
 
@@ -663,7 +593,7 @@ const HiringProcessDetail = () => {
                   .sort((a, b) => a.order - b.order)
                   .map((stage, index) => {
                     const stageCandidates = process.candidates?.filter(c => c.current_stage_id === stage.id) || [];
-                    console.log(`Stage ${stage.name} (${stage.id}):`, stageCandidates);
+                    logger.debug(`Stage ${stage.name} (${stage.id}):`, stageCandidates);
                     const isLastStage = index === process.stages.length - 1;
                     
                     return (
@@ -773,7 +703,7 @@ const HiringProcessDetail = () => {
                                       {candidate.resume_bank_entry_id && (
                                         <button
                                           onClick={() => {
-                                            console.log('Navigating to candidate:', candidate.resume_bank_entry_id, 'Full candidate:', candidate);
+                                            logger.debug('Navigating to candidate:', candidate.resume_bank_entry_id, 'Full candidate:', candidate);
                                             navigate(`/resume-bank/${candidate.resume_bank_entry_id}`);
                                           }}
                                           className="flex-1 flex items-center justify-center px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
@@ -1262,14 +1192,6 @@ const HiringProcessDetail = () => {
         </div>
       )}
 
-      {/* Toast */}
-      {showToast && (
-        <Toast
-          message={toastMessage}
-          type={toastType}
-          onClose={() => setShowToast(false)}
-        />
-      )}
       </div>
 
       {/* Delete Process Confirmation Modal */}

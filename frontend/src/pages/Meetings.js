@@ -19,14 +19,15 @@ import {
   Eye,
   MoreHorizontal
 } from 'lucide-react';
-import { meetingsAPI } from '../services/api/api';
-import { ROUTES } from '../constants/routes';
+import { meetingsAPI } from '../services/api';
 import ConfirmationModal from '../components/ui/ConfirmationModal';
-import Toast from '../components/ui/Toast';
+import { useToast } from '../hooks/useToast';
 import { DetailPageSkeleton } from '../components/ui/SkeletonLoader';
+import logger from '../utils/logger';
 
 const Meetings = () => {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   
   const [meetings, setMeetings] = useState([]);
   const [filteredMeetings, setFilteredMeetings] = useState([]);
@@ -36,7 +37,6 @@ const Meetings = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [meetingToDelete, setMeetingToDelete] = useState(null);
   const [deletingMeetingId, setDeletingMeetingId] = useState(null);
-  const [toast, setToast] = useState(null);
 
   const statusOptions = [
     { value: 'all', label: 'All Meetings', color: 'bg-gray-100 text-gray-800' },
@@ -52,11 +52,8 @@ const Meetings = () => {
       const response = await meetingsAPI.getMeetings();
       setMeetings(response.data || []);
     } catch (error) {
-      console.error('Error fetching meetings:', error);
-      setToast({
-        type: 'error',
-        message: 'Failed to fetch meetings'
-      });
+      logger.error('Error fetching meetings:', error);
+      showToast('Failed to fetch meetings', 'error');
     } finally {
       setLoading(false);
     }
@@ -92,17 +89,11 @@ const Meetings = () => {
   const handleDeleteMeeting = async () => {
     try {
       await meetingsAPI.deleteMeeting(meetingToDelete.id);
-      setToast({
-        type: 'success',
-        message: 'Meeting deleted successfully'
-      });
+      showToast('Meeting deleted successfully', 'success');
       fetchMeetings();
     } catch (error) {
-      console.error('Error deleting meeting:', error);
-      setToast({
-        type: 'error',
-        message: 'Failed to delete meeting'
-      });
+      logger.error('Error deleting meeting:', error);
+      showToast('Failed to delete meeting', 'error');
     } finally {
       setShowDeleteModal(false);
       setMeetingToDelete(null);
@@ -112,34 +103,22 @@ const Meetings = () => {
   const handleOpenMeeting = async (meetingId) => {
     try {
       await meetingsAPI.openMeeting(meetingId);
-      setToast({
-        type: 'success',
-        message: 'Meeting opened successfully!'
-      });
+      showToast('Meeting opened successfully!', 'success');
       fetchMeetings();
     } catch (error) {
-      console.error('Error opening meeting:', error);
-      setToast({
-        type: 'error',
-        message: 'Failed to open meeting'
-      });
+      logger.error('Error opening meeting:', error);
+      showToast('Failed to open meeting', 'error');
     }
   };
 
   const handleCloseMeeting = async (meetingId) => {
     try {
       await meetingsAPI.closeMeeting(meetingId);
-      setToast({
-        type: 'success',
-        message: 'Meeting closed successfully!'
-      });
+      showToast('Meeting closed successfully!', 'success');
       fetchMeetings();
     } catch (error) {
-      console.error('Error closing meeting:', error);
-      setToast({
-        type: 'error',
-        message: 'Failed to close meeting'
-      });
+      logger.error('Error closing meeting:', error);
+      showToast('Failed to close meeting', 'error');
     }
   };
 
@@ -166,10 +145,7 @@ const Meetings = () => {
         const successful = document.execCommand('copy');
         
         if (successful) {
-          setToast({
-            type: 'success',
-            message: 'Meeting link copied to clipboard!'
-          });
+          showToast('Meeting link copied to clipboard!', 'success');
         } else {
           // Try modern method as backup
           if (navigator.clipboard && window.isSecureContext) {
@@ -182,16 +158,10 @@ const Meetings = () => {
         document.body.removeChild(textArea);
         
       } catch (error) {
-        setToast({
-          type: 'error',
-          message: 'Automatic copy failed. Use the manual copy option.'
-        });
+        showToast('Automatic copy failed. Use the manual copy option.', 'error');
       }
     } else {
-      setToast({
-        type: 'error',
-        message: 'No meeting ID available'
-      });
+      showToast('No meeting ID available', 'error');
     }
   };
 
@@ -272,7 +242,7 @@ const Meetings = () => {
             <p className="mt-2 text-gray-600">Manage your meetings and track their progress</p>
           </div>
           <button
-            onClick={() => navigate(ROUTES.CREATE_MEETING)}
+            onClick={() => navigate('/meetings/create')}
             className="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
           >
             <Plus className="w-4 h-4 mr-2" />
@@ -441,7 +411,7 @@ const Meetings = () => {
                       )}
                       
                       <button
-                        onClick={() => navigate(`${ROUTES.MEETINGS}/${meeting.id}`)}
+                        onClick={() => navigate(`/meetings/${meeting.id}`)}
                         className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                         title="View details"
                       >
@@ -449,7 +419,7 @@ const Meetings = () => {
                       </button>
                       
                       <button
-                        onClick={() => navigate(`${ROUTES.MEETINGS}/${meeting.id}/edit`)}
+                        onClick={() => navigate(`/meetings/${meeting.id}/edit`)}
                         className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                         title="Edit meeting"
                       >
@@ -483,7 +453,7 @@ const Meetings = () => {
                 {!searchQuery && selectedStatus === 'all' && (
                   <div className="mt-6">
                     <button
-                      onClick={() => navigate(ROUTES.CREATE_MEETING)}
+                      onClick={() => navigate('/meetings/create')}
                       className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                     >
                       <Plus className="w-4 h-4 mr-2" />
@@ -512,13 +482,6 @@ const Meetings = () => {
       {/* Removed manual copy modal state and related code */}
       
       {/* Toast */}
-      {toast && (
-        <Toast
-          type={toast.type}
-          message={toast.message}
-          onClose={() => setToast(null)}
-        />
-      )}
     </>
   );
 };

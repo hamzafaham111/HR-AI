@@ -13,14 +13,14 @@ import {
   AlertCircle,
   Info
 } from 'lucide-react';
-import { authenticatedFetch } from '../utils/api';
-import { API_ENDPOINTS } from '../config/api';
-import Toast from '../components/ui/Toast';
+import { hiringProcessesAPI } from '../services/api';
+import { useToast } from '../hooks/useToast';
+import logger from '../utils/logger';
 
 const CreateHiringProcess = () => {
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [toast, setToast] = useState({ message: '', type: '', isVisible: false });
   const [showReturnBanner, setShowReturnBanner] = useState(false);
 
   // Form state
@@ -57,10 +57,6 @@ const CreateHiringProcess = () => {
     }
   }, []);
 
-  const showToast = (message, type = 'success') => {
-    setToast({ message, type, isVisible: true });
-    setTimeout(() => setToast(prev => ({ ...prev, isVisible: false })), 5000);
-  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -181,53 +177,40 @@ const CreateHiringProcess = () => {
         }))
       };
       
-      const response = await authenticatedFetch(API_ENDPOINTS.HIRING_PROCESSES.CREATE, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(processData)
-      });
+      const newProcess = await hiringProcessesAPI.createHiringProcess(processData);
+      showToast('Hiring process created successfully', 'success');
       
-      if (response.ok) {
-        const newProcess = await response.json();
-        showToast('Hiring process created successfully');
-        
-        // Check if we're returning from application approval
-        const pendingApproval = sessionStorage.getItem('pendingApplicationApproval');
-        
-        if (pendingApproval) {
-          try {
-            const { returnUrl } = JSON.parse(pendingApproval);
-            
-            // Clear the pending approval
-            sessionStorage.removeItem('pendingApplicationApproval');
-            
-            // Navigate back to application approval with new process
-            navigate(returnUrl, { 
-              state: { 
-                newlyCreatedProcess: newProcess,
-                showProcessSelection: true 
-              }
-            });
-          } catch (error) {
-            console.error('Error parsing pending approval:', error);
-            // Fallback to normal navigation
-            setTimeout(() => {
-              navigate('/hiring-processes');
-            }, 1000);
-          }
-        } else {
-          console.log('No pending approval, staying on creation page');
-          // Don't navigate away - stay on the creation page
-          // The user can manually navigate back or create another process
+      // Check if we're returning from application approval
+      const pendingApproval = sessionStorage.getItem('pendingApplicationApproval');
+      
+      if (pendingApproval) {
+        try {
+          const { returnUrl } = JSON.parse(pendingApproval);
+          
+          // Clear the pending approval
+          sessionStorage.removeItem('pendingApplicationApproval');
+          
+          // Navigate back to application approval with new process
+          navigate(returnUrl, { 
+            state: { 
+              newlyCreatedProcess: newProcess,
+              showProcessSelection: true 
+            }
+          });
+        } catch (error) {
+          logger.error('Error parsing pending approval:', error);
+          // Fallback to normal navigation
+          setTimeout(() => {
+            navigate('/hiring-processes');
+          }, 1000);
         }
       } else {
-        throw new Error(`Creation failed with status: ${response.status}`);
+        logger.debug('No pending approval, staying on creation page');
+        // Don't navigate away - stay on the creation page
+        // The user can manually navigate back or create another process
       }
-      
     } catch (error) {
-      console.error('Error creating hiring process:', error);
+      logger.error('Error creating hiring process:', error);
       showToast('Failed to create hiring process', 'error');
     } finally {
       setLoading(false);
@@ -642,12 +625,6 @@ const CreateHiringProcess = () => {
       </form>
 
       {/* Toast Notification */}
-      <Toast
-        message={toast.message}
-        type={toast.type}
-        isVisible={toast.isVisible}
-        onClose={() => setToast(prev => ({ ...prev, isVisible: false }))}
-      />
       </div>
     </>
   );

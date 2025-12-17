@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import PropTypes from 'prop-types';
 
 const Toast = ({ 
   isVisible, 
@@ -73,6 +74,19 @@ const Toast = ({
       </div>
     </div>
   );
+};
+
+Toast.propTypes = {
+  isVisible: PropTypes.bool.isRequired,
+  message: PropTypes.string.isRequired,
+  type: PropTypes.oneOf(['success', 'error', 'warning', 'info']),
+  duration: PropTypes.number,
+  onClose: PropTypes.func.isRequired,
+};
+
+Toast.defaultProps = {
+  type: 'info',
+  duration: 3000,
 };
 
 export default Toast; 

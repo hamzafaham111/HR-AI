@@ -13,7 +13,10 @@
  */
 
 // Base API URL - can be changed for different environments
-export const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+// In development, use relative URL to take advantage of proxy in package.json
+// In production, use absolute URL
+const isDevelopment = process.env.NODE_ENV === 'development';
+export const API_BASE_URL = process.env.REACT_APP_API_URL || (isDevelopment ? '' : 'http://localhost:8000');
 
 // API path prefix
 export const API_BASE_PATH = process.env.REACT_APP_API_BASE_PATH || '/api/v1';
@@ -118,6 +121,7 @@ export const API_ENDPOINTS = {
       PUBLIC_APPLY: (jobId) => `${API_URL}/job-applications/public/apply/${jobId}`,
       WITH_SCORES: (jobId) => `${API_URL}/job-applications/${jobId}/applications-with-scores`,
       UPDATE_STATUS: (applicationId) => `${API_URL}/job-applications/applications/${applicationId}/status`,
+      APPROVE_AND_ADD_TO_PROCESS: (applicationId) => `${API_URL}/job-applications/applications/${applicationId}/approve-and-add-to-process`,
     }
   },
 };
@@ -142,6 +146,26 @@ export const UPLOAD_CONFIG = {
 export const UI_CONFIG = {
   ITEMS_PER_PAGE: parseInt(process.env.REACT_APP_ITEMS_PER_PAGE) || 10,
   DEFAULT_THEME: process.env.REACT_APP_DEFAULT_THEME || 'light',
+};
+
+// HTTP Constants (moved from constants/api.js for consolidation)
+export const HTTP_METHODS = {
+  GET: 'GET',
+  POST: 'POST',
+  PUT: 'PUT',
+  PATCH: 'PATCH',
+  DELETE: 'DELETE',
+};
+
+export const HTTP_STATUS = {
+  OK: 200,
+  CREATED: 201,
+  NO_CONTENT: 204,
+  BAD_REQUEST: 400,
+  UNAUTHORIZED: 401,
+  FORBIDDEN: 403,
+  NOT_FOUND: 404,
+  INTERNAL_SERVER_ERROR: 500,
 };
 
 // Log configuration for debugging (only in development)

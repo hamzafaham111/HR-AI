@@ -18,18 +18,18 @@ import {
   Eye,
   Trash2
 } from 'lucide-react';
-import { authenticatedFetch } from '../utils/api';
-import { API_ENDPOINTS } from '../config/api';
-import Toast from '../components/ui/Toast';
+import { hiringProcessesAPI } from '../services/api';
+import { useToast } from '../hooks/useToast';
 import ConfirmationModal from '../components/ui/ConfirmationModal';
+import logger from '../utils/logger';
 
 const HiringProcesses = () => {
+  const { showToast } = useToast();
   const [processes, setProcesses] = useState([]);
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [toast, setToast] = useState({ message: '', type: '', isVisible: false });
   const [deleteModal, setDeleteModal] = useState({
     isOpen: false,
     processId: null,
@@ -81,37 +81,22 @@ const HiringProcesses = () => {
     }
   };
 
-  const showToast = (message, type = 'success') => {
-    setToast({ message, type, isVisible: true });
-    setTimeout(() => setToast(prev => ({ ...prev, isVisible: false })), 5000);
-  };
-
   const fetchProcesses = async () => {
     try {
       setLoading(true);
       
       // Build query parameters
-      const params = new URLSearchParams();
-      if (searchTerm) params.append('search', searchTerm);
-      if (statusFilter) params.append('status', statusFilter);
-      params.append('limit', '50');
+      const queryParams = {};
+      if (searchTerm) queryParams.search = searchTerm;
+      if (statusFilter) queryParams.status = statusFilter;
+      queryParams.limit = '50';
       
-      const queryString = params.toString();
-      const url = queryString ? `${API_ENDPOINTS.HIRING_PROCESSES.LIST}?${queryString}` : API_ENDPOINTS.HIRING_PROCESSES.LIST;
-      
-      const response = await authenticatedFetch(url);
-      
-      if (response.ok) {
-        const data = await response.json();
-        setProcesses(Array.isArray(data) ? data : []);
-      } else {
-        console.error('Failed to fetch processes:', response.status);
-        setProcesses([]);
-      }
+      const data = await hiringProcessesAPI.getHiringProcesses(queryParams);
+      setProcesses(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error('Error fetching processes:', error);
+      logger.error('Error fetching processes:', error);
       showToast('Failed to load hiring processes', 'error');
-      setProcesses([]); // Ensure processes is always an array
+      setProcesses([]);
     } finally {
       setLoading(false);
     }
@@ -119,16 +104,10 @@ const HiringProcesses = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await authenticatedFetch(API_ENDPOINTS.HIRING_PROCESSES.STATS);
-      if (response.ok) {
-        const data = await response.json();
-        setStats(data || {});
-      } else {
-        console.error('Stats API response not ok:', response.status);
-        setStats({});
-      }
+      const data = await hiringProcessesAPI.getStats();
+      setStats(data || {});
     } catch (error) {
-      console.error('Error fetching stats:', error);
+      logger.error('Error fetching stats:', error);
       setStats({});
     }
   };
@@ -154,20 +133,13 @@ const HiringProcesses = () => {
     
     try {
       setDeletingProcessId(processId);
-      const response = await authenticatedFetch(API_ENDPOINTS.HIRING_PROCESSES.DELETE(processId), {
-        method: 'DELETE'
-      });
-      
-      if (response.ok) {
-        showToast('Hiring process deleted successfully');
-        closeDeleteModal();
-        fetchProcesses();
-        fetchStats();
-      } else {
-        throw new Error(`Delete failed with status: ${response.status}`);
-      }
+      await hiringProcessesAPI.deleteHiringProcess(processId);
+      showToast('Hiring process deleted successfully', 'success');
+      closeDeleteModal();
+      fetchProcesses();
+      fetchStats();
     } catch (error) {
-      console.error('Error deleting process:', error);
+      logger.error('Error deleting process:', error);
       showToast('Failed to delete hiring process', 'error');
     } finally {
       setDeletingProcessId(null);
@@ -505,12 +477,6 @@ const HiringProcesses = () => {
       />
 
       {/* Toast Notification */}
-      <Toast
-        message={toast.message}
-        type={toast.type}
-        isVisible={toast.isVisible}
-        onClose={() => setToast(prev => ({ ...prev, isVisible: false }))}
-      />
       </div>
     </>
   );

@@ -12,12 +12,13 @@ import {
   Shield,
   CalendarDays
 } from 'lucide-react';
-import { API_ENDPOINTS } from '../config/api';
-import { apiRequest } from '../utils/api';
-import Toast from '../components/ui/Toast';
+import { meetingsAPI } from '../services/api';
+import { useToast } from '../hooks/useToast';
+import logger from '../utils/logger';
 
 const PublicMeeting = () => {
   const { meetingLink } = useParams();
+  const { showToast } = useToast();
   
   const [meeting, setMeeting] = useState(null);
   const [availableSlots, setAvailableSlots] = useState([]);
@@ -25,7 +26,6 @@ const PublicMeeting = () => {
   const [bookingLoading, setBookingLoading] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [showBookingForm, setShowBookingForm] = useState(false);
-  const [toast, setToast] = useState(null);
   const [copied, setCopied] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   
@@ -39,20 +39,18 @@ const PublicMeeting = () => {
   const fetchMeetingInfo = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await apiRequest(API_ENDPOINTS.MEETINGS.PUBLIC_INFO(meetingLink));
+      const response = await meetingsAPI.getPublicMeetingInfo(meetingLink);
       
       if (response && response.success) {
         setMeeting(response.data.meeting);
         setAvailableSlots(response.data.available_slots);
       } else {
-        throw new Error('Failed to fetch meeting info');
+        setMeeting(response.meeting);
+        setAvailableSlots(response.available_slots || []);
       }
     } catch (error) {
-      console.error('Error fetching meeting info:', error);
-      setToast({
-        type: 'error',
-        message: 'Meeting not found or no longer available'
-      });
+      logger.error('Error fetching meeting info:', error);
+      showToast('Meeting not found or no longer available', 'error');
     } finally {
       setLoading(false);
     }
@@ -85,10 +83,7 @@ const PublicMeeting = () => {
     e.preventDefault();
     
     if (!bookingForm.participant_name || !bookingForm.participant_email) {
-      setToast({
-        type: 'error',
-        message: 'Please fill in all required fields'
-      });
+      showToast('Please fill in all required fields', 'error');
       return;
     }
 
@@ -104,40 +99,14 @@ const PublicMeeting = () => {
         notes: bookingForm.notes || null
       };
       
-      console.log('Booking data being sent:', bookingData);
-      console.log('API endpoint:', API_ENDPOINTS.MEETINGS.BOOK_PUBLIC(meetingLink));
+      logger.debug('Booking data being sent:', bookingData);
       
-      let response;
-      try {
-        // Try the apiRequest function first
-        response = await apiRequest(API_ENDPOINTS.MEETINGS.BOOK_PUBLIC(meetingLink), 'POST', bookingData);
-      } catch (apiError) {
-        console.log('apiRequest failed, trying direct fetch:', apiError);
-        
-        // Fallback to direct fetch
-        const fetchResponse = await fetch(API_ENDPOINTS.MEETINGS.BOOK_PUBLIC(meetingLink), {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(bookingData)
-        });
-        
-        if (!fetchResponse.ok) {
-          const errorData = await fetchResponse.json().catch(() => ({}));
-          throw new Error(errorData.detail || `HTTP error! status: ${fetchResponse.status}`);
-        }
-        
-        response = await fetchResponse.json();
-      }
+      const response = await meetingsAPI.bookPublicMeeting(meetingLink, bookingData);
       
-      console.log('Booking response:', response);
+      logger.debug('Booking response:', response);
       
       if (response && response.success) {
-        setToast({
-          type: 'success',
-          message: 'Slot booked successfully! Check your email for confirmation.'
-        });
+        showToast('Slot booked successfully! Check your email for confirmation.', 'success');
         
         // Reset form and hide booking form
         setShowBookingForm(false);
@@ -155,11 +124,8 @@ const PublicMeeting = () => {
         throw new Error(response?.message || 'Failed to book slot');
       }
     } catch (error) {
-      console.error('Error booking slot:', error);
-      setToast({
-        type: 'error',
-        message: error.message || 'Failed to book slot'
-      });
+      logger.error('Error booking slot:', error);
+      showToast(error.message || 'Failed to book slot', 'error');
     } finally {
       setBookingLoading(false);
     }
@@ -169,16 +135,10 @@ const PublicMeeting = () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
       setCopied(true);
-      setToast({
-        type: 'success',
-        message: 'Meeting link copied to clipboard!'
-      });
+      showToast('Meeting link copied to clipboard!', 'success');
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      setToast({
-        type: 'error',
-        message: 'Failed to copy link'
-      });
+      showToast('Failed to copy link', 'error');
     }
   };
 
@@ -582,14 +542,6 @@ const PublicMeeting = () => {
         )}
       </div>
 
-      {/* Toast */}
-      {toast && (
-        <Toast
-          type={toast.type}
-          message={toast.message}
-          onClose={() => setToast(null)}
-        />
-      )}
 
       {/* Floating Action Button */}
       <div className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-40">

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Users, MapPin, Calendar, Star } from 'lucide-react';
-import { authenticatedFetch } from '../utils/api';
+import { jobsAPI, resumesAPI } from '../services/api';
+import logger from '../utils/logger';
 
 const SearchCandidates = () => {
   const { jobId } = useParams();
@@ -33,16 +34,13 @@ const SearchCandidates = () => {
   const fetchJobAndCandidates = async () => {
     try {
       // Fetch job details
-      const jobResponse = await authenticatedFetch(`http://localhost:8000/api/v1/jobs/${jobId}`);
-      if (jobResponse.ok) {
-        const jobData = await jobResponse.json();
-        setJob(jobData);
-      }
+      const jobData = await jobsAPI.getJob(jobId);
+      setJob(jobData);
 
       // Fetch candidates
       await fetchCandidates();
     } catch (error) {
-      console.error('Error fetching data:', error);
+      logger.error('Error fetching data:', error);
       setError('Failed to load data');
     } finally {
       setLoading(false);
@@ -62,21 +60,16 @@ const SearchCandidates = () => {
       params.append('sort_by', sorting.sortBy);
       params.append('sort_order', sorting.sortOrder);
 
-      const response = await authenticatedFetch(`http://localhost:8000/api/v1/resume-bank/search-candidates/${jobId}?${params}`);
-      if (response.ok) {
-        const data = await response.json();
-        setCandidates(data.candidates || []);
-        setPagination(prev => ({
-          ...prev,
-          total: data.total_candidates || 0,
-          page: data.pagination?.page || 1,
-          pageSize: data.pagination?.page_size || 10
-        }));
-      } else {
-        throw new Error('Failed to fetch candidates');
-      }
+      const data = await resumesAPI.searchCandidates(jobId);
+      setCandidates(data.candidates || []);
+      setPagination(prev => ({
+        ...prev,
+        total: data.total_candidates || 0,
+        page: data.pagination?.page || 1,
+        pageSize: data.pagination?.page_size || 10
+      }));
     } catch (error) {
-      console.error('Error fetching candidates:', error);
+      logger.error('Error fetching candidates:', error);
       setError('Failed to fetch candidates');
     }
   };
@@ -368,7 +361,7 @@ const SearchCandidates = () => {
                   <div className="flex space-x-2 ml-4">
                     <button
                       onClick={() => {
-                        console.log('Navigating to candidate:', candidate.resume_id, 'Full candidate:', candidate);
+                        logger.debug('Navigating to candidate:', candidate.resume_id, 'Full candidate:', candidate);
                         navigate(`/resume-bank/${candidate.resume_id}`);
                       }}
                       className="px-3 py-1 text-sm border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"

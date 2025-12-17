@@ -16,23 +16,19 @@ import {
   Send,
   ArrowLeft
 } from 'lucide-react';
-import { API_ENDPOINTS } from '../config/api';
-import { apiRequest } from '../utils/api';
-import Toast from '../components/ui/Toast';
+import { jobsAPI, jobApplicationsAPI } from '../services/api';
+import { useToast } from '../hooks/useToast';
+import logger from '../utils/logger';
 
 const PublicJobApplication = () => {
   const { jobId } = useParams();
-  
-  // Temporary workaround: Define the endpoint directly
-  const PUBLIC_FORM_ENDPOINT = (jobId) => `${API_ENDPOINTS.JOB_APPLICATIONS.FORMS.PUBLIC_FORM(jobId)}`;
-  const PUBLIC_APPLY_ENDPOINT = (jobId) => `${API_ENDPOINTS.JOB_APPLICATIONS.APPLICATIONS.PUBLIC_APPLY(jobId)}`;
+  const { showToast } = useToast();
   
   const [job, setJob] = useState(null);
   const [applicationForm, setApplicationForm] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [toast, setToast] = useState(null);
   const [copied, setCopied] = useState(false);
   
   const [applicationData, setApplicationData] = useState({
@@ -47,28 +43,19 @@ const PublicJobApplication = () => {
       setLoading(true);
       
       // Fetch job details
-      const jobResponse = await apiRequest(API_ENDPOINTS.JOBS.PUBLIC_DETAIL(jobId));
+      const jobData = await jobsAPI.getPublicJob(jobId);
+      setJob(jobData);
       
-      if (jobResponse) {
-        setJob(jobResponse);
+      // Fetch application form
+      const formData = await jobApplicationsAPI.getPublicForm(jobId);
+      if (formData && formData.success && formData.data) {
+        setApplicationForm(formData.data);
       } else {
-        throw new Error('Failed to fetch job details');
+        setApplicationForm(formData);
       }
-      
-      // Fetch application form - use temporary workaround
-      const formResponse = await apiRequest(PUBLIC_FORM_ENDPOINT(jobId));
-      
-      if (formResponse && formResponse.success && formResponse.data) {
-        setApplicationForm(formResponse.data);
-      } else {
-        throw new Error('Failed to fetch application form');
-      }
-      
     } catch (error) {
-      setToast({
-        type: 'error',
-        message: 'Job not found or application form not available'
-      });
+      logger.error('Error fetching job and form:', error);
+      showToast('Job not found or application form not available', 'error');
     } finally {
       setLoading(false);
     }
@@ -83,7 +70,7 @@ const PublicJobApplication = () => {
         }
       }).catch((error) => {
         if (isMounted) {
-          console.error('Fetch failed:', error);
+          logger.error('Fetch failed:', error);
         }
       });
     }
@@ -94,7 +81,7 @@ const PublicJobApplication = () => {
   }, [jobId]);
 
   const handleInputChange = (field, value) => {
-    console.log('Input change:', field, value);
+    logger.debug('Input change:', field, value);
     setApplicationData(prev => ({
       ...prev,
       [field]: value
@@ -110,7 +97,7 @@ const PublicJobApplication = () => {
   };
 
   const handleFormFieldChange = (fieldName, value) => {
-    console.log('Form field change:', fieldName, value);
+    logger.debug('Form field change:', fieldName, value);
     setApplicationData(prev => ({
       ...prev,
       form_data: {
@@ -173,7 +160,7 @@ const PublicJobApplication = () => {
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
-    console.log('File change:', files);
+    logger.debug('File change:', files);
     setResumeFiles(files);
     
     // Clear resume error when files are selected
@@ -189,16 +176,10 @@ const PublicJobApplication = () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
       setCopied(true);
-      setToast({
-        type: 'success',
-        message: 'Application link copied to clipboard!'
-      });
+      showToast('Application link copied to clipboard!', 'success');
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      setToast({
-        type: 'error',
-        message: 'Failed to copy link'
-      });
+      showToast('Failed to copy link', 'error');
     }
   };
 
@@ -211,10 +192,7 @@ const PublicJobApplication = () => {
 
     // Validate form before submission
     if (!validateForm()) {
-      setToast({
-        type: 'error',
-        message: 'Please fill in all required fields'
-      });
+      showToast('Please fill in all required fields', 'error');
       return;
     }
 
@@ -227,24 +205,21 @@ const PublicJobApplication = () => {
         resume_files: resumeFiles.map(file => file.name) // Send file names for now
       };
       
-      console.log('Submitting data:', submitData);
-      console.log('Using endpoint:', PUBLIC_APPLY_ENDPOINT(jobId));
+      logger.debug('Submitting data:', submitData);
       
-      const response = await apiRequest(PUBLIC_APPLY_ENDPOINT(jobId), 'POST', submitData);
+      const response = await jobApplicationsAPI.submitApplication(jobId, submitData);
       
-      console.log('Submit response:', response);
+      logger.debug('Submit response:', response);
       
       if (response && response.success) {
         setSubmitted(true);
+        showToast('Application submitted successfully!', 'success');
       } else {
         throw new Error(response?.message || 'Failed to submit application');
       }
     } catch (error) {
-      console.error('Submit error:', error);
-      setToast({
-        type: 'error',
-        message: error.message || 'Failed to submit application'
-      });
+      logger.error('Submit error:', error);
+      showToast(error.message || 'Failed to submit application', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -706,14 +681,6 @@ const PublicJobApplication = () => {
         </div>
       </div>
 
-      {/* Toast */}
-      {toast && (
-        <Toast
-          type={toast.type}
-          message={toast.message}
-          onClose={() => setToast(null)}
-        />
-      )}
     </div>
   );
 };

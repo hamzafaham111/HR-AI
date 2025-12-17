@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { authenticatedFetch } from '../utils/api';
+import { useToast } from '../hooks/useToast';
+import { resumesAPI } from '../services/api';
+import logger from '../utils/logger';
 
 const EditResume = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [resume, setResume] = useState(null);
@@ -29,30 +32,25 @@ const EditResume = () => {
 
   const fetchResume = async () => {
     try {
-      const response = await authenticatedFetch(`http://localhost:8000/api/v1/resume-bank/${id}`);
-      if (response.ok) {
-        const data = await response.json();
-        setResume(data);
-        setCandidateInfo({
-          candidate_name: data.candidate_name || '',
-          candidate_email: data.candidate_email || '',
-          candidate_phone: data.candidate_phone || '',
-          candidate_location: data.candidate_location || '',
-          years_experience: data.years_experience?.toString() || '',
-          current_role: data.current_role || '',
-          desired_role: data.desired_role || '',
-          salary_expectation: data.salary_expectation || '',
-          availability: data.availability || '',
-          tags: data.tags ? data.tags.join(', ') : '',
-          notes: data.notes || '',
-          status: data.status || ''
-        });
-      } else {
-        throw new Error('Failed to fetch resume');
-      }
+      const data = await resumesAPI.getResume(id);
+      setResume(data);
+      setCandidateInfo({
+        candidate_name: data.candidate_name || '',
+        candidate_email: data.candidate_email || '',
+        candidate_phone: data.candidate_phone || '',
+        candidate_location: data.candidate_location || '',
+        years_experience: data.years_experience?.toString() || '',
+        current_role: data.current_role || '',
+        desired_role: data.desired_role || '',
+        salary_expectation: data.salary_expectation || '',
+        availability: data.availability || '',
+        tags: data.tags ? data.tags.join(', ') : '',
+        notes: data.notes || '',
+        status: data.status || ''
+      });
     } catch (error) {
-      console.error('Error fetching resume:', error);
-      alert('Failed to load resume');
+      logger.error('Error fetching resume:', error);
+      showToast('Failed to load resume', 'error');
       navigate('/resume-bank');
     } finally {
       setLoading(false);
@@ -63,7 +61,7 @@ const EditResume = () => {
     e.preventDefault();
     
     if (!candidateInfo.candidate_name || !candidateInfo.candidate_email) {
-      alert('Please fill in candidate name and email');
+      showToast('Please fill in candidate name and email', 'warning');
       return;
     }
 
@@ -85,23 +83,12 @@ const EditResume = () => {
         status: candidateInfo.status || 'active'
       };
 
-      const response = await authenticatedFetch(`http://localhost:8000/api/v1/resume-bank/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updateData),
-      });
-
-      if (response.ok) {
-        alert('Resume updated successfully!');
-        navigate('/resume-bank');
-      } else {
-        throw new Error('Failed to update resume');
-      }
+      await resumesAPI.updateResume(id, updateData);
+      showToast('Resume updated successfully!', 'success');
+      navigate('/resume-bank');
     } catch (error) {
-      console.error('Error updating resume:', error);
-      alert('Failed to update resume');
+      logger.error('Error updating resume:', error);
+      showToast('Failed to update resume', 'error');
     } finally {
       setSaving(false);
     }

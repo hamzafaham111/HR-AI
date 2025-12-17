@@ -1,19 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { BarChart3, FileText, Clock, CheckCircle, AlertCircle, Search, TrendingUp } from 'lucide-react';
-import { dashboardAPI } from '../services/api/api';
+import { dashboardAPI } from '../services/api';
 import { DashboardSkeleton } from '../components/ui/SkeletonLoader';
 
-const Dashboard = () => {
+const Dashboard = React.memo(() => {
   const [overview, setOverview] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
-
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true);
       const overviewData = await dashboardAPI.getOverview();
@@ -24,9 +20,13 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const getStatusIcon = (status) => {
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
+
+  const getStatusIcon = useCallback((status) => {
     switch (status) {
       case 'completed':
         return <CheckCircle className="w-5 h-5 text-green-500" />;
@@ -37,9 +37,9 @@ const Dashboard = () => {
       default:
         return <Clock className="w-5 h-5 text-gray-400" />;
     }
-  };
+  }, []);
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = useCallback((status) => {
     const statusClasses = {
       completed: 'badge-success',
       processing: 'badge-warning',
@@ -52,9 +52,9 @@ const Dashboard = () => {
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
     );
-  };
+  }, []);
 
-  const formatDate = (dateString) => {
+  const formatDate = useCallback((dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -62,7 +62,7 @@ const Dashboard = () => {
       hour: '2-digit',
       minute: '2-digit'
     });
-  };
+  }, []);
 
   if (loading) {
     return <DashboardSkeleton />;
@@ -230,6 +230,8 @@ const Dashboard = () => {
       )}
     </div>
   );
-};
+});
+
+Dashboard.displayName = 'Dashboard';
 
 export default Dashboard; 

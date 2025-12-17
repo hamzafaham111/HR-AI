@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { authenticatedFetch } from '../utils/api';
+import { useToast } from '../hooks/useToast';
+import { resumesAPI } from '../services/api';
 import { API_ENDPOINTS } from '../config/api';
+import logger from '../utils/logger';
 
 const CandidateDetail = () => {
   const { candidateId } = useParams();
   const navigate = useNavigate();
+  const { showToast } = useToast();
   
   const [candidate, setCandidate] = useState(null);
   const [currentProcesses, setCurrentProcesses] = useState([]);
@@ -22,27 +25,21 @@ const CandidateDetail = () => {
   const fetchCandidateDetails = async () => {
     try {
       setLoading(true);
-      console.log('Fetching candidate details for ID:', candidateId);
+      logger.debug('Fetching candidate details for ID:', candidateId);
       if (!candidateId || candidateId === 'undefined') {
         throw new Error('Invalid candidate ID');
       }
-      const response = await authenticatedFetch(`http://localhost:8000/api/v1/resume-bank/candidate/${candidateId}`);
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('API Response:', data);
-        setCandidate(data.candidate);
-        setCurrentProcesses(data.current_processes || []);
-        setProcessHistory(data.process_history || []);
-        setPdfUrl(data.pdf_url ? `http://localhost:8000${data.pdf_url}` : null);
-      } else {
-        const errorData = await response.json();
-        console.error('API Error:', errorData);
-        throw new Error(`Failed to fetch candidate details: ${errorData.detail || 'Unknown error'}`);
-      }
+      const data = await resumesAPI.getCandidateDetails(candidateId);
+      logger.debug('API Response:', data);
+      setCandidate(data.candidate);
+      setCurrentProcesses(data.current_processes || []);
+      setProcessHistory(data.process_history || []);
+      // PDF URL should come from the API response
+      setPdfUrl(data.pdf_url || null);
     } catch (err) {
       setError(err.message || 'Failed to load candidate details');
-      console.error('Error fetching candidate details:', err);
+      logger.error('Error fetching candidate details:', err);
+      showToast('Failed to load candidate details', 'error');
     } finally {
       setLoading(false);
     }
@@ -51,28 +48,17 @@ const CandidateDetail = () => {
   const updateCandidateStatus = async (newStatus) => {
     try {
       setUpdatingStatus(true);
-      const response = await authenticatedFetch(`http://localhost:8000/api/v1/resume-bank/candidate/${candidateId}/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          candidate_status: newStatus
-        })
-      });
-      
-      if (response.ok) {
-        // Update local state
-        setCandidate(prev => ({
-          ...prev,
-          candidate_status: newStatus
-        }));
-      } else {
-        throw new Error('Failed to update candidate status');
-      }
+      await resumesAPI.updateCandidateStatus(candidateId, newStatus);
+      // Update local state
+      setCandidate(prev => ({
+        ...prev,
+        candidate_status: newStatus
+      }));
+      showToast('Candidate status updated successfully', 'success');
     } catch (err) {
       setError('Failed to update candidate status');
-      console.error('Error updating status:', err);
+      logger.error('Error updating status:', err);
+      showToast('Failed to update candidate status', 'error');
     } finally {
       setUpdatingStatus(false);
     }

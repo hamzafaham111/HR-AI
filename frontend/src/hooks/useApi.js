@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
-import { apiRequest, handleApiError } from '../utils/api';
+import apiClient from '../services/api/client';
+import { handleError } from '../utils/errorHandler';
 
 export const useApi = () => {
   const [loading, setLoading] = useState(false);
@@ -10,12 +11,12 @@ export const useApi = () => {
     setError(null);
 
     try {
-      const result = await apiRequest(endpoint, options);
+      const result = await apiClient.request(endpoint, options);
       return { success: true, data: result };
     } catch (err) {
-      const errorMessage = handleApiError(err);
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
+      const transformedError = handleError(err);
+      setError(transformedError.message);
+      return { success: false, error: transformedError.message };
     } finally {
       setLoading(false);
     }
