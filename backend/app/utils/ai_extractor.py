@@ -325,7 +325,7 @@ Return the result as a valid JSON object with these exact field names.
         for line in lines[:5]:  # Check first 5 lines
             if '@' in line and '.com' in line:  # Line contains email
                 # Find the email position
-                email_match = re.search(r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}', line)
+                email_match = re.search(r'[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}', line)
                 if email_match:
                     # Get the part before the email
                     name_part = line[:email_match.start()].strip()
@@ -403,7 +403,7 @@ Return the result as a valid JSON object with these exact field names.
         email_found = False
         
         # Method 1: Check for split emails (like "juancontardi isdev@gmail.com") - ALL PAGES
-        split_email_pattern = r'([A-Za-z0-9._%+-]+)\s+([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,})'
+        split_email_pattern = r'([A-Za-z0-9._%+\-]+)\s+([A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,})'
         for page_text in pages:
             split_email_match = re.search(split_email_pattern, page_text)
             if split_email_match:
@@ -425,10 +425,10 @@ Return the result as a valid JSON object with these exact field names.
         # Method 2: Look for emails in contact information sections - ALL PAGES
         if not email_found:
             contact_patterns = [
-                r'email\s*:?\s*([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,})',
-                r'e-mail\s*:?\s*([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,})',
-                r'contact\s*:?\s*([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,})',
-                r'mail\s*:?\s*([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,})',
+                r'email\s*:?\s*([A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,})',
+                r'e-mail\s*:?\s*([A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,})',
+                r'contact\s*:?\s*([A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,})',
+                r'mail\s*:?\s*([A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,})',
             ]
             
             for page_text in pages:
@@ -446,9 +446,9 @@ Return the result as a valid JSON object with these exact field names.
         # Method 3: Try standard email patterns - ALL PAGES
         if not email_found:
             email_patterns = [
-                r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',  # Standard email
-                r'([A-Za-z0-9._%+-]+)\s*@\s*([A-Za-z0-9.-]+)\s*\.\s*([A-Z|a-z]{2,})',  # Email with spaces
-                r'([A-Za-z0-9._%+-]+)\s*@\s*([A-Za-z0-9.-]+)\.([A-Z|a-z]{2,})',  # Email with space before @
+                r'\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b',  # Standard email
+                r'([A-Za-z0-9._%+\-]+)\s*@\s*([A-Za-z0-9.\-]+)\s*\.\s*([A-Za-z]{2,})',  # Email with spaces
+                r'([A-Za-z0-9._%+\-]+)\s*@\s*([A-Za-z0-9.\-]+)\.([A-Za-z]{2,})',  # Email with space before @
             ]
             
             for page_text in pages:
@@ -472,7 +472,7 @@ Return the result as a valid JSON object with these exact field names.
                 
         # Method 4: Try to extract from name line patterns - ALL PAGES
         if not email_found:
-            email_in_name_pattern = r'([A-Za-z\s\.\-]+)\s+([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,})'
+            email_in_name_pattern = r'([A-Za-z\s\.\-]+)\s+([A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,})'
             for page_text in pages:
                 email_in_name_match = re.search(email_in_name_pattern, page_text)
                 if email_in_name_match:
@@ -811,7 +811,9 @@ Return the result as a valid JSON object with these exact field names.
         # Search all pages for skills
         for page_text in pages:
             for skill in skills_keywords:
-                if re.search(rf'\b{skill}\b', page_text, re.IGNORECASE):
+                # Escape special regex characters in skill name to avoid regex errors
+                escaped_skill = re.escape(skill)
+                if re.search(rf'\b{escaped_skill}\b', page_text, re.IGNORECASE):
                     skill_title = skill.title()
                     if skill_title not in found_skills:  # Avoid duplicates
                         found_skills.append(skill_title)

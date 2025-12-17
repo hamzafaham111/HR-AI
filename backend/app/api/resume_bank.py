@@ -141,7 +141,12 @@ async def upload_resume_to_bank(
             logger.info(f"PDF text content: {resume_text}")
         except Exception as pdf_error:
             logger.error(f"PDF processing failed: {pdf_error}")
-            raise pdf_error
+            import traceback
+            logger.error(f"PDF processing traceback: {traceback.format_exc()}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to process PDF file: {str(pdf_error)}"
+            )
         
         # Extract candidate information from resume text using AI-powered extraction
         try:
@@ -159,7 +164,12 @@ async def upload_resume_to_bank(
             logger.info(f"AI extraction completed: {extracted_info}")
         except Exception as ai_error:
             logger.error(f"AI extraction failed: {ai_error}")
-            raise ai_error
+            import traceback
+            logger.error(f"AI extraction traceback: {traceback.format_exc()}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to extract information from resume: {str(ai_error)}"
+            )
         # Use extracted info if form data is empty (no fallback values)
         print("====> MERGING FORM DATA WITH EXTRACTED INFO:")
         print(f"====> Original candidate_name: '{candidate_name}'")
@@ -300,7 +310,12 @@ async def upload_resume_to_bank(
         except Exception as create_error:
             logger.error(f"Failed to create resume bank entry: {create_error}")
             logger.error(f"Entry data: {entry_data}")
-            raise create_error
+            import traceback
+            logger.error(f"Database creation traceback: {traceback.format_exc()}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to save resume to database: {str(create_error)}"
+            )
         
         # Resume successfully stored in MongoDB
         logger.info(f"Resume successfully stored in MongoDB: {filename}")
@@ -337,15 +352,22 @@ async def upload_resume_to_bank(
         except Exception as response_error:
             logger.error(f"Failed to create response model: {response_error}")
             logger.error(f"Created entry data: {created_entry}")
-            raise response_error
+            import traceback
+            logger.error(f"Response creation traceback: {traceback.format_exc()}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to process response: {str(response_error)}"
+            )
         
     except HTTPException:
         raise
     except Exception as e:
+        import traceback
         logger.error(f"Failed to upload resume to bank: {e}")
+        logger.error(f"Full traceback: {traceback.format_exc()}")
         raise HTTPException(
             status_code=500,
-            detail="Failed to upload resume to bank"
+            detail=f"Failed to upload resume to bank: {str(e)}"
         )
 
 
