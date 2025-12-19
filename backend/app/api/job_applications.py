@@ -10,32 +10,12 @@ from app.models.mongodb_models import UserDocument
 from app.services.job_application_service import JobApplicationService
 from app.services.resume_bank_service import ResumeBankService
 from app.api.auth import get_current_user
-from app.core.database import get_database
-from app.repositories.job_application_repository import JobApplicationRepository
-from app.repositories.resume_bank_repository import ResumeBankRepository
-from app.services.openai_service import get_openai_service
+from app.core.dependencies import (
+    get_job_application_service,
+    get_resume_bank_service,
+)
 
 router = APIRouter()
-
-# Dependency injection
-def get_job_application_repository(database = Depends(get_database)):
-    return JobApplicationRepository(database)
-
-def get_job_application_service(database = Depends(get_database)):
-    repository = JobApplicationRepository(database)
-    try:
-        openai_service = get_openai_service()
-    except:
-        openai_service = None  # Fallback if OpenAI service is not available
-    return JobApplicationService(repository, openai_service)
-
-def get_resume_bank_service(database = Depends(get_database)):
-    repository = ResumeBankRepository(database)
-    try:
-        openai_service = get_openai_service()
-    except:
-        openai_service = None  # Fallback if OpenAI service is not available
-    return ResumeBankService(repository, openai_service)
 
 # Request Models
 class CreateApplicationFormRequest(BaseModel):

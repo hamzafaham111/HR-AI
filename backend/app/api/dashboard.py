@@ -26,7 +26,7 @@ class DashboardResponse(BaseModel):
     ai_insights: Dict[str, Any] = Field(..., description="AI-generated insights")
 
 
-from app.core.logger import logger
+from app.core.logging import logger
 from app.core.database import get_database
 from app.repositories.mongodb_repository import MongoDBRepository
 from app.models.mongodb_models import COLLECTIONS

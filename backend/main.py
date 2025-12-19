@@ -53,6 +53,15 @@ async def lifespan(app: FastAPI):
 # Load environment variables
 load_dotenv()
 
+# Validate settings after all imports are complete
+from app.core.config import validate_settings
+try:
+    validate_settings()
+except ValueError as e:
+    # Log warning but allow app to start (for development)
+    import warnings
+    warnings.warn(f"Configuration validation warning: {e}", UserWarning)
+
 # Create FastAPI application instance
 app = FastAPI(
     title="HR API",
@@ -64,23 +73,24 @@ app = FastAPI(
 )
 
 # Setup error handlers and middleware
-# from app.middleware.error_handler import setup_error_handlers
-# from app.middleware.security import setup_security_middleware
+from app.middleware.error_handler import setup_error_handlers
+from app.middleware.security import setup_security_middleware
+
+# Setup error handlers (must be done before adding routes)
+setup_error_handlers(app)
+
+# Setup security middleware (rate limiting, request validation, security headers)
+# This should be added before CORS middleware
+setup_security_middleware(app)
 
 # Configure CORS middleware for frontend communication
+# CORS origins are now configurable from settings
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",  # React development server
-        "http://127.0.0.1:3000",
-        "http://localhost:3001",  # React development server (new port)
-        "http://127.0.0.1:3001",
-        "http://localhost:5173",  # Vite development server
-        "http://127.0.0.1:5173",
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=settings.get_cors_origins(),
+    allow_credentials=settings.cors_allow_credentials,
+    allow_methods=settings.get_cors_methods(),
+    allow_headers=settings.get_cors_headers(),
 )
 
 # Include API routes

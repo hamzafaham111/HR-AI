@@ -9,19 +9,14 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime, date
 import json
 
-from app.core.database import get_database
-from app.repositories.meeting_repository import MeetingRepository
 from app.services.meeting_service import MeetingService
 from app.models.mongodb_models import MeetingStatus, SlotSelectionType, MeetingType
 from app.api.auth import get_current_user
 from app.models.mongodb_models import UserDocument
+from app.core.dependencies import get_meeting_service
+from app.core.database import get_database
 
 router = APIRouter()
-
-async def get_meeting_service(db = Depends(get_database)) -> MeetingService:
-    """Dependency to get meeting service."""
-    repository = MeetingRepository(db)
-    return MeetingService(repository)
 
 # Protected routes (require authentication)
 # Create a request model for meeting creation

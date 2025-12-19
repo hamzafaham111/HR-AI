@@ -13,7 +13,7 @@ from fastapi import UploadFile, HTTPException
 import os
 
 from app.core.config import settings
-from app.core.logger import logger
+from app.core.logging import logger
 
 # Try to import pdfplumber for better PDF processing
 try:

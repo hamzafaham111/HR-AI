@@ -33,9 +33,9 @@ KEY AI CONCEPTS EXPLAINED:
 
 import json
 import asyncio
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 from openai import AsyncOpenAI
-from loguru import logger
+from app.core.logging import logger
 
 # Import configuration settings
 from ..core.config import settings
@@ -83,7 +83,7 @@ class OpenAIService:
         self.max_tokens = settings.max_tokens        # Maximum response length
         self.temperature = settings.temperature      # Creativity level (0.0 = focused, 1.0 = creative)
         
-    async def extract_candidate_info(self, resume_text: str) -> Dict[str, any]:
+    async def extract_candidate_info(self, resume_text: str) -> Dict[str, Any]:
         """
         Extract candidate information from resume text using OpenAI GPT model.
         
@@ -161,7 +161,7 @@ class OpenAIService:
             logger.error(f"OpenAI API call failed: {e}")
             raise e
     
-    def _parse_extraction_response(self, response: str) -> Dict[str, any]:
+    def _parse_extraction_response(self, response: str) -> Dict[str, Any]:
         """
         Parse OpenAI API response into structured data.
         
@@ -195,7 +195,7 @@ class OpenAIService:
             logger.error(f"Failed to parse OpenAI response: {e}")
             return self._get_mock_extraction_response("")
     
-    def _get_mock_extraction_response(self, resume_text: str) -> Dict[str, any]:
+    def _get_mock_extraction_response(self, resume_text: str) -> Dict[str, Any]:
         """
         Generate mock extraction data for testing or fallback.
         

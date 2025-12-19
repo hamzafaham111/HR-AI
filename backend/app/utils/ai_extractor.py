@@ -8,7 +8,7 @@ from any PDF content, whether it's a formal resume or rough candidate data.
 import json
 import re
 from typing import Dict, Any, Optional, List
-from loguru import logger
+from app.core.logging import logger
 from app.core.config import settings
 from app.services.openai_service import OpenAIService
 

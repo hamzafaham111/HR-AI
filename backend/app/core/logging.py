@@ -7,9 +7,7 @@ structured formatting, and proper log levels for different environments.
 
 import logging
 import sys
-import json
-from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Optional
 from contextvars import ContextVar
 import uuid
 from loguru import logger
@@ -17,50 +15,6 @@ from app.core.config import settings
 
 # Context variable for correlation ID
 correlation_id: ContextVar[Optional[str]] = ContextVar('correlation_id', default=None)
-
-
-class StructuredFormatter:
-    """Custom formatter for structured JSON logging."""
-    
-    def format(self, record) -> str:
-        """Format log record as structured JSON."""
-        # Handle both standard logging and loguru records
-        if hasattr(record, 'levelname'):
-            level = record.levelname
-        elif hasattr(record, 'level'):
-            level = record.level.name if hasattr(record.level, 'name') else str(record.level)
-        else:
-            level = "INFO"
-            
-        log_entry = {
-            "timestamp": datetime.utcnow().isoformat(),
-            "level": level,
-            "logger": getattr(record, 'name', 'unknown'),
-            "message": record.getMessage() if hasattr(record, 'getMessage') else str(record.get('message', '')),
-            "correlation_id": correlation_id.get(),
-            "module": getattr(record, 'module', 'unknown'),
-            "function": getattr(record, 'funcName', 'unknown'),
-            "line": getattr(record, 'lineno', 0),
-        }
-        
-        # Add exception info if present
-        if hasattr(record, 'exc_info') and record.exc_info:
-            log_entry["exception"] = {
-                "type": record.exc_info[0].__name__,
-                "message": str(record.exc_info[1]),
-                "traceback": self.format_traceback(record.exc_info[2])
-            }
-        
-        # Add extra fields if present
-        if hasattr(record, 'extra_fields'):
-            log_entry.update(record.extra_fields)
-        
-        return json.dumps(log_entry)
-    
-    def format_traceback(self, traceback) -> list:
-        """Format traceback as list of strings."""
-        import traceback as tb
-        return tb.format_tb(traceback)
 
 
 class CorrelationFilter:
@@ -87,14 +41,15 @@ def setup_logging():
     # Remove default loguru handler
     logger.remove()
     
-    # Configure loguru with structured formatting
+    # Configure loguru with structured formatting and colors
     logger.configure(
         handlers=[
             {
                 "sink": sys.stdout,
-                "format": "{time} | {level} | {name}:{function}:{line} | {message}",
+                "format": "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> | <level>{message}</level>",
                 "level": settings.log_level,
                 "filter": CorrelationFilter().filter,
+                "colorize": True,  # Enable color output for terminal
             },
             {
                 "sink": "logs/app.log",
@@ -196,4 +151,16 @@ class LoggerMixin:
 
 
 # Initialize logging on module import
-setup_logging() 
+setup_logging()
+
+
+def get_logger():
+    """
+    Get the configured logger instance.
+    
+    This function provides backward compatibility with the old logger.py module.
+    
+    Returns:
+        Logger: The configured loguru logger instance
+    """
+    return logger 

@@ -10,7 +10,7 @@ from pymongo import MongoClient
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 from bson import ObjectId
-from loguru import logger
+from app.core.logging import logger
 
 from app.models.mongodb_models import (
     JobPostingDocument,

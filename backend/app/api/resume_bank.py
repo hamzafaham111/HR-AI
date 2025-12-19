@@ -45,7 +45,7 @@ from app.models.mongodb_models import COLLECTIONS       # Collection names
 from app.services.openai_service import openai_service  # AI processing
 from app.utils.pdf_processor import PDFProcessor        # PDF text extraction
 from app.utils.ai_extractor import ai_extractor         # AI-powered extraction
-from app.core.logger import logger                      # Logging utility
+from app.core.logging import logger                      # Logging utility
 from app.api.auth import get_current_user              # Authentication
 from app.models.mongodb_models import UserDocument      # User data model
 

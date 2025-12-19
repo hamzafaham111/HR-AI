@@ -12,18 +12,19 @@ from typing import List, Optional
 from pydantic import BaseModel
 from bson import ObjectId
 from app.core.database import get_database
-from app.repositories.mongodb_repository import MongoDBRepository
+from app.core.dependencies import get_mongodb_repository
 from app.models.job import JobPostingCreate, JobPostingResponse, JobPostingUpdate
 from app.api.auth import get_current_user
 from app.models.mongodb_models import UserDocument, COLLECTIONS
 from app.services.job_parser_service import job_parser_service
-from loguru import logger
+from app.core.logging import logger
+from app.repositories.mongodb_repository import MongoDBRepository
 
 router = APIRouter(tags=["jobs"])
 
 
 class ParseTextRequest(BaseModel):
-    content: str
+    text: str  # Changed from 'content' to 'text' to match frontend
 
 
 class ParseTextResponse(BaseModel):
@@ -66,10 +67,10 @@ async def parse_job_text(request: ParseTextRequest):
         ParseTextResponse: Parsed job data
     """
     try:
-        logger.info(f"Parsing job text with AI (length: {len(request.content)})")
+        logger.info(f"Parsing job text with AI (length: {len(request.text)})")
         
         # Use AI-powered parsing service
-        parsed_data = await job_parser_service.parse_job_text(request.content)
+        parsed_data = await job_parser_service.parse_job_text(request.text)
         
         # Convert to response model
         response = ParseTextResponse(

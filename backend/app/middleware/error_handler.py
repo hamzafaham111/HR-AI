@@ -6,17 +6,17 @@ and standardized error responses.
 """
 
 import traceback
-from typing import Union, Dict, Any
+from typing import Dict, Any
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from sqlalchemy import exc as SQLAlchemyError
-from pydantic import ValidationError
-import json
+from pymongo import errors as MongoErrors
+from pymongo.errors import PyMongoError
 
 from app.core.logging import logger, get_correlation_id, set_correlation_id
 from app.core.config import settings
+from app.exceptions import BaseAPIException
 
 
 class ErrorHandler:
@@ -86,13 +86,27 @@ class ErrorHandler:
         )
     
     @staticmethod
-    async def handle_database_error(request: Request, exc: SQLAlchemyError) -> JSONResponse:
-        """Handle database errors."""
+    async def handle_database_error(request: Request, exc: PyMongoError) -> JSONResponse:
+        """Handle MongoDB database errors."""
         correlation_id = set_correlation_id()
         
+        # Determine appropriate status code based on error type
+        if isinstance(exc, MongoErrors.DuplicateKeyError):
+            status_code = status.HTTP_409_CONFLICT
+            error_message = "A resource with this identifier already exists"
+        elif isinstance(exc, MongoErrors.OperationFailure):
+            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+            error_message = "Database operation failed"
+        elif isinstance(exc, MongoErrors.ServerSelectionTimeoutError):
+            status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+            error_message = "Database connection timeout"
+        else:
+            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+            error_message = "An error occurred while accessing the database"
+        
         error_response = {
-            "error": "Database Error",
-            "message": "An error occurred while accessing the database",
+            "error": "DATABASE_ERROR",
+            "message": error_message,
             "correlation_id": correlation_id,
             "path": request.url.path,
             "method": request.method
@@ -112,7 +126,7 @@ class ErrorHandler:
         # In production, don't expose internal database errors
         if not settings.debug:
             return JSONResponse(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                status_code=status_code,
                 content=error_response
             )
         else:
@@ -124,9 +138,33 @@ class ErrorHandler:
                 }
             })
             return JSONResponse(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                status_code=status_code,
                 content=error_response
             )
+    
+    @staticmethod
+    async def handle_api_exception(request: Request, exc: BaseAPIException) -> JSONResponse:
+        """Handle custom API exceptions."""
+        correlation_id = set_correlation_id()
+        
+        error_response = exc.to_dict()
+        error_response["correlation_id"] = correlation_id
+        error_response["path"] = request.url.path
+        error_response["method"] = request.method
+        
+        logger.warning(
+            "API exception",
+            correlation_id=correlation_id,
+            path=request.url.path,
+            method=request.method,
+            error_code=exc.error_code,
+            message=exc.message
+        )
+        
+        return JSONResponse(
+            status_code=exc.status_code,
+            content=error_response
+        )
     
     @staticmethod
     async def handle_generic_exception(request: Request, exc: Exception) -> JSONResponse:
@@ -134,7 +172,7 @@ class ErrorHandler:
         correlation_id = set_correlation_id()
         
         error_response = {
-            "error": "Internal Server Error",
+            "error": "INTERNAL_SERVER_ERROR",
             "message": "An unexpected error occurred",
             "correlation_id": correlation_id,
             "path": request.url.path,
@@ -233,85 +271,20 @@ class ErrorHandlingMiddleware:
 def setup_error_handlers(app):
     """Setup error handlers for the FastAPI application."""
     
-    # Add error handlers
+    # Add error handlers in order of specificity (most specific first)
+    # Custom API exceptions (most specific)
+    app.add_exception_handler(BaseAPIException, ErrorHandler.handle_api_exception)
+    
+    # Pydantic validation errors
     app.add_exception_handler(RequestValidationError, ErrorHandler.handle_validation_error)
+    
+    # HTTP exceptions (FastAPI/Starlette)
     app.add_exception_handler(StarletteHTTPException, ErrorHandler.handle_http_exception)
-    app.add_exception_handler(SQLAlchemyError, ErrorHandler.handle_database_error)
+    
+    # MongoDB database errors
+    app.add_exception_handler(PyMongoError, ErrorHandler.handle_database_error)
+    
+    # Generic exceptions (catch-all, must be last)
     app.add_exception_handler(Exception, ErrorHandler.handle_generic_exception)
     
-    logger.info("Error handlers configured successfully")
-
-
-class APIError(Exception):
-    """Base class for API-specific errors."""
-    
-    def __init__(
-        self,
-        message: str,
-        status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR,
-        error_code: str = None,
-        details: Dict[str, Any] = None
-    ):
-        self.message = message
-        self.status_code = status_code
-        self.error_code = error_code
-        self.details = details or {}
-        super().__init__(self.message)
-
-
-class ValidationError(APIError):
-    """Raised when data validation fails."""
-    
-    def __init__(self, message: str, details: Dict[str, Any] = None):
-        super().__init__(
-            message=message,
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            error_code="VALIDATION_ERROR",
-            details=details
-        )
-
-
-class NotFoundError(APIError):
-    """Raised when a resource is not found."""
-    
-    def __init__(self, message: str, resource_type: str = None):
-        details = {"resource_type": resource_type} if resource_type else {}
-        super().__init__(
-            message=message,
-            status_code=status.HTTP_404_NOT_FOUND,
-            error_code="NOT_FOUND",
-            details=details
-        )
-
-
-class AuthenticationError(APIError):
-    """Raised when authentication fails."""
-    
-    def __init__(self, message: str = "Authentication failed"):
-        super().__init__(
-            message=message,
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            error_code="AUTHENTICATION_ERROR"
-        )
-
-
-class AuthorizationError(APIError):
-    """Raised when authorization fails."""
-    
-    def __init__(self, message: str = "Access denied"):
-        super().__init__(
-            message=message,
-            status_code=status.HTTP_403_FORBIDDEN,
-            error_code="AUTHORIZATION_ERROR"
-        )
-
-
-class RateLimitError(APIError):
-    """Raised when rate limit is exceeded."""
-    
-    def __init__(self, message: str = "Rate limit exceeded"):
-        super().__init__(
-            message=message,
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            error_code="RATE_LIMIT_ERROR"
-        ) 
+    logger.info("Error handlers configured successfully") 

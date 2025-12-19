@@ -5,21 +5,17 @@ This module provides rate limiting, security headers, and input validation.
 """
 
 import time
-from typing import Dict, Set
+from typing import Dict, Optional
 from collections import defaultdict
-from fastapi import Request, HTTPException, status
+from fastapi import Request, status
 from fastapi.responses import JSONResponse
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.types import ASGIApp
 import re
 
-from app.core.logging import logger, get_correlation_id
+from app.core.logging import logger, get_correlation_id, set_correlation_id
 from app.core.config import settings
-
-
-# Rate limiter instance
-limiter = Limiter(key_func=get_remote_address)
+from app.exceptions import RateLimitError
 
 # Store for tracking requests per IP
 request_counts: Dict[str, Dict] = defaultdict(lambda: {"count": 0, "reset_time": 0})
@@ -43,35 +39,39 @@ XSS_PATTERNS = [
 ]
 
 
-class SecurityMiddleware:
-    """Security middleware for request validation and rate limiting."""
+class SecurityMiddleware(BaseHTTPMiddleware):
+    """Security middleware for request validation, rate limiting, and security headers."""
     
-    def __init__(self, app):
-        self.app = app
-        self.rate_limit_window = 60  # 1 minute
-        self.max_requests_per_window = 100
+    def __init__(self, app: ASGIApp):
+        super().__init__(app)
+        self.rate_limit_enabled = settings.rate_limit_enabled
+        self.rate_limit_window = settings.rate_limit_window_seconds
+        self.max_requests_per_window = settings.rate_limit_max_requests
     
-    async def __call__(self, scope, receive, send):
-        if scope["type"] == "http":
-            request = Request(scope, receive)
-            
-            # Get client IP
-            client_ip = self.get_client_ip(request)
-            
-            # Check rate limiting
-            if not self.check_rate_limit(client_ip):
-                await self.send_rate_limit_response(send)
-                return
-            
-            # Validate request
-            if not self.validate_request(request):
-                await self.send_validation_error_response(send)
-                return
-            
-            # Add security headers
-            await self.add_security_headers(scope, receive, send)
-        else:
-            await self.app(scope, receive, send)
+    async def dispatch(self, request: Request, call_next):
+        """Process request through security checks."""
+        # Set correlation ID if not already set
+        correlation_id = set_correlation_id()
+        
+        # Get client IP
+        client_ip = self.get_client_ip(request)
+        
+        # Check rate limiting if enabled
+        if self.rate_limit_enabled:
+            if not self.check_rate_limit(client_ip, correlation_id):
+                return await self.send_rate_limit_response()
+        
+        # Validate request for security threats
+        if not self.validate_request(request, client_ip, correlation_id):
+            return await self.send_validation_error_response()
+        
+        # Process request
+        response = await call_next(request)
+        
+        # Add security headers
+        self.add_security_headers(response)
+        
+        return response
     
     def get_client_ip(self, request: Request) -> str:
         """Get the real client IP address."""
@@ -86,7 +86,7 @@ class SecurityMiddleware:
         
         return request.client.host if request.client else "unknown"
     
-    def check_rate_limit(self, client_ip: str) -> bool:
+    def check_rate_limit(self, client_ip: str, correlation_id: Optional[str] = None) -> bool:
         """Check if client has exceeded rate limit."""
         current_time = time.time()
         
@@ -105,7 +105,7 @@ class SecurityMiddleware:
         if request_counts[client_ip]["count"] > self.max_requests_per_window:
             logger.warning(
                 "Rate limit exceeded",
-                correlation_id=get_correlation_id(),
+                correlation_id=correlation_id or get_correlation_id(),
                 client_ip=client_ip,
                 count=request_counts[client_ip]["count"]
             )
@@ -113,14 +113,16 @@ class SecurityMiddleware:
         
         return True
     
-    def validate_request(self, request: Request) -> bool:
+    def validate_request(self, request: Request, client_ip: str, correlation_id: Optional[str] = None) -> bool:
         """Validate request for security threats."""
+        corr_id = correlation_id or get_correlation_id()
+        
         # Check URL for SQL injection
         if self.contains_sql_injection(request.url.path):
             logger.warning(
                 "SQL injection attempt detected in URL",
-                correlation_id=get_correlation_id(),
-                client_ip=self.get_client_ip(request),
+                correlation_id=corr_id,
+                client_ip=client_ip,
                 url=request.url.path
             )
             return False
@@ -130,8 +132,8 @@ class SecurityMiddleware:
             if self.contains_sql_injection(str(param_value)):
                 logger.warning(
                     "SQL injection attempt detected in query parameter",
-                    correlation_id=get_correlation_id(),
-                    client_ip=self.get_client_ip(request),
+                    correlation_id=corr_id,
+                    client_ip=client_ip,
                     param_name=param_name,
                     param_value=param_value
                 )
@@ -154,64 +156,52 @@ class SecurityMiddleware:
                 return True
         return False
     
-    async def send_rate_limit_response(self, send):
+    async def send_rate_limit_response(self) -> JSONResponse:
         """Send rate limit exceeded response."""
-        response = JSONResponse(
+        correlation_id = get_correlation_id()
+        return JSONResponse(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             content={
-                "error": "Rate Limit Exceeded",
+                "success": False,
+                "error": "RATE_LIMIT_ERROR",
                 "message": "Too many requests. Please try again later.",
-                "retry_after": 60
+                "correlation_id": correlation_id,
+                "retry_after": self.rate_limit_window
             }
         )
-        await send({
-            "type": "http.response.start",
-            "status": response.status_code,
-            "headers": response.headers.raw
-        })
-        await send({
-            "type": "http.response.body",
-            "body": response.body
-        })
     
-    async def send_validation_error_response(self, send):
+    async def send_validation_error_response(self) -> JSONResponse:
         """Send validation error response."""
-        response = JSONResponse(
+        correlation_id = get_correlation_id()
+        return JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST,
             content={
-                "error": "Invalid Request",
-                "message": "Request contains invalid or malicious content."
+                "success": False,
+                "error": "VALIDATION_ERROR",
+                "message": "Request contains invalid or malicious content.",
+                "correlation_id": correlation_id
             }
         )
-        await send({
-            "type": "http.response.start",
-            "status": response.status_code,
-            "headers": response.headers.raw
-        })
-        await send({
-            "type": "http.response.body",
-            "body": response.body
-        })
     
-    async def add_security_headers(self, scope, receive, send):
+    def add_security_headers(self, response: JSONResponse) -> None:
         """Add security headers to responses."""
-        async def send_with_headers(message):
-            if message["type"] == "http.response.start":
-                # Add security headers
-                headers = list(message.get("headers", []))
-                headers.extend([
-                    (b"X-Content-Type-Options", b"nosniff"),
-                    (b"X-Frame-Options", b"DENY"),
-                    (b"X-XSS-Protection", b"1; mode=block"),
-                    (b"Strict-Transport-Security", b"max-age=31536000; includeSubDomains"),
-                    (b"Content-Security-Policy", b"default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"),
-                    (b"Referrer-Policy", b"strict-origin-when-cross-origin"),
-                    (b"Permissions-Policy", b"geolocation=(), microphone=(), camera=()"),
-                ])
-                message["headers"] = headers
-            await send(message)
+        # Security headers
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
         
-        await self.app(scope, receive, send_with_headers)
+        # Only add HSTS in production (HTTPS)
+        if settings.environment == "production":
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        
+        # Content Security Policy (can be customized per environment)
+        if settings.environment == "production":
+            response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';"
+        else:
+            # More relaxed for development
+            response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';"
 
 
 class InputSanitizer:
@@ -263,7 +253,23 @@ class InputSanitizer:
         return bool(re.match(pattern, email))
 
 
-def setup_security_middleware(app):
-    """Setup security middleware for the FastAPI application."""
-    app.add_middleware(SecurityMiddleware)
-    logger.info("Security middleware configured successfully") 
+def setup_security_middleware(app) -> None:
+    """
+    Setup security middleware for the FastAPI application.
+    
+    This function adds security middleware if enabled in settings.
+    The middleware provides:
+    - Rate limiting
+    - Request validation (SQL injection, XSS detection)
+    - Security headers
+    """
+    if settings.enable_security_middleware:
+        app.add_middleware(SecurityMiddleware)
+        logger.info(
+            "Security middleware configured successfully",
+            rate_limit_enabled=settings.rate_limit_enabled,
+            rate_limit_max_requests=settings.rate_limit_max_requests,
+            rate_limit_window=settings.rate_limit_window_seconds
+        )
+    else:
+        logger.info("Security middleware is disabled in settings") 

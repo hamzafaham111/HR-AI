@@ -16,9 +16,10 @@ Key Concepts for React Developers:
 """
 
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from motor.motor_asyncio import AsyncIOMotorDatabase
 import jwt  # JSON Web Tokens for secure authentication
 import bcrypt  # For password hashing (like bcrypt in Node.js)
 from bson import ObjectId  # MongoDB's unique identifier type
@@ -32,7 +33,7 @@ from app.models.auth import (
 )
 from app.models.mongodb_models import UserDocument, COLLECTIONS
 from app.utils.email_service import send_password_reset_email, send_welcome_email
-from loguru import logger
+from app.core.logging import logger
 
 # Create FastAPI router - like Express Router
 router = APIRouter()
@@ -49,7 +50,7 @@ REFRESH_TOKEN_EXPIRE_DAYS = 7     # Longer-lived for convenience
 # JWT Token Creation Functions
 # These functions create JWT tokens that contain user information and expiration time
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     """
     Create an access token for API authentication.
     
@@ -78,7 +79,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-def create_refresh_token(data: dict, expires_delta: Optional[timedelta] = None):
+def create_refresh_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     """
     Create a refresh token for renewing access tokens.
     
@@ -103,7 +104,7 @@ def get_password_hash(password: str) -> str:
 # Dependency to get current user
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    database = Depends(get_database)
+    database: AsyncIOMotorDatabase = Depends(get_database)
 ) -> UserDocument:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -140,7 +141,7 @@ async def get_current_user(
 
 async def get_current_user_from_refresh_token(
     refresh_token: str,
-    database = Depends(get_database)
+    database: AsyncIOMotorDatabase = Depends(get_database)
 ) -> UserDocument:
     try:
         payload = jwt.decode(refresh_token, REFRESH_SECRET_KEY, algorithms=[ALGORITHM])
@@ -211,12 +212,15 @@ async def register(user_data: UserCreate, database = Depends(get_database)):
         send_welcome_email(user_data.email, user_data.name)
     except Exception as e:
         # Log error but don't fail registration
-        print(f"Failed to send welcome email: {e}")
+        logger.warning(f"Failed to send welcome email: {e}")
     
     return UserResponse(**user_doc)
 
 @router.post("/login", response_model=TokenResponse)
-async def login(user_credentials: UserLogin, database = Depends(get_database)):
+async def login(
+    user_credentials: UserLogin,
+    database: AsyncIOMotorDatabase = Depends(get_database)
+) -> TokenResponse:
     """Login user and return access/refresh tokens."""
     user_data = await database[COLLECTIONS["users"]].find_one({"email": user_credentials.email})
     
@@ -264,8 +268,8 @@ async def login(user_credentials: UserLogin, database = Depends(get_database)):
 @router.post("/refresh", response_model=TokenResponse)
 async def refresh_token(
     refresh_token_request: RefreshTokenRequest,
-    database = Depends(get_database)
-):
+    database: AsyncIOMotorDatabase = Depends(get_database)
+) -> TokenResponse:
     """Refresh access token using refresh token."""
     try:
         # Verify refresh token and get user
@@ -315,50 +319,71 @@ async def get_current_user_info(current_user: UserDocument = Depends(get_current
     )
 
 @router.post("/forgot-password")
-async def forgot_password(request: ForgotPasswordRequest, database = Depends(get_database)):
+async def forgot_password(
+    request: ForgotPasswordRequest,
+    database: AsyncIOMotorDatabase = Depends(get_database)
+) -> Dict[str, Any]:
     """Send password reset email."""
-    user = database.query(User).filter(User.email == request.email).first()
+    # Find user by email
+    user_data = await database[COLLECTIONS["users"]].find_one({"email": request.email})
     
-    if user:
+    if user_data:
         # Generate reset token (in a real app, this would be stored in database)
-        reset_token = "reset_token_placeholder"  # In production, generate proper token
-        user.reset_token = reset_token
-        user.reset_token_expires = datetime.utcnow() + timedelta(hours=1)
-        database.commit()
+        import secrets
+        reset_token = secrets.token_urlsafe(32)
+        reset_token_expires = datetime.utcnow() + timedelta(hours=1)
+        
+        # Update user with reset token
+        await database[COLLECTIONS["users"]].update_one(
+            {"_id": user_data["_id"]},
+            {"$set": {
+                "reset_token": reset_token,
+                "reset_token_expires": reset_token_expires
+            }}
+        )
         
         # Send reset email
         try:
-            send_password_reset_email(user.email, reset_token)
+            send_password_reset_email(user_data["email"], reset_token)
         except Exception as e:
-            print(f"Failed to send password reset email: {e}")
+            logger.error(f"Failed to send password reset email: {e}")
     
     # Always return success to prevent email enumeration
     return {"message": "If an account with that email exists, a password reset link has been sent."}
 
 @router.post("/reset-password")
-async def reset_password(request: ResetPasswordRequest, database = Depends(get_database)):
+async def reset_password(
+    request: ResetPasswordRequest,
+    database: AsyncIOMotorDatabase = Depends(get_database)
+) -> Dict[str, Any]:
     """Reset password using token."""
-    user = database.query(User).filter(
-        User.reset_token == request.token,
-        User.reset_token_expires > datetime.utcnow()
-    ).first()
+    # Find user by reset token
+    user_data = await database[COLLECTIONS["users"]].find_one({
+        "reset_token": request.token,
+        "reset_token_expires": {"$gt": datetime.utcnow()}
+    })
     
-    if not user:
+    if not user_data:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid or expired reset token"
         )
     
     # Update password
-    user.hashed_password = get_password_hash(request.new_password)
-    user.reset_token = None
-    user.reset_token_expires = None
-    database.commit()
+    hashed_password = get_password_hash(request.new_password)
+    await database[COLLECTIONS["users"]].update_one(
+        {"_id": user_data["_id"]},
+        {"$set": {
+            "hashed_password": hashed_password,
+            "reset_token": None,
+            "reset_token_expires": None
+        }}
+    )
     
     return {"message": "Password has been reset successfully"}
 
 @router.post("/logout")
-async def logout():
+async def logout() -> Dict[str, Any]:
     """Logout user (client should discard tokens)."""
     return {"message": "Successfully logged out"}
 
@@ -366,14 +391,14 @@ async def logout():
 async def update_profile(
     profile_data: ProfileUpdateRequest,
     current_user: UserDocument = Depends(get_current_user),
-    database = Depends(get_database)
-):
+    database: AsyncIOMotorDatabase = Depends(get_database)
+) -> UserResponse:
     """Update user profile information."""
     # Check if email is already taken by another user
     if profile_data.email != current_user.email:
-        existing_user = database[COLLECTIONS["users"]].find_one({
+        existing_user = await database[COLLECTIONS["users"]].find_one({
             "email": profile_data.email,
-            "_id": {"$ne": current_user.id}
+            "_id": {"$ne": ObjectId(current_user.id)}
         })
         if existing_user:
             raise HTTPException(
@@ -389,8 +414,8 @@ async def update_profile(
         "updated_at": datetime.utcnow()
     }
     
-    result = database[COLLECTIONS["users"]].update_one(
-        {"_id": current_user.id},
+    result = await database[COLLECTIONS["users"]].update_one(
+        {"_id": ObjectId(current_user.id)},
         {"$set": update_data}
     )
     
@@ -401,7 +426,7 @@ async def update_profile(
         )
     
     # Get updated user data
-    updated_user = database[COLLECTIONS["users"]].find_one({"_id": current_user.id})
+    updated_user = await database[COLLECTIONS["users"]].find_one({"_id": ObjectId(current_user.id)})
     
     return UserResponse(
         id=str(updated_user["_id"]),
@@ -418,8 +443,8 @@ async def update_profile(
 async def change_password(
     password_data: PasswordChangeRequest,
     current_user: UserDocument = Depends(get_current_user),
-    database = Depends(get_database)
-):
+    database: AsyncIOMotorDatabase = Depends(get_database)
+) -> Dict[str, Any]:
     """Change user password."""
     # Verify current password
     if not verify_password(password_data.current_password, current_user.hashed_password):
@@ -432,8 +457,8 @@ async def change_password(
     new_hashed_password = get_password_hash(password_data.new_password)
     
     # Update password
-    result = database[COLLECTIONS["users"]].update_one(
-        {"_id": current_user.id},
+    result = await database[COLLECTIONS["users"]].update_one(
+        {"_id": ObjectId(current_user.id)},
         {
             "$set": {
                 "hashed_password": new_hashed_password,
@@ -454,12 +479,12 @@ async def change_password(
 async def update_account_settings(
     settings_data: AccountSettingsRequest,
     current_user: UserDocument = Depends(get_current_user),
-    database = Depends(get_database)
-):
+    database: AsyncIOMotorDatabase = Depends(get_database)
+) -> UserResponse:
     """Update user account settings."""
     # Update settings
-    result = database[COLLECTIONS["users"]].update_one(
-        {"_id": current_user.id},
+    result = await database[COLLECTIONS["users"]].update_one(
+        {"_id": ObjectId(current_user.id)},
         {
             "$set": {
                 "settings": {

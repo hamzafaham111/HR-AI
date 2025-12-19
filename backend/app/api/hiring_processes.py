@@ -15,7 +15,7 @@ Key Features:
 
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
-from loguru import logger
+from app.core.logging import logger
 
 from ..core.database import get_database
 from ..api.auth import get_current_user
