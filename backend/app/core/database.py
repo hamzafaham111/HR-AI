@@ -57,4 +57,8 @@ async def close_mongodb_connection() -> None:
     global client
     if client:
         client.close()
-        logger.info("MongoDB connection closed") 
+        try:
+            from app.core.logging import logger
+            logger.info("MongoDB connection closed")
+        except (ImportError, AttributeError):
+            pass  # Logger not available during shutdown 

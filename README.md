@@ -1,835 +1,1486 @@
-# AI Resume Management System - Complete Learning Guide
+# HR-AI: Intelligent Recruitment Platform
 
-A comprehensive full-stack application for AI-powered resume management and candidate matching. This guide will teach you how the entire system works from frontend to backend, including Python concepts and AI integration.
+A comprehensive full-stack AI-powered recruitment management system that automates resume analysis, candidate matching, and hiring workflows.
 
-## 📚 Table of Contents
+---
+
+## 📋 Table of Contents
 
 1. [System Overview](#system-overview)
-2. [Architecture Breakdown](#architecture-breakdown)
-3. [Python & FastAPI Fundamentals](#python--fastapi-fundamentals)
-4. [AI/ML Components Explained](#aiml-components-explained)
-5. [Authentication Flow](#authentication-flow)
-6. [Data Flow & API Structure](#data-flow--api-structure)
-7. [Database Design](#database-design)
-8. [Frontend-Backend Communication](#frontend-backend-communication)
-9. [Setup & Installation](#setup--installation)
-10. [Code Walkthrough](#code-walkthrough)
+2. [Architecture Diagrams](#architecture-diagrams)
+3. [Complete Data Flow](#complete-data-flow)
+4. [Feature Workflows](#feature-workflows)
+5. [Database Schema](#database-schema)
+6. [API Structure](#api-structure)
+7. [Authentication & Security](#authentication--security)
+8. [Setup & Installation](#setup--installation)
+9. [Development Guide](#development-guide)
+10. [Troubleshooting](#troubleshooting)
 
 ---
 
 ## 🎯 System Overview
 
 ### What This System Does
-- **Resume Bank Management**: Upload, store, and organize candidate resumes
-- **AI-Powered Analysis**: Extract candidate information using OpenAI GPT models
-- **Job Posting Management**: Create and manage job listings
-- **Intelligent Matching**: Match candidates to jobs using AI and vector search
-- **User Authentication**: Secure login/registration with JWT tokens
-- **User Isolation**: Each user only sees their own data
 
-### Technologies Used
+HR-AI is an intelligent recruitment platform that helps HR teams:
 
-**Backend (Python)**:
-- **FastAPI**: Modern Python web framework (like Express.js for Node.js)
-- **MongoDB**: NoSQL database for storing documents
-- **OpenAI API**: AI for text processing and analysis
-- **Qdrant**: Vector database for semantic search
-- **JWT**: JSON Web Tokens for authentication
-- **Pydantic**: Data validation and serialization
+- **📄 Resume Management**: Upload, store, and analyze candidate resumes using AI
+- **🎯 Job Posting**: Create and manage job listings with AI-powered parsing
+- **🔍 Smart Matching**: Match candidates to jobs using semantic search and AI
+- **📊 Hiring Pipeline**: Track candidates through custom hiring stages
+- **📅 Interview Scheduling**: Manage and schedule candidate interviews
+- **📈 Analytics**: Get insights into your recruitment process
 
-**Frontend (React)**:
-- **React.js**: User interface library
-- **Tailwind CSS**: Utility-first CSS framework
-- **React Router**: Client-side routing
-- **Axios**: HTTP client for API calls
-
----
-
-## 🏗️ Architecture Breakdown
+### Technology Stack
 
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   React Client  │    │  FastAPI Server │    │    MongoDB      │
-│   (Frontend)    │◄──►│   (Backend)     │◄──►│   (Database)    │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │                       │
-         │                       ▼                       │
-         │              ┌─────────────────┐              │
-         │              │   OpenAI API    │              │
-         │              │ (AI Processing) │              │
-         │              └─────────────────┘              │
-         │                       │                       │
-         │                       ▼                       │
-         │              ┌─────────────────┐              │
-         └──────────────►│  Qdrant Vector │◄─────────────┘
-                        │   Database      │
-                        │ (Semantic Search)│
-                        └─────────────────┘
-```
-
-### Component Relationships
-
-1. **Frontend (React)** ↔ **Backend (FastAPI)**: REST API calls with JSON
-2. **Backend** ↔ **MongoDB**: Document storage and retrieval
-3. **Backend** ↔ **OpenAI**: AI text processing and embeddings
-4. **Backend** ↔ **Qdrant**: Vector storage and similarity search
-
----
-
-## 🐍 Python & FastAPI Fundamentals
-
-### What is FastAPI?
-FastAPI is a modern Python web framework similar to Express.js in Node.js. It's designed for building APIs quickly with automatic documentation.
-
-### Key Concepts for React Developers
-
-#### 1. **Decorators** (Like React Hooks)
-```python
-@router.get("/users")  # This is a decorator - similar to app.get() in Express
-async def get_users():
-    return {"users": []}
-```
-
-#### 2. **Async/Await** (Same as JavaScript)
-```python
-# Python async (same concept as JavaScript)
-async def fetch_data():
-    result = await database.find_one({"id": "123"})
-    return result
-```
-
-#### 3. **Type Hints** (Like TypeScript)
-```python
-# Python with type hints
-def calculate_score(skills: List[str], experience: int) -> float:
-    return len(skills) * experience * 0.1
-
-# JavaScript equivalent would be:
-# function calculateScore(skills: string[], experience: number): number
-```
-
-#### 4. **Pydantic Models** (Like TypeScript Interfaces)
-```python
-# Python Pydantic model
-class User(BaseModel):
-    name: str
-    email: str
-    age: int
-
-# TypeScript equivalent:
-# interface User {
-#   name: string;
-#   email: string;
-#   age: number;
-# }
+┌─────────────────────────────────────────────────────────────┐
+│                    TECHNOLOGY STACK                         │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  Frontend:          Backend:            Database:           │
+│  ┌──────────┐       ┌──────────┐        ┌──────────┐        │
+│  │ React.js │       │ FastAPI  │        │ MongoDB  │        │
+│  │ Tailwind │       │ Python   │        │ Atlas    │        │
+│  │ Axios    │       │ Pydantic │        │          │        │
+│  └──────────┘       └──────────┘        └──────────┘        │
+│                                                              │
+│  AI Services:        External:                               │
+│  ┌──────────┐       ┌──────────┐                            │
+│  │ OpenAI   │       │ Qdrant   │                            │
+│  │ GPT-3.5  │       │ Vector DB│                            │
+│  │ Embeddings│      │          │                            │
+│  └──────────┘       └──────────┘                            │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🤖 AI/ML Components Explained
+## 🏗️ Architecture Diagrams
 
-### 1. **OpenAI Integration**
+### High-Level System Architecture
 
-The system uses OpenAI's GPT models to extract structured information from unstructured resume text.
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                         SYSTEM ARCHITECTURE                          │
+└─────────────────────────────────────────────────────────────────────┘
 
-**How it works:**
-1. **PDF Upload** → Extract text from PDF
-2. **Text Processing** → Send to OpenAI with specific prompt
-3. **AI Analysis** → GPT model extracts structured data
-4. **Data Storage** → Save extracted information to database
-
-```python
-# Example: How AI extracts candidate info
-async def extract_candidate_info(self, resume_text: str) -> Dict[str, any]:
-    # Create a prompt for AI
-    prompt = f"""
-    Extract candidate information from this resume:
-    {resume_text}
-    
-    Return JSON with: name, email, phone, skills, experience, etc.
-    """
-    
-    # Send to OpenAI
-    response = await openai.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "user", "content": prompt}]
-    )
-    
-    # Parse AI response into structured data
-    return parse_json_response(response)
+    ┌──────────────┐
+    │   Browser    │
+    │  (React App) │
+    │  Port: 3000  │
+    └──────┬───────┘
+           │
+           │ HTTP/HTTPS
+           │ JSON Requests
+           │
+    ┌──────▼──────────────────────────────────────────────────┐
+    │              FastAPI Backend Server                       │
+    │              Port: 8000                                   │
+    │  ┌────────────────────────────────────────────────────┐  │
+    │  │  API Routes Layer                                   │  │
+    │  │  ├── /api/v1/auth          (Authentication)        │  │
+    │  │  ├── /api/v1/jobs           (Job Management)      │  │
+    │  │  ├── /api/v1/resume-bank    (Resume Management)   │  │
+    │  │  ├── /api/v1/hiring-processes (Pipeline)           │  │
+    │  │  ├── /api/v1/meetings       (Scheduling)          │  │
+    │  │  └── /api/v1/dashboard      (Analytics)            │  │
+    │  └────────────────────────────────────────────────────┘  │
+    │  ┌────────────────────────────────────────────────────┐  │
+    │  │  Business Logic Layer (Services)                     │  │
+    │  │  ├── OpenAI Service      (AI Processing)           │  │
+    │  │  ├── Job Parser Service  (Job Extraction)            │  │
+    │  │  ├── Meeting Service     (Scheduling Logic)        │  │
+    │  │  └── Resume Bank Service (Candidate Matching)      │  │
+    │  └────────────────────────────────────────────────────┘  │
+    │  ┌────────────────────────────────────────────────────┐  │
+    │  │  Data Access Layer (Repositories)                    │  │
+    │  │  └── MongoDB Repository  (Database Operations)      │  │
+    │  └────────────────────────────────────────────────────┘  │
+    └──────┬──────────────────────────────────────────────────┘
+           │
+           │                    │                    │
+           │                    │                    │
+    ┌──────▼──────┐    ┌───────▼──────┐    ┌───────▼──────┐
+    │   MongoDB    │    │   OpenAI API  │    │   Qdrant     │
+    │   Atlas      │    │   (AI/ML)     │    │  (Vectors)   │
+    │              │    │               │    │              │
+    │  - Users     │    │  - GPT-3.5    │    │  - Embeddings│
+    │  - Jobs      │    │  - Embeddings │    │  - Similarity│
+    │  - Resumes   │    │  - Parsing    │    │  - Search    │
+    │  - Processes │    │               │    │              │
+    └──────────────┘    └───────────────┘    └──────────────┘
 ```
 
-### 2. **Vector Embeddings & Semantic Search**
+### Request Flow Architecture
 
-**What are embeddings?**
-- Embeddings convert text into numerical vectors (arrays of numbers)
-- Similar texts have similar vectors
-- This enables "semantic search" - finding content by meaning, not just keywords
-
-**Example:**
 ```
-"Python developer" → [0.1, 0.8, 0.3, 0.9, ...] (1536 numbers)
-"Software engineer" → [0.2, 0.7, 0.4, 0.8, ...] (similar vector)
-"Chef" → [0.9, 0.1, 0.2, 0.1, ...] (very different vector)
-```
+┌─────────────────────────────────────────────────────────────────┐
+│                    REQUEST FLOW DIAGRAM                          │
+└─────────────────────────────────────────────────────────────────┘
 
-**How matching works:**
-1. **Job Description** → Convert to vector embedding
-2. **Resume** → Convert to vector embedding  
-3. **Calculate Similarity** → Compare vectors mathematically
-4. **Rank Results** → Show most similar candidates first
+User Action (Frontend)
+        │
+        ▼
+┌──────────────────┐
+│  React Component │  (e.g., UploadResume.js)
+│  - User clicks   │
+│  - Form submit   │
+└────────┬─────────┘
+         │
+         │ API Call (Axios)
+         │ POST /api/v1/resume-bank/upload
+         │ Headers: { Authorization: "Bearer <token>" }
+         │ Body: FormData (file)
+         ▼
+┌──────────────────┐
+│  FastAPI Router  │  (resume_bank.py)
+│  - Route handler │
+│  - Validation    │
+└────────┬─────────┘
+         │
+         │ Dependency Injection
+         │ - get_current_user() → Authenticate
+         │ - get_database() → DB Connection
+         ▼
+┌──────────────────┐
+│  Service Layer   │  (openai_service.py)
+│  - Business Logic│
+│  - AI Processing │
+└────────┬─────────┘
+         │
+         │ External API Call
+         │ OpenAI API
+         ▼
+┌──────────────────┐
+│  Repository      │  (mongodb_repository.py)
+│  - Data Access   │
+│  - CRUD Ops      │
+└────────┬─────────┘
+         │
+         │ Database Query
+         │ MongoDB Operations
+         ▼
+┌──────────────────┐
+│   MongoDB        │
+│   - Store Data   │
+│   - Return Result│
+└────────┬─────────┘
+         │
+         │ Response Chain (Reverse)
+         │
+         ▼
+┌──────────────────┐
+│  JSON Response   │  { "id": "...", "status": "success" }
+│  Back to Frontend│
+└──────────────────┘
+```
 
 ---
 
-## 🔐 Authentication Flow
+## 🔄 Complete Data Flow
 
-### JWT Token System
-
-The app uses JWT (JSON Web Tokens) for secure authentication - similar to session management but stateless.
-
-#### 1. **Registration/Login Process**
+### 1. User Registration Flow
 
 ```
-User Registration/Login
-         ↓
-Backend validates credentials
-         ↓
-Generate JWT tokens:
-- Access Token (15 min expiry)
-- Refresh Token (7 days expiry)
-         ↓
-Send tokens to frontend
-         ↓
-Frontend stores in localStorage
+┌─────────────────────────────────────────────────────────────────┐
+│                  USER REGISTRATION FLOW                         │
+└─────────────────────────────────────────────────────────────────┘
+
+Step 1: User Fills Form
+┌──────────────┐
+│  Frontend    │
+│  Register.js │
+│              │
+│  Input:      │
+│  - Name      │
+│  - Email     │
+│  - Password  │
+└──────┬───────┘
+       │
+       │ POST /api/v1/auth/register
+       │ { name, email, password }
+       ▼
+┌──────────────┐
+│  Backend     │
+│  auth.py     │
+│              │
+│  1. Validate │
+│  2. Hash PWD │
+│  3. Create   │
+│     User Doc │
+└──────┬───────┘
+       │
+       │ Insert Document
+       ▼
+┌──────────────┐
+│  MongoDB     │
+│              │
+│  Collection: │
+│  users       │
+│              │
+│  Document:   │
+│  {           │
+│    _id: ...  │
+│    name: ... │
+│    email: ...│
+│    hashed_   │
+│    password: │
+│    ...       │
+│  }           │
+└──────┬───────┘
+       │
+       │ Return User Data
+       ▼
+┌──────────────┐
+│  Response    │
+│  {           │
+│    id: ...   │
+│    name: ... │
+│    email: ...│
+│  }           │
+└──────────────┘
 ```
 
-#### 2. **Protected API Calls**
+### 2. Resume Upload & Processing Flow
 
 ```
-Frontend API Call
-         ↓
-Add Authorization header: "Bearer <access_token>"
-         ↓
-Backend validates token
-         ↓
-If valid: Process request
-If expired: Return 401 error
-         ↓
-Frontend auto-refreshes token using refresh_token
+┌─────────────────────────────────────────────────────────────────┐
+│            RESUME UPLOAD & AI PROCESSING FLOW                    │
+└─────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│ STEP 1: File Upload (Frontend)                                  │
+└──────────────────────────────────────────────────────────────────┘
+User selects PDF file
+        │
+        ▼
+FormData created with file
+        │
+        ▼
+POST /api/v1/resume-bank/upload
+Headers: Authorization: Bearer <token>
+Body: FormData(file)
+
+┌──────────────────────────────────────────────────────────────────┐
+│ STEP 2: Backend Receives File (API Route)                        │
+└──────────────────────────────────────────────────────────────────┘
+resume_bank.py → upload_resume_to_bank()
+        │
+        ├─► Validate file type (PDF only)
+        ├─► Authenticate user (get_current_user)
+        └─► Get database connection
+
+┌──────────────────────────────────────────────────────────────────┐
+│ STEP 3: PDF Text Extraction                                     │
+└──────────────────────────────────────────────────────────────────┘
+PDFProcessor.process_pdf(file)
+        │
+        ├─► Read PDF bytes
+        ├─► Extract text using PyPDF2/pdfplumber
+        └─► Return: resume_text (string)
+
+┌──────────────────────────────────────────────────────────────────┐
+│ STEP 4: AI-Powered Data Extraction                              │
+└──────────────────────────────────────────────────────────────────┘
+ai_extractor.extract_candidate_info(resume_text)
+        │
+        ├─► Create AI prompt with resume text
+        ├─► Call OpenAI API (GPT-3.5-turbo)
+        │   └─► Request: {
+        │         model: "gpt-3.5-turbo",
+        │         messages: [{
+        │           role: "user",
+        │           content: "Extract: name, email, skills..."
+        │         }]
+        │       }
+        │
+        ├─► Parse AI response (JSON)
+        └─► Return: {
+              name: "John Doe",
+              email: "john@example.com",
+              phone: "+1234567890",
+              skills: ["Python", "React", "MongoDB"],
+              experience_years: 5,
+              education: [...],
+              ...
+            }
+
+┌──────────────────────────────────────────────────────────────────┐
+│ STEP 5: Generate Vector Embedding                               │
+└──────────────────────────────────────────────────────────────────┘
+openai_service.generate_embedding(resume_text)
+        │
+        ├─► Call OpenAI Embeddings API
+        │   └─► Request: {
+        │         model: "text-embedding-ada-002",
+        │         input: resume_text
+        │       }
+        │
+        └─► Return: [0.1, 0.8, 0.3, ..., 0.2] (1536 numbers)
+
+┌──────────────────────────────────────────────────────────────────┐
+│ STEP 6: Store in MongoDB                                        │
+└──────────────────────────────────────────────────────────────────┘
+MongoDB Repository → create_resume_bank_entry()
+        │
+        ├─► Create document:
+        │   {
+        │     user_id: ObjectId("..."),
+        │     filename: "resume.pdf",
+        │     candidate_name: "John Doe",
+        │     candidate_email: "john@example.com",
+        │     skills: ["Python", "React"],
+        │     experience_years: 5,
+        │     text_content: "...",
+        │     embedding: [0.1, 0.8, ...],
+        │     created_at: datetime.now(),
+        │     status: "active"
+        │   }
+        │
+        └─► Insert into: resume_bank_entries collection
+            └─► Return: inserted_id
+
+┌──────────────────────────────────────────────────────────────────┐
+│ STEP 7: Store Embedding in Qdrant (Optional)                    │
+└──────────────────────────────────────────────────────────────────┘
+qdrant_service.store_resume_embedding()
+        │
+        ├─► Store vector in Qdrant collection
+        └─► Link to MongoDB document ID
+
+┌──────────────────────────────────────────────────────────────────┐
+│ STEP 8: Response to Frontend                                   │
+└──────────────────────────────────────────────────────────────────┘
+Return JSON:
+{
+  "id": "507f1f77bcf86cd799439011",
+  "message": "Resume uploaded successfully",
+  "candidate_name": "John Doe",
+  "extracted_skills": ["Python", "React", "MongoDB"],
+  "status": "active"
+}
+
+Frontend Updates:
+- Show success message
+- Refresh resume list
+- Display extracted data
 ```
 
-#### 3. **Code Implementation**
+### 3. Job Posting Creation Flow
 
-**Backend Authentication:**
-```python
-# Extract user from JWT token
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    try:
-        # Decode JWT token
-        payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=["HS256"])
-        user_id = payload.get("sub")
-        
-        # Find user in database
-        user = await database.users.find_one({"_id": ObjectId(user_id)})
-        return user
-    except jwt.PyJWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+```
+┌─────────────────────────────────────────────────────────────────┐
+│              JOB POSTING CREATION FLOW                          │
+└─────────────────────────────────────────────────────────────────┘
+
+User creates job posting
+        │
+        ├─► Option A: Manual Entry
+        │   └─► Fill form fields
+        │
+        └─► Option B: Upload Job Description PDF
+            └─► Upload file → Parse with AI
+
+┌──────────────────────────────────────────────────────────────────┐
+│ If PDF Upload:                                                   │
+└──────────────────────────────────────────────────────────────────┘
+POST /api/v1/jobs/parse-document
+        │
+        ├─► Extract text from PDF
+        ├─► job_parser_service.parse_job_text(text)
+        │   └─► AI extracts:
+        │       - Title
+        │       - Company
+        │       - Location
+        │       - Requirements
+        │       - Responsibilities
+        │       - Benefits
+        │       - Salary range
+        │       - Job type
+        │
+        └─► Return parsed data to frontend
+
+┌──────────────────────────────────────────────────────────────────┐
+│ Create Job Posting:                                              │
+└──────────────────────────────────────────────────────────────────┘
+POST /api/v1/jobs/
+Body: {
+  title: "Senior Software Engineer",
+  company: "Tech Corp",
+  location: "Remote",
+  requirements: [...],
+  responsibilities: [...],
+  benefits: [...],
+  ...
+}
+        │
+        ▼
+MongoDB Repository → create_job_posting()
+        │
+        ├─► Add user_id (from token)
+        ├─► Add timestamps
+        └─► Insert into: job_postings collection
+        │
+        ▼
+Return: {
+  id: "...",
+  title: "...",
+  status: "active",
+  ...
+}
 ```
 
-**Frontend Token Management:**
-```javascript
-// Store tokens after login
-localStorage.setItem('accessToken', data.access_token);
-localStorage.setItem('refreshToken', data.refresh_token);
+### 4. Candidate Matching Flow
 
-// Add token to API calls
-const response = await fetch('/api/users', {
-    headers: {
-        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+```
+┌─────────────────────────────────────────────────────────────────┐
+│              CANDIDATE MATCHING FLOW                            │
+└─────────────────────────────────────────────────────────────────┘
+
+User searches for candidates for a job
+        │
+        ▼
+POST /api/v1/resume-bank/search
+Body: {
+  job_id: "507f1f77bcf86cd799439011",
+  filters: {
+    skills: ["Python", "React"],
+    min_experience: 3,
+    ...
+  }
+}
+        │
+        ├─► Get job posting from MongoDB
+        │   └─► Extract: requirements, description
+        │
+        ├─► Generate job embedding
+        │   └─► openai_service.generate_embedding(job_description)
+        │
+        ├─► Search candidates (Two methods):
+        │
+        │   Method 1: Vector Similarity Search (Qdrant)
+        │   └─► qdrant_service.search_similar(
+        │         query_vector=job_embedding,
+        │         limit=10
+        │       )
+        │       └─► Returns: Top 10 similar candidates
+        │
+        │   Method 2: MongoDB Text Search (Fallback)
+        │   └─► MongoDB text search on skills/requirements
+        │       └─► Returns: Candidates matching keywords
+        │
+        ├─► Calculate match scores
+        │   └─► For each candidate:
+        │       - Skills match percentage
+        │       - Experience match
+        │       - Education match
+        │       - Overall compatibility score
+        │
+        └─► Rank and return results
+            └─► Sort by match score (highest first)
+
+Response:
+{
+  candidates: [
+    {
+      id: "...",
+      name: "John Doe",
+      match_score: 0.95,
+      skills_match: ["Python", "React", "MongoDB"],
+      missing_skills: ["Docker"],
+      compatibility: {
+        skills: 0.90,
+        experience: 1.0,
+        education: 0.85
+      }
+    },
+    ...
+  ],
+  total_matches: 10
+}
+```
+
+### 5. Hiring Pipeline Flow
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│              HIRING PIPELINE MANAGEMENT FLOW                     │
+└─────────────────────────────────────────────────────────────────┘
+
+Create Hiring Process
+        │
+        ▼
+POST /api/v1/hiring-processes/
+Body: {
+  job_id: "...",
+  name: "Senior Engineer Hiring",
+  stages: [
+    { name: "Applied", order: 1 },
+    { name: "Screening", order: 2 },
+    { name: "Interview", order: 3 },
+    { name: "Offer", order: 4 },
+    { name: "Hired", order: 5 }
+  ]
+}
+        │
+        ▼
+Store in MongoDB: hiring_processes collection
+        │
+        ▼
+Add Candidate to Pipeline
+        │
+        ▼
+POST /api/v1/hiring-processes/{id}/candidates
+Body: {
+  candidate_id: "...",
+  resume_id: "...",
+  initial_stage: "Applied"
+}
+        │
+        ▼
+Update hiring_process document:
+{
+  candidates: [
+    {
+      candidate_id: "...",
+      resume_id: "...",
+      current_stage: "Applied",
+      added_at: datetime.now(),
+      notes: []
     }
-});
+  ]
+}
 
-// Auto-refresh expired tokens
-if (response.status === 401) {
-    await refreshToken();
-    // Retry original request
+Move Candidate Between Stages
+        │
+        ▼
+PATCH /api/v1/hiring-processes/{id}/candidates/{candidate_id}/move
+Body: {
+  from_stage: "Applied",
+  to_stage: "Screening",
+  notes: "Passed initial screening"
+}
+        │
+        ▼
+Update candidate's current_stage
+Add entry to candidate's history:
+{
+  stage: "Screening",
+  moved_at: datetime.now(),
+  moved_by: user_id,
+  notes: "..."
 }
 ```
 
 ---
 
-## 🛠️ Setup & Installation Guide
+## 📊 Database Schema
+
+### MongoDB Collections Structure
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    DATABASE SCHEMA                               │
+└─────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│ Collection: users                                               │
+├──────────────────────────────────────────────────────────────────┤
+│ {                                                                │
+│   _id: ObjectId("..."),                                         │
+│   name: "John Doe",                                             │
+│   email: "john@example.com",                                    │
+│   hashed_password: "$2b$12$...",                                │
+│   role: "user" | "admin",                                       │
+│   company: "Tech Corp",                                         │
+│   phone: "+1234567890",                                         │
+│   is_active: true,                                              │
+│   created_at: ISODate("2024-01-01T00:00:00Z"),                 │
+│   updated_at: ISODate("2024-01-01T00:00:00Z")                  │
+│ }                                                                │
+└──────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│ Collection: job_postings                                        │
+├──────────────────────────────────────────────────────────────────┤
+│ {                                                                │
+│   _id: ObjectId("..."),                                         │
+│   user_id: ObjectId("..."),  // Owner                           │
+│   title: "Senior Software Engineer",                            │
+│   company: "Tech Corp",                                         │
+│   location: "Remote",                                          │
+│   description: "...",                                           │
+│   requirements: ["Python", "React", ...],                      │
+│   responsibilities: ["Develop features", ...],                  │
+│   benefits: ["Health insurance", ...],                         │
+│   salary_range: { min: 80000, max: 120000 },                   │
+│   job_type: "full_time" | "part_time" | "contract",            │
+│   experience_level: "junior" | "mid" | "senior",               │
+│   status: "active" | "closed" | "draft",                        │
+│   created_at: ISODate("..."),                                  │
+│   updated_at: ISODate("...")                                   │
+│ }                                                                │
+└──────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│ Collection: resume_bank_entries                                 │
+├──────────────────────────────────────────────────────────────────┤
+│ {                                                                │
+│   _id: ObjectId("..."),                                         │
+│   user_id: ObjectId("..."),  // Owner                           │
+│   filename: "john_doe_resume.pdf",                              │
+│   file_path: "/uploads/resumes/...",                            │
+│   candidate_name: "John Doe",                                   │
+│   candidate_email: "john@example.com",                          │
+│   candidate_phone: "+1234567890",                               │
+│   skills: ["Python", "React", "MongoDB"],                       │
+│   experience_years: 5,                                          │
+│   current_role: "Software Engineer",                            │
+│   education: [                                                  │
+│     {                                                            │
+│       degree: "Bachelor's",                                     │
+│       field: "Computer Science",                                │
+│       institution: "University X",                               │
+│       year: 2019                                                │
+│     }                                                            │
+│   ],                                                             │
+│   text_content: "Full extracted text from PDF...",              │
+│   embedding: [0.1, 0.8, 0.3, ..., 0.2],  // 1536 numbers      │
+│   status: "active" | "archived",                                │
+│   created_at: ISODate("..."),                                   │
+│   updated_at: ISODate("...")                                    │
+│ }                                                                │
+└──────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│ Collection: hiring_processes                                    │
+├──────────────────────────────────────────────────────────────────┤
+│ {                                                                │
+│   _id: ObjectId("..."),                                         │
+│   user_id: ObjectId("..."),  // Owner                           │
+│   job_id: ObjectId("..."),  // Linked job                       │
+│   name: "Senior Engineer Hiring Q1 2024",                       │
+│   status: "active" | "closed" | "paused",                       │
+│   stages: [                                                      │
+│     {                                                            │
+│       name: "Applied",                                           │
+│       order: 1,                                                  │
+│       candidates_count: 5                                       │
+│     },                                                            │
+│     { name: "Screening", order: 2, ... },                       │
+│     { name: "Interview", order: 3, ... },                       │
+│     { name: "Offer", order: 4, ... },                          │
+│     { name: "Hired", order: 5, ... }                           │
+│   ],                                                             │
+│   candidates: [                                                 │
+│     {                                                            │
+│       candidate_id: ObjectId("..."),                            │
+│       resume_id: ObjectId("..."),                               │
+│       current_stage: "Screening",                               │
+│       added_at: ISODate("..."),                                 │
+│       stage_history: [                                          │
+│         {                                                        │
+│           stage: "Applied",                                     │
+│           moved_at: ISODate("..."),                             │
+│           moved_by: ObjectId("..."),                            │
+│           notes: "Initial application"                          │
+│         },                                                        │
+│         { stage: "Screening", ... }                            │
+│       ],                                                         │
+│       notes: ["Good candidate", ...],                           │
+│       rating: 4.5                                                │
+│     }                                                            │
+│   ],                                                             │
+│   created_at: ISODate("..."),                                  │
+│   updated_at: ISODate("...")                                    │
+│ }                                                                │
+└──────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│ Collection: meetings                                             │
+├──────────────────────────────────────────────────────────────────┤
+│ {                                                                │
+│   _id: ObjectId("..."),                                         │
+│   user_id: ObjectId("..."),  // Organizer                       │
+│   hiring_process_id: ObjectId("..."),  // Optional              │
+│   candidate_id: ObjectId("..."),  // Optional                    │
+│   title: "Technical Interview - John Doe",                      │
+│   description: "...",                                           │
+│   start_time: ISODate("2024-01-15T10:00:00Z"),                 │
+│   end_time: ISODate("2024-01-15T11:00:00Z"),                   │
+│   duration_minutes: 60,                                          │
+│   meeting_type: "phone" | "video" | "in_person",                │
+│   location: "Zoom Link" | "Office Address",                    │
+│   attendees: [                                                   │
+│     {                                                            │
+│       name: "John Doe",                                         │
+│       email: "john@example.com",                                │
+│       role: "candidate"                                          │
+│     },                                                            │
+│     { name: "Jane Smith", email: "...", role: "interviewer" }  │
+│   ],                                                             │
+│   status: "scheduled" | "completed" | "cancelled",               │
+│   created_at: ISODate("..."),                                   │
+│   updated_at: ISODate("...")                                    │
+│ }                                                                │
+└──────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│ Collection: job_applications                                     │
+├──────────────────────────────────────────────────────────────────┤
+│ {                                                                │
+│   _id: ObjectId("..."),                                         │
+│   user_id: ObjectId("..."),  // Job poster                      │
+│   job_id: ObjectId("..."),                                      │
+│   candidate_id: ObjectId("..."),  // From resume bank           │
+│   resume_id: ObjectId("..."),                                   │
+│   status: "pending" | "reviewed" | "shortlisted" | "rejected",  │
+│   application_date: ISODate("..."),                            │
+│   match_score: 0.95,  // AI-calculated                         │
+│   notes: "...",                                                  │
+│   created_at: ISODate("..."),                                   │
+│   updated_at: ISODate("...")                                    │
+│ }                                                                │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### Relationships Diagram
+
+```
+┌──────────┐
+│  users   │
+│          │
+│  _id     │◄─────┐
+│  name    │      │
+│  email   │      │
+└──────────┘      │
+                  │ user_id (references)
+                  │
+        ┌─────────┴─────────┬──────────────┬──────────────┐
+        │                   │              │              │
+        ▼                   ▼              ▼              ▼
+┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+│ job_postings │  │resume_bank_  │  │hiring_       │  │  meetings    │
+│              │  │entries       │  │processes     │  │              │
+│  _id         │  │              │  │              │  │  _id         │
+│  user_id ────┼──┤  _id         │  │  _id         │  │  user_id     │
+│  title       │  │  user_id ────┼──┤  user_id      │  │  candidate_id│
+│  company     │  │  candidate_  │  │  job_id ─────┼──┤  hiring_     │
+│  ...         │  │  name        │  │  candidates  │  │  process_id  │
+└──────────────┘  │  skills      │  │  stages      │  └──────────────┘
+                  │  embedding   │  │  ...          │
+                  │  ...         │  └──────────────┘
+                  └──────────────┘
+                         │
+                         │ resume_id (references)
+                         │
+                         ▼
+                  ┌──────────────┐
+                  │job_          │
+                  │applications   │
+                  │              │
+                  │  _id         │
+                  │  job_id ─────┘
+                  │  resume_id ──┘
+                  │  candidate_id│
+                  │  match_score │
+                  │  ...         │
+                  └──────────────┘
+```
+
+---
+
+## 🔌 API Structure
+
+### API Endpoints Overview
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    API ENDPOINTS STRUCTURE                      │
+└─────────────────────────────────────────────────────────────────┘
+
+Base URL: http://localhost:8000/api/v1
+
+┌──────────────────────────────────────────────────────────────────┐
+│ Authentication (/api/v1/auth)                                    │
+├──────────────────────────────────────────────────────────────────┤
+│ POST   /register          Register new user                      │
+│ POST   /login             Login and get tokens                   │
+│ POST   /refresh            Refresh access token                   │
+│ GET    /profile           Get current user profile               │
+│ PUT    /profile           Update user profile                     │
+└──────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│ Job Management (/api/v1/jobs)                                    │
+├──────────────────────────────────────────────────────────────────┤
+│ GET    /                   List all jobs (paginated)             │
+│ POST   /                   Create new job posting                │
+│ GET    /{id}               Get job details                       │
+│ PUT    /{id}               Update job posting                    │
+│ DELETE /{id}               Delete job posting                    │
+│ POST   /parse-document     Parse job from PDF                    │
+│ GET    /{id}/applications  Get applications for job              │
+└──────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│ Resume Bank (/api/v1/resume-bank)                                │
+├──────────────────────────────────────────────────────────────────┤
+│ GET    /                   List all resumes (paginated)           │
+│ POST   /upload             Upload and process resume              │
+│ GET    /{id}               Get resume details                    │
+│ PUT    /{id}               Update resume entry                   │
+│ DELETE /{id}               Delete resume entry                   │
+│ POST   /search             Search candidates                      │
+│ GET    /stats              Get resume bank statistics             │
+└──────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│ Hiring Processes (/api/v1/hiring-processes)                      │
+├──────────────────────────────────────────────────────────────────┤
+│ GET    /                   List all processes                    │
+│ POST   /                   Create hiring process                 │
+│ GET    /{id}               Get process details                   │
+│ PUT    /{id}               Update process                        │
+│ DELETE /{id}               Delete process                         │
+│ POST   /{id}/candidates    Add candidate to process              │
+│ PATCH  /{id}/candidates/{candidate_id}/move  Move candidate     │
+│ GET    /{id}/stats         Get process statistics                │
+└──────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│ Meetings (/api/v1/meetings)                                       │
+├──────────────────────────────────────────────────────────────────┤
+│ GET    /                   List all meetings                     │
+│ POST   /                   Create meeting                        │
+│ GET    /{id}               Get meeting details                   │
+│ PUT    /{id}               Update meeting                        │
+│ DELETE /{id}               Delete meeting                        │
+│ GET    /available-slots    Get available time slots              │
+└──────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│ Dashboard (/api/v1/dashboard)                                     │
+├──────────────────────────────────────────────────────────────────┤
+│ GET    /overview           Get dashboard overview                 │
+│ GET    /stats              Get detailed statistics               │
+│ GET    /recent-activity    Get recent activity feed              │
+└──────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│ Job Applications (/api/v1/job-applications)                      │
+├──────────────────────────────────────────────────────────────────┤
+│ GET    /                   List applications                     │
+│ POST   /                   Create application                    │
+│ GET    /{id}               Get application details               │
+│ PUT    /{id}               Update application status             │
+│ DELETE /{id}               Delete application                   │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### Request/Response Examples
+
+#### Example 1: Upload Resume
+
+```http
+POST /api/v1/resume-bank/upload
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: multipart/form-data
+
+FormData:
+  file: <PDF file>
+
+Response (200 OK):
+{
+  "id": "507f1f77bcf86cd799439011",
+  "message": "Resume uploaded and processed successfully",
+  "candidate_name": "John Doe",
+  "candidate_email": "john@example.com",
+  "extracted_skills": ["Python", "React", "MongoDB"],
+  "status": "active",
+  "created_at": "2024-01-15T10:30:00Z"
+}
+```
+
+#### Example 2: Create Job Posting
+
+```http
+POST /api/v1/jobs
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+{
+  "title": "Senior Software Engineer",
+  "company": "Tech Corp",
+  "location": "Remote",
+  "description": "We are looking for...",
+  "requirements": [
+    "5+ years Python experience",
+    "React.js proficiency",
+    "MongoDB knowledge"
+  ],
+  "responsibilities": [
+    "Develop new features",
+    "Code reviews",
+    "Mentor junior developers"
+  ],
+  "benefits": [
+    "Health insurance",
+    "Remote work",
+    "401k matching"
+  ],
+  "salary_range": {
+    "min": 100000,
+    "max": 150000
+  },
+  "job_type": "full_time",
+  "experience_level": "senior"
+}
+
+Response (201 Created):
+{
+  "id": "507f1f77bcf86cd799439012",
+  "title": "Senior Software Engineer",
+  "company": "Tech Corp",
+  "status": "active",
+  "created_at": "2024-01-15T10:35:00Z"
+}
+```
+
+#### Example 3: Search Candidates
+
+```http
+POST /api/v1/resume-bank/search
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+{
+  "job_id": "507f1f77bcf86cd799439012",
+  "filters": {
+    "skills": ["Python", "React"],
+    "min_experience": 3,
+    "location": "Remote"
+  },
+  "limit": 10
+}
+
+Response (200 OK):
+{
+  "candidates": [
+    {
+      "id": "507f1f77bcf86cd799439011",
+      "name": "John Doe",
+      "email": "john@example.com",
+      "match_score": 0.95,
+      "skills_match": ["Python", "React", "MongoDB"],
+      "missing_skills": ["Docker"],
+      "experience_years": 5,
+      "compatibility": {
+        "skills": 0.90,
+        "experience": 1.0,
+        "education": 0.85,
+        "overall": 0.95
+      }
+    }
+  ],
+  "total_matches": 10,
+  "search_time_ms": 245
+}
+```
+
+---
+
+## 🔐 Authentication & Security
+
+### JWT Token Flow
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    JWT AUTHENTICATION FLOW                       │
+└─────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────┐
+│ STEP 1: User Login                                               │
+└──────────────────────────────────────────────────────────────────┘
+POST /api/v1/auth/login
+Body: { email, password }
+        │
+        ├─► Validate credentials
+        ├─► Verify password (bcrypt)
+        └─► Generate tokens:
+            - Access Token (15 min expiry)
+            - Refresh Token (7 days expiry)
+
+Response:
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer",
+  "expires_in": 900,  // 15 minutes in seconds
+  "user": {
+    "id": "...",
+    "name": "John Doe",
+    "email": "john@example.com"
+  }
+}
+
+┌──────────────────────────────────────────────────────────────────┐
+│ STEP 2: Store Tokens (Frontend)                                 │
+└──────────────────────────────────────────────────────────────────┘
+localStorage.setItem('accessToken', access_token)
+localStorage.setItem('refreshToken', refresh_token)
+
+┌──────────────────────────────────────────────────────────────────┐
+│ STEP 3: Use Token in API Calls                                  │
+└──────────────────────────────────────────────────────────────────┘
+Every API request includes:
+Headers: {
+  "Authorization": "Bearer <access_token>"
+}
+
+┌──────────────────────────────────────────────────────────────────┐
+│ STEP 4: Backend Validates Token                                 │
+└──────────────────────────────────────────────────────────────────┘
+get_current_user() dependency:
+  1. Extract token from Authorization header
+  2. Decode JWT token
+  3. Verify signature
+  4. Check expiration
+  5. Get user from database
+  6. Return user object
+
+┌──────────────────────────────────────────────────────────────────┐
+│ STEP 5: Token Refresh (When Expired)                            │
+└──────────────────────────────────────────────────────────────────┘
+If access_token expires (401 Unauthorized):
+  1. Frontend detects 401 error
+  2. Call POST /api/v1/auth/refresh
+     Body: { refresh_token: "..." }
+  3. Backend validates refresh_token
+  4. Generate new access_token
+  5. Return new token
+  6. Retry original request with new token
+
+Token Structure:
+{
+  "sub": "user_id",           // Subject (user ID)
+  "exp": 1705315200,          // Expiration timestamp
+  "iat": 1705311300,          // Issued at timestamp
+  "type": "access" | "refresh" // Token type
+}
+```
+
+### Security Features
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    SECURITY LAYERS                              │
+└─────────────────────────────────────────────────────────────────┘
+
+Layer 1: Authentication
+├─► JWT tokens (stateless)
+├─► Password hashing (bcrypt)
+├─► Token expiration
+└─► Refresh token rotation
+
+Layer 2: Authorization
+├─► User-based data isolation
+├─► Role-based access control (user/admin)
+└─► Resource ownership validation
+
+Layer 3: Input Validation
+├─► Pydantic models (type checking)
+├─► File type validation
+├─► File size limits
+└─► SQL injection prevention (NoSQL)
+
+Layer 4: Data Protection
+├─► Environment variables for secrets
+├─► HTTPS in production
+├─► CORS configuration
+└─► Rate limiting (middleware)
+
+Layer 5: Error Handling
+├─► Custom exception handlers
+├─► No sensitive data in errors
+├─► Structured error responses
+└─► Logging (without sensitive data)
+```
+
+---
+
+## 🛠️ Setup & Installation
 
 ### Prerequisites
-- **Node.js** (v16+) for React frontend
-- **Python** (3.8+) for FastAPI backend
-- **MongoDB** (Atlas cloud or local installation)
-- **OpenAI API Key** (get from platform.openai.com)
 
-### Quick Start Commands
+- **Node.js** v16+ (for React frontend)
+- **Python** 3.8+ (for FastAPI backend)
+- **MongoDB Atlas** account (or local MongoDB)
+- **OpenAI API Key** (for AI features)
 
-#### Option 1: Using the Start Script (Recommended)
+### Quick Start
+
 ```bash
-# 1. Clone the repository
-git clone <your-repo-url>
-cd first
+# 1. Clone repository
+git clone <repository-url>
+cd HR-AI
 
 # 2. Backend Setup
 cd backend
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
-# 3. Create environment file
+# 3. Configure Environment
 cp env.example .env
-# Edit .env with your MongoDB and OpenAI credentials
+# Edit .env with your credentials:
+# - MONGODB_URL
+# - OPENAI_API_KEY
+# - SECRET_KEY
+# - REFRESH_SECRET_KEY
 
 # 4. Frontend Setup
 cd ../frontend
 npm install
 
-# 5. Start both servers with one command
+# 5. Start Application
 cd ..
-./start.sh
+./start.sh  # Starts both backend and frontend
 ```
 
-#### Option 2: Manual Start
+### Environment Variables
+
+Create `backend/.env`:
+
+```env
+# Database
+MONGODB_URL=mongodb+srv://username:password@cluster.mongodb.net/resume_analysis?retryWrites=true&w=majority
+DATABASE_NAME=resume_analysis
+
+# OpenAI
+OPENAI_API_KEY=sk-your-api-key-here
+OPENAI_MODEL=gpt-3.5-turbo
+OPENAI_API_BASE=https://api.openai.com/v1
+MAX_TOKENS=1500
+TEMPERATURE=0.3
+
+# JWT
+SECRET_KEY=your-secret-key-here
+REFRESH_SECRET_KEY=your-refresh-secret-key-here
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=15
+REFRESH_TOKEN_EXPIRE_DAYS=7
+
+# Application
+DEBUG=True
+CORS_ORIGINS=http://localhost:3000,http://localhost:8080
+```
+
+### Manual Start (Alternative)
+
 ```bash
-# 1. Clone the repository
-git clone <your-repo-url>
-cd first
-
-# 2. Backend Setup
+# Terminal 1: Backend
 cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-
-# 3. Create environment file
-cp env.example .env
-# Edit .env with your MongoDB and OpenAI credentials
-
-# 4. Start Backend Server
+source venv/bin/activate
 python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
-# 5. Frontend Setup (in new terminal)
-cd ../frontend
-npm install
-
-# 6. Start Frontend Server
+# Terminal 2: Frontend
+cd frontend
 npm start
 
-# 7. Access the application
+# Access:
 # Frontend: http://localhost:3000
 # Backend API: http://localhost:8000
 # API Docs: http://localhost:8000/docs
 ```
 
-### Detailed Step-by-Step Setup
-
-#### 1. **Clone and Setup Project Structure**
-```bash
-git clone <your-repo-url>
-cd first
-
-# Project structure:
-# ├── backend/          # Python FastAPI server
-# ├── frontend/         # React.js application
-# ├── README.md         # This guide
-# └── .gitignore        # Files to ignore in git
-```
-
-#### 2. **Backend Setup (Python/FastAPI)**
-
-```bash
-# Navigate to backend directory
-cd backend
-
-# Create Python virtual environment (isolated Python packages)
-python -m venv venv
-
-# Activate virtual environment
-# On macOS/Linux:
-source venv/bin/activate
-# On Windows:
-# venv\Scripts\activate
-
-# You should see (venv) in your terminal prompt
-
-# Install Python dependencies
-pip install -r requirements.txt
-```
-
-#### 3. **Environment Configuration**
-
-Create a `.env` file in the backend directory:
-
-```bash
-# Copy the example environment file
-cp env.example .env
-
-# Edit .env with your credentials:
-MONGODB_URL=mongodb+srv://username:password@cluster0.mongodb.net/resume_analysis?retryWrites=true&w=majority
-OPENAI_API_KEY=sk-your-openai-api-key-here
-SECRET_KEY=your-super-secret-key-for-jwt-signing
-REFRESH_SECRET_KEY=your-refresh-token-secret-key
-ALGORITHM=HS256
-OPENAI_MODEL=gpt-3.5-turbo
-OPENAI_API_BASE=https://api.openai.com/v1
-MAX_TOKENS=1500
-TEMPERATURE=0.3
-```
-
-**How to get these values:**
-
-- **MongoDB URL**: 
-  - Sign up at [MongoDB Atlas](https://cloud.mongodb.com)
-  - Create a free cluster
-  - Get connection string from "Connect" → "Connect your application"
-  
-- **OpenAI API Key**:
-  - Sign up at [OpenAI Platform](https://platform.openai.com)
-  - Go to API Keys section
-  - Create new API key
-  
-- **Secret Keys**: Generate random strings for JWT signing
-  ```bash
-  # Generate secure random keys
-  python -c "import secrets; print(secrets.token_urlsafe(32))"
-  ```
-
-#### 4. **Start Backend Server**
-
-```bash
-# Make sure you're in backend/ directory with (venv) active
-python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
-
-# You should see:
-# INFO:     Started server process
-# INFO:     Uvicorn running on http://0.0.0.0:8000
-# INFO:     Application startup complete.
-```
-
-Test backend is working:
-```bash
-# In another terminal
-curl http://localhost:8000/docs
-# Should show FastAPI documentation page
-```
-
-#### 5. **Frontend Setup (React)**
-
-```bash
-# Open new terminal, navigate to frontend
-cd frontend
-
-# Install Node.js dependencies
-npm install
-
-# This installs packages like:
-# - React, React Router for UI
-# - Tailwind CSS for styling
-# - Axios for API calls
-```
-
-#### 6. **Start Frontend Server**
-
-```bash
-# In frontend/ directory
-npm start
-
-# You should see:
-# Local:            http://localhost:3000
-# On Your Network:  http://192.168.1.x:3000
-```
-
-#### 7. **Verify Everything Works**
-
-1. **Open browser**: Go to `http://localhost:3000`
-2. **Register account**: Create a new user account
-3. **Upload resume**: Test PDF upload functionality
-4. **Create job**: Add a job posting
-5. **Search candidates**: Test the matching feature
-
 ---
 
-## 📊 Project Structure Explained
+## 📁 Project Structure
 
 ```
 HR-AI/
-├── backend/                    # Python FastAPI server
+├── backend/                          # Python FastAPI Backend
 │   ├── app/
-│   │   ├── api/               # API route handlers
-│   │   │   ├── auth.py        # Authentication endpoints
-│   │   │   ├── jobs.py        # Job management endpoints
-│   │   │   ├── resume_bank.py # Resume management endpoints
-│   │   │   └── dashboard.py   # Dashboard statistics
-│   │   ├── core/              # Core configuration
-│   │   │   ├── config.py      # App settings
-│   │   │   └── database.py    # MongoDB connection
-│   │   ├── models/            # Data models
-│   │   │   ├── auth.py        # User/authentication models
-│   │   │   └── mongodb_models.py # Database schemas
-│   │   ├── services/          # Business logic
+│   │   ├── api/                      # API Route Handlers
+│   │   │   ├── auth.py              # Authentication endpoints
+│   │   │   ├── jobs.py               # Job management
+│   │   │   ├── resume_bank.py       # Resume management
+│   │   │   ├── hiring_processes.py  # Pipeline management
+│   │   │   ├── meetings.py           # Meeting scheduling
+│   │   │   ├── job_applications.py   # Application tracking
+│   │   │   └── dashboard.py         # Analytics
+│   │   │
+│   │   ├── core/                     # Core Configuration
+│   │   │   ├── config/              # Settings management
+│   │   │   ├── database.py          # MongoDB connection
+│   │   │   ├── dependencies.py      # Dependency injection
+│   │   │   └── logging.py           # Logging setup
+│   │   │
+│   │   ├── models/                   # Data Models
+│   │   │   ├── auth.py              # User models
+│   │   │   ├── job.py               # Job models
+│   │   │   ├── resume_bank.py       # Resume models
+│   │   │   ├── hiring_process.py    # Process models
+│   │   │   └── mongodb_models.py    # Database schemas
+│   │   │
+│   │   ├── repositories/             # Data Access Layer
+│   │   │   └── mongodb_repository.py # Database operations
+│   │   │
+│   │   ├── services/                 # Business Logic
 │   │   │   ├── openai_service.py    # AI integration
-│   │   │   ├── qdrant_service.py    # Vector database
-│   │   │   └── job_parser_service.py # Job parsing
-│   │   └── utils/             # Helper functions
-│   ├── main.py                # Application entry point
-│   ├── requirements.txt       # Python dependencies
-│   └── .env                   # Environment variables
-├── frontend/                  # React.js application
-│   ├── public/                # Static files
+│   │   │   ├── job_parser_service.py # Job parsing
+│   │   │   └── meeting_service.py   # Scheduling logic
+│   │   │
+│   │   ├── utils/                    # Utilities
+│   │   │   ├── pdf_processor.py     # PDF extraction
+│   │   │   ├── ai_extractor.py      # AI extraction
+│   │   │   └── email_service.py     # Email utilities
+│   │   │
+│   │   ├── middleware/               # Middleware
+│   │   │   ├── error_handler.py     # Error handling
+│   │   │   └── security.py          # Security middleware
+│   │   │
+│   │   ├── exceptions/               # Custom Exceptions
+│   │   │   └── base.py              # Base exception classes
+│   │   │
+│   │   └── schemas/                  # Response Schemas
+│   │       ├── responses.py        # Standard responses
+│   │       └── pagination.py        # Pagination models
+│   │
+│   ├── main.py                       # Application entry point
+│   ├── requirements.txt              # Python dependencies
+│   └── .env                          # Environment variables
+│
+├── frontend/                         # React Frontend
 │   ├── src/
-│   │   ├── components/        # Reusable UI components
-│   │   │   ├── auth/          # Authentication components
-│   │   │   ├── layout/        # Page layout components
-│   │   │   └── ui/            # Basic UI elements
-│   │   ├── pages/             # Page components
-│   │   │   ├── Dashboard.js   # Main dashboard
-│   │   │   ├── ResumeBank.js  # Resume management
-│   │   │   ├── Jobs.js        # Job listings
-│   │   │   └── Login.js       # Login page
-│   │   ├── context/           # React Context (global state)
-│   │   ├── services/          # API service layer
-│   │   ├── utils/             # Helper functions
-│   │   └── App.js             # Main React component
-│   ├── package.json           # Node.js dependencies
-│   └── tailwind.config.js     # CSS framework config
-└── README.md                  # This documentation
+│   │   ├── components/               # Reusable Components
+│   │   │   ├── auth/               # Auth components
+│   │   │   ├── layout/             # Layout components
+│   │   │   └── ui/                 # UI components
+│   │   │
+│   │   ├── pages/                   # Page Components
+│   │   │   ├── Dashboard.js        # Main dashboard
+│   │   │   ├── Jobs.js             # Job listings
+│   │   │   ├── CreateJob.js        # Create job
+│   │   │   ├── ResumeBank.js       # Resume management
+│   │   │   ├── HiringProcesses.js  # Pipeline view
+│   │   │   └── Login.js            # Login page
+│   │   │
+│   │   ├── services/                # API Services
+│   │   │   └── api/                # API client functions
+│   │   │
+│   │   ├── context/                 # React Context
+│   │   │   ├── AuthContext.js      # Auth state
+│   │   │   └── ToastContext.js     # Notifications
+│   │   │
+│   │   ├── hooks/                   # Custom Hooks
+│   │   │   ├── useAuth.js          # Auth hook
+│   │   │   └── useApi.js           # API hook
+│   │   │
+│   │   ├── utils/                   # Utilities
+│   │   │   ├── api.js               # API config
+│   │   │   └── validation.js       # Form validation
+│   │   │
+│   │   └── App.js                   # Main App component
+│   │
+│   ├── package.json                 # Node dependencies
+│   └── tailwind.config.js           # Tailwind config
+│
+├── landing-page/                     # Marketing Landing Page
+│   ├── app/                         # Next.js app directory
+│   ├── package.json                 # Next.js dependencies
+│   └── ...
+│
+├── start.sh                          # Startup script
+└── README.md                         # This file
 ```
 
 ---
 
-## 🔄 Data Flow Walkthrough
+## 🔧 Development Guide
 
-### Example: Uploading a Resume
+### Development Workflow
 
-Let's trace what happens when a user uploads a resume:
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                  DEVELOPMENT WORKFLOW                            │
+└─────────────────────────────────────────────────────────────────┘
 
-#### 1. **Frontend (React)**
-```javascript
-// User selects PDF file
-const handleFileUpload = async (file) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    // Send to backend with authentication
-    const response = await fetch('/api/v1/resume-bank/upload', {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`
-        },
-        body: formData
-    });
-};
+1. Start Development Servers
+   ├─► Backend: cd backend && python -m uvicorn main:app --reload
+   └─► Frontend: cd frontend && npm start
+
+2. Make Changes
+   ├─► Backend: Auto-reloads on file save
+   └─► Frontend: Hot-reloads in browser
+
+3. Test Changes
+   ├─► Frontend: http://localhost:3000
+   ├─► Backend API: http://localhost:8000/docs
+   └─► Check logs in terminal
+
+4. Debug
+   ├─► Backend: Check terminal logs
+   ├─► Frontend: Browser DevTools console
+   └─► API: Use /docs for interactive testing
 ```
 
-#### 2. **Backend API Handler** (`resume_bank.py`)
-```python
-@router.post("/upload")
-async def upload_resume_to_bank(
-    file: UploadFile = File(...),                    # Receive file
-    current_user: UserDocument = Depends(get_current_user),  # Authenticate user
-    database = Depends(get_database)                 # Get database connection
-):
-    # Validate file type
-    if file.content_type != 'application/pdf':
-        raise HTTPException(400, "Only PDF files allowed")
-```
+### Code Organization Principles
 
-#### 3. **PDF Text Extraction**
-```python
-    # Extract text from PDF using PyPDF2 or similar
-    pdf_content = await file.read()
-    text_content = extract_text_from_pdf(pdf_content)
-```
+1. **Separation of Concerns**
+   - API routes handle HTTP requests/responses
+   - Services contain business logic
+   - Repositories handle data access
+   - Models define data structures
 
-#### 4. **AI Processing** (`openai_service.py`)
-```python
-    # Use OpenAI to extract structured information
-    candidate_info = await openai_service.extract_candidate_info(text_content)
-    
-    # Result looks like:
-    # {
-    #   "name": "John Doe",
-    #   "email": "john@example.com",
-    #   "skills": ["Python", "React", "MongoDB"],
-    #   "experience_years": 5,
-    #   "current_role": "Software Engineer"
-    # }
-```
+2. **Dependency Injection**
+   - Database connections injected via `Depends()`
+   - Services injected where needed
+   - Makes code testable and maintainable
 
-#### 5. **Vector Embedding Generation**
-```python
-    # Generate embedding for semantic search
-    embedding = await openai_service.generate_embedding(text_content)
-    # Result: [0.1, 0.8, 0.3, ..., 0.2] (1536 numbers)
-```
+3. **Error Handling**
+   - Custom exceptions for business errors
+   - Middleware for global error handling
+   - User-friendly error messages
 
-#### 6. **Database Storage** (MongoDB)
-```python
-    # Create database document
-    resume_entry = {
-        "user_id": ObjectId(current_user.id),        # Link to user
-        "filename": file.filename,
-        "candidate_name": candidate_info["name"],
-        "candidate_email": candidate_info["email"],
-        "skills": candidate_info["skills"],
-        "experience_years": candidate_info["experience_years"],
-        "text_content": text_content,                # Full text for search
-        "embedding": embedding,                      # Vector for similarity
-        "created_at": datetime.utcnow(),
-        "status": "active"
-    }
-    
-    # Save to MongoDB
-    result = await database.resume_bank_entries.insert_one(resume_entry)
-```
-
-#### 7. **Vector Database Storage** (Qdrant)
-```python
-    # Store embedding in vector database for fast similarity search
-    await qdrant_service.store_resume_embedding(
-        resume_id=str(result.inserted_id),
-        embedding=embedding,
-        metadata={
-            "skills": candidate_info["skills"],
-            "experience": candidate_info["experience_years"]
-        }
-    )
-```
-
-#### 8. **Response to Frontend**
-```python
-    # Return success response
-    return {
-        "id": str(result.inserted_id),
-        "message": "Resume uploaded and processed successfully",
-        "candidate_name": candidate_info["name"],
-        "extracted_skills": candidate_info["skills"]
-    }
-```
-
-#### 9. **Frontend Updates**
-```javascript
-// Handle successful upload
-if (response.ok) {
-    const result = await response.json();
-    setMessage(`Resume uploaded: ${result.candidate_name}`);
-    
-    // Refresh the resume list
-    fetchResumes();
-}
-```
-
-This entire flow takes about 2-5 seconds depending on file size and AI processing time.
+4. **Data Validation**
+   - Pydantic models for request/response validation
+   - Type hints throughout codebase
+   - Automatic API documentation
 
 ---
 
-## 🎯 Learning Path for React Developers
+## 🚨 Troubleshooting
 
-### Phase 1: Understanding Python Basics (1-2 weeks)
-1. **Python Syntax**: Variables, functions, classes
-2. **Async/Await**: Same concept as JavaScript
-3. **Type Hints**: Similar to TypeScript
-4. **Virtual Environments**: Like node_modules for Python
-5. **Package Management**: pip (like npm)
+### Common Issues
 
-### Phase 2: FastAPI Framework (1 week)
-1. **Route Handlers**: Similar to Express.js
-2. **Dependency Injection**: Middleware equivalent
-3. **Pydantic Models**: TypeScript interfaces for Python
-4. **Automatic Documentation**: Built-in API docs
-
-### Phase 3: Database Concepts (1 week)
-1. **MongoDB vs SQL**: Document vs table storage
-2. **NoSQL Queries**: Different from SQL syntax
-3. **Data Modeling**: Flexible schemas
-4. **Async Operations**: Database calls with await
-
-### Phase 4: AI Integration (2 weeks)
-1. **API Integration**: HTTP calls to OpenAI
-2. **Prompt Engineering**: Writing effective AI instructions
-3. **Vector Embeddings**: Text to numbers conversion
-4. **Semantic Search**: Meaning-based matching
-
-### Phase 5: Advanced Topics (2-3 weeks)
-1. **Vector Databases**: Qdrant for similarity search
-2. **Authentication**: JWT tokens and security
-3. **File Processing**: PDF text extraction
-4. **Error Handling**: Graceful failure management
-
----
-
-## 🚨 Common Issues & Troubleshooting
-
-### Backend Issues
-
-#### 1. **ModuleNotFoundError**
-```bash
-# Error: No module named 'app'
-# Solution: Make sure you're in the backend directory and virtual environment is activated
-cd backend
-source venv/bin/activate  # or venv\Scripts\activate on Windows
+#### 1. MongoDB Connection Failed
+```
+Error: ServerSelectionTimeoutError
+Solution:
+- Check MONGODB_URL in .env
+- Verify IP whitelist in MongoDB Atlas
+- Check internet connection
+- Increase timeout in database.py
 ```
 
-#### 2. **MongoDB Connection Failed**
-```bash
-# Error: Connection refused or authentication failed
-# Solution: Check your MONGODB_URL in .env file
-# Make sure your IP is whitelisted in MongoDB Atlas
+#### 2. OpenAI API Error
+```
+Error: 401 Unauthorized
+Solution:
+- Verify OPENAI_API_KEY in .env
+- Check API key is active
+- Verify account has credits
 ```
 
-#### 3. **OpenAI API Error**
-```bash
-# Error: 401 Unauthorized or quota exceeded
-# Solution: Check your OPENAI_API_KEY
-# Verify you have credits in your OpenAI account
+#### 3. Port Already in Use
+```
+Error: Address already in use
+Solution:
+# Kill process on port 8000
+lsof -ti:8000 | xargs kill -9
+
+# Or use different port
+uvicorn main:app --port 8001
 ```
 
-#### 4. **Port Already in Use**
-```bash
-# Error: Port 8000 is already in use
-# Solution: Kill existing process or use different port
-lsof -ti:8000 | xargs kill -9  # Kill process on port 8000
+#### 4. Module Not Found
+```
+Error: No module named 'app'
+Solution:
+- Ensure virtual environment is activated
+- Install dependencies: pip install -r requirements.txt
+- Check you're in backend/ directory
 ```
 
-### Frontend Issues
-
-#### 1. **CORS Errors**
-```bash
-# Error: Cross-origin request blocked
-# Solution: Backend CORS middleware should allow localhost:3000
-# Check backend/main.py CORS configuration
+#### 5. CORS Errors
 ```
-
-#### 2. **API Calls Failing**
-```bash
-# Error: 403 Forbidden or network errors
-# Solution: Check if backend is running on correct port
-# Verify API base URL in frontend code
-```
-
-#### 3. **Build Errors**
-```bash
-# Error: Module not found or syntax errors
-# Solution: Clear cache and reinstall
-rm -rf node_modules package-lock.json
-npm install
-```
-
-### Environment Issues
-
-#### 1. **Environment Variables Not Loading**
-```bash
-# Create .env file with correct format
-# No spaces around = sign
-# Use quotes for values with spaces
-SECRET_KEY="your secret here"
-```
-
-#### 2. **Path Issues**
-```bash
-# Always use absolute paths or relative from project root
-# Check current directory with pwd (Linux/Mac) or cd (Windows)
+Error: CORS policy blocked
+Solution:
+- Check CORS_ORIGINS in .env
+- Ensure frontend URL is in allowed origins
+- Restart backend server
 ```
 
 ---
 
-## 🔧 Development Workflow
+## 📈 Performance Considerations
 
-### Daily Development Process
+### Optimization Strategies
 
-1. **Start Backend**:
-   ```bash
-   cd backend
-   source venv/bin/activate
-   python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
-   ```
+1. **Database Indexing**
+   - Index on `user_id` for all collections
+   - Index on `email` for users
+   - Text index on `text_content` for search
 
-2. **Start Frontend** (new terminal):
-   ```bash
-   cd frontend
-   npm start
-   ```
+2. **Caching**
+   - Cache frequently accessed data
+   - Use Redis for session storage (future)
 
-3. **Make Changes**:
-   - Backend changes auto-reload (uvicorn --reload)
-   - Frontend hot-reloads automatically
-   - Check browser console for errors
+3. **Async Operations**
+   - All database operations are async
+   - AI API calls are non-blocking
+   - File processing in background
 
-4. **Test Changes**:
-   - Use browser for frontend testing (http://localhost:3000)
-   - Use http://localhost:8000/docs for API testing
-   - Check terminal for error logs
-
-5. **Stop Servers**:
-   - Press `Ctrl+C` in each terminal to stop the servers
-
-### Code Organization Tips
-
-1. **Backend Structure**:
-   - Keep API routes in `app/api/`
-   - Business logic in `app/services/`
-   - Data models in `app/models/`
-   - Utilities in `app/utils/`
-
-2. **Frontend Structure**:
-   - Reusable components in `components/`
-   - Page components in `pages/`
-   - API calls in `services/`
-   - Global state in `context/`
+4. **Pagination**
+   - All list endpoints support pagination
+   - Default limit: 100 items
+   - Prevents large data transfers
 
 ---
 
-## 🚀 Next Steps & Enhancements
+## 🚀 Deployment
 
-### Easy Improvements (Beginner)
-1. **UI Enhancements**: Better styling, animations
-2. **Validation**: Form validation on frontend
-3. **Error Messages**: User-friendly error handling
-4. **Loading States**: Spinners and progress indicators
+### Production Checklist
 
-### Intermediate Features
-1. **Email Notifications**: Send updates to users
-2. **Resume Templates**: Generate formatted resumes
-3. **Advanced Filters**: More search options
-4. **Export Features**: PDF reports, CSV exports
-
-### Advanced Features
-1. **Real-time Updates**: WebSocket integration
-2. **Machine Learning**: Custom matching algorithms
-3. **Multi-language**: Internationalization
-4. **Mobile App**: React Native version
+- [ ] Set `DEBUG=False` in environment
+- [ ] Use strong `SECRET_KEY` values
+- [ ] Configure CORS for production domain
+- [ ] Set up HTTPS/SSL certificates
+- [ ] Configure MongoDB Atlas IP whitelist
+- [ ] Set up monitoring and logging
+- [ ] Configure backup strategy
+- [ ] Set up CI/CD pipeline
+- [ ] Load testing
+- [ ] Security audit
 
 ### Deployment Options
-1. **Frontend**: Vercel, Netlify, AWS S3
-2. **Backend**: Heroku, AWS, DigitalOcean
-3. **Database**: MongoDB Atlas (already cloud)
-4. **AI Services**: OpenAI API (already cloud)
+
+**Frontend:**
+- Vercel (recommended for Next.js)
+- Netlify
+- AWS S3 + CloudFront
+
+**Backend:**
+- AWS EC2/ECS
+- DigitalOcean App Platform
+- Heroku
+- Railway
+
+**Database:**
+- MongoDB Atlas (already cloud)
 
 ---
 
 ## 📚 Additional Resources
 
-### Python & FastAPI Learning
-- [Python.org Official Tutorial](https://docs.python.org/3/tutorial/)
+### Documentation Links
+
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- [Real Python Tutorials](https://realpython.com/)
-
-### AI & Machine Learning
+- [React Documentation](https://react.dev/)
+- [MongoDB Documentation](https://docs.mongodb.com/)
 - [OpenAI API Documentation](https://platform.openai.com/docs)
-- [Vector Databases Explained](https://www.pinecone.io/learn/vector-database/)
-- [Qdrant Documentation](https://qdrant.tech/documentation/)
 
-### MongoDB
-- [MongoDB Manual](https://docs.mongodb.com/manual/)
-- [MongoDB University](https://university.mongodb.com/)
+### Learning Resources
 
-### General Full-Stack
-- [MDN Web Docs](https://developer.mozilla.org/)
-- [Stack Overflow](https://stackoverflow.com/) for troubleshooting
+- [Python Async/Await Guide](https://docs.python.org/3/library/asyncio.html)
+- [Pydantic Models](https://docs.pydantic.dev/)
+- [JWT Authentication](https://jwt.io/introduction)
+- [Vector Embeddings Explained](https://www.pinecone.io/learn/vector-database/)
 
 ---
 
@@ -845,24 +1496,26 @@ SECRET_KEY="your secret here"
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License.
 
 ---
 
-**Happy Learning! 🎉**
+## ⚠️ Known Issues & Pending Tasks
 
-This guide provides a comprehensive foundation for understanding how modern full-stack applications work with AI integration. The concepts here apply to many other systems beyond just resume management!
+### Current Issues
 
-If you have questions or need clarification on any part, feel free to ask!
+1. **Resume Text Extraction Accuracy**
+   - Issue: Resume bank text extraction sometimes returns "Unknown" for missing fields
+   - Status: Needs improvement in PDF processing and AI extraction
+   - Impact: ~50% of resumes may have incomplete data extraction
+   - Potential Solutions:
+     - Improve PDF text extraction (try different libraries)
+     - Enhance AI prompts for better extraction
+     - Add fallback parsing mechanisms
+     - Consider OCR for scanned PDFs
 
+---
 
+**Happy Coding! 🎉**
 
-
-Pending Tasks:
-- We have to fix the resume bank text extraction and parsing issue.
------ [
-    right now the upload resume to resume bank functionality works fine but it does not extract the data properly, in 50% of the cases it does not exxtract the correct data, insted it uses "unKnown" for everything it does not find or extract from the file 
-    
-    right now we are using some pdf text extractors but if ther is a better way of doing it though AI or without AI, will use it.
-    
-    ]
+For questions or support, please open an issue in the repository.
