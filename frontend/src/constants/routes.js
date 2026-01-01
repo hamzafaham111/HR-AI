@@ -1,12 +1,11 @@
 export const ROUTES = {
   // Public routes
-  HOME: '/',
   LOGIN: '/login',
   REGISTER: '/register',
   FORGOT_PASSWORD: '/forgot-password',
   
   // Protected routes
-  DASHBOARD: '/dashboard',
+  DASHBOARD: '/',
   // ANALYSIS: '/analysis/:id', // Removed - functionality moved to resume bank
   JOBS: '/jobs',
   CREATE_JOB: '/jobs/create',

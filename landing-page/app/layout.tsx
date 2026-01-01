@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:8080"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || ""),
   alternates: {
     canonical: "/",
   },
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     title: "HR-AI | Intelligent Recruitment Platform",
     description:
       "Transform your hiring process with AI-powered recruitment tools. Reduce time-to-hire by 70%.",
-    url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:8080",
+    url: process.env.NEXT_PUBLIC_SITE_URL,
     siteName: "HR-AI",
     images: [
       {
@@ -116,8 +116,8 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "Organization",
               name: "HR-AI",
-              url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:8080",
-              logo: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:8080"}/logo.png`,
+              url: process.env.NEXT_PUBLIC_SITE_URL,
+              logo: `${process.env.NEXT_PUBLIC_SITE_URL}/logo.png`,
               description: "Intelligent recruitment platform powered by AI",
             }),
           }}

@@ -281,7 +281,7 @@ export default function Home() {
               <span className="text-lg md:text-xl font-bold gradient-text">HR-AI</span>
             </Link>
             <Link
-              href={process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}
+              href={process.env.NEXT_PUBLIC_DASHBOARD_URL || 'http://localhost:3080'}
               className="px-4 py-2 md:px-6 md:py-2.5 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-all duration-200 flex items-center space-x-1.5 md:space-x-2 text-sm md:text-base shadow-lg hover:shadow-xl transform hover:scale-105"
             >
               <span className="hidden sm:inline">Access Platform</span>
@@ -345,7 +345,7 @@ export default function Home() {
               className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-8"
             >
               <Link
-                href={process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}
+                href={process.env.NEXT_PUBLIC_DASHBOARD_URL || "http://localhost:3000"}
                 className="group px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold text-base hover:bg-primary-700 transition-all duration-200 flex items-center space-x-2 shadow-lg shadow-primary-500/30 hover:shadow-xl hover:shadow-primary-500/40 transform hover:scale-105"
               >
                 <span>Get Started Free</span>
@@ -803,7 +803,7 @@ export default function Home() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link
-                href={process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}
+                href={process.env.NEXT_PUBLIC_DASHBOARD_URL || "http://localhost:3000"}
                 className="inline-flex items-center space-x-2 px-6 md:px-8 py-3 md:py-4 bg-white text-primary-600 rounded-lg md:rounded-xl font-semibold text-base md:text-lg hover:bg-primary-50 transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:scale-105"
               >
                 <span>Access Platform Now</span>

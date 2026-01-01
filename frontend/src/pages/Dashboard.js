@@ -39,21 +39,6 @@ const Dashboard = React.memo(() => {
     }
   }, []);
 
-  const getStatusBadge = useCallback((status) => {
-    const statusClasses = {
-      completed: 'badge-success',
-      processing: 'badge-warning',
-      failed: 'badge-error',
-      pending: 'badge-info'
-    };
-
-    return (
-      <span className={`badge ${statusClasses[status] || 'badge-info'}`}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </span>
-    );
-  }, []);
-
   const formatDate = useCallback((dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',

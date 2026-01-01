@@ -47,8 +47,9 @@ export const routes = [
   // Public routes
   {
     path: '/',
-    element: <Home />,
-    isPublic: true,
+    element: <Dashboard />,
+    requiresAuth: true,
+    showSidebar: true,
   },
   {
     path: '/login',
