@@ -84,13 +84,14 @@ setup_error_handlers(app)
 setup_security_middleware(app)
 
 # Configure CORS middleware for frontend communication
-# CORS origins are now configurable from settings
+# Allow all origins for maximum compatibility
+# Note: allow_credentials must be False when using allow_origins=["*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.get_cors_origins(),
-    allow_credentials=settings.cors_allow_credentials,
-    allow_methods=settings.get_cors_methods(),
-    allow_headers=settings.get_cors_headers(),
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=False,  # Must be False when using "*" for origins
+    allow_methods=["*"],  # Allow all methods (GET, POST, PUT, DELETE, etc.)
+    allow_headers=["*"],  # Allow all headers
 )
 
 # Include API routes
