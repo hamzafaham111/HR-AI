@@ -151,13 +151,13 @@ export const AuthProvider = ({ children }) => {
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
         return { 
           success: false, 
-          error: 'Cannot connect to backend. Please ensure the backend server is running on http://localhost:8000' 
+          error: `Cannot connect to backend. Please ensure the backend server is running on ${process.env.REACT_APP_API_URL}` 
         };
       }
       
       return { 
         success: false, 
-        error: `Network error: ${error.message}. Please check if the backend is running on http://localhost:8000` 
+        error: `Network error: ${error.message}. Please check if the backend is running on ${process.env.REACT_APP_API_URL}` 
       };
     }
   }, []);
