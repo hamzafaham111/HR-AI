@@ -10,10 +10,9 @@ from app.models.mongodb_models import UserDocument
 from app.services.job_application_service import JobApplicationService
 from app.services.resume_bank_service import ResumeBankService
 from app.api.auth import get_current_user
-from app.core.dependencies import (
-    get_job_application_service,
-    get_resume_bank_service,
-)
+from app.core.database import get_database
+from app.repositories.job_application_repository import JobApplicationRepository
+from app.repositories.resume_bank_repository import ResumeBankRepository
 
 router = APIRouter()
 
@@ -59,10 +58,12 @@ async def create_application_form(
     job_id: str,
     form_data: CreateApplicationFormRequest,
     current_user: UserDocument = Depends(get_current_user),
-    service: JobApplicationService = Depends(get_job_application_service)
+    database = Depends(get_database)
 ):
     """Create a new job application form."""
     try:
+        repository = JobApplicationRepository(database)
+        service = JobApplicationService(repository)
         form = await service.create_application_form(job_id, form_data.model_dump())
         
         if not form:
@@ -96,10 +97,12 @@ async def create_application_form(
 @router.get("/forms/{job_id}")
 async def get_application_form(
     job_id: str,
-    service: JobApplicationService = Depends(get_job_application_service)
+    database = Depends(get_database)
 ):
     """Get application form for a job."""
     try:
+        repository = JobApplicationRepository(database)
+        service = JobApplicationService(repository)
         form = await service.get_application_form_by_job(job_id)
         
         if not form:
@@ -136,10 +139,12 @@ async def update_application_form(
     form_id: str,
     form_data: UpdateApplicationFormRequest,
     current_user: UserDocument = Depends(get_current_user),
-    service: JobApplicationService = Depends(get_job_application_service)
+    database = Depends(get_database)
 ):
     """Update an application form."""
     try:
+        repository = JobApplicationRepository(database)
+        service = JobApplicationService(repository)
         # Remove None values
         update_data = {k: v for k, v in form_data.model_dump().items() if v is not None}
         
@@ -179,10 +184,12 @@ async def update_application_form(
 async def delete_application_form(
     form_id: str,
     current_user: UserDocument = Depends(get_current_user),
-    service: JobApplicationService = Depends(get_job_application_service)
+    database = Depends(get_database)
 ):
     """Delete an application form."""
     try:
+        repository = JobApplicationRepository(database)
+        service = JobApplicationService(repository)
         success = await service.delete_application_form(form_id)
         
         if not success:
@@ -209,10 +216,12 @@ async def delete_application_form(
 @router.get("/public/forms/{job_id}")
 async def get_public_application_form(
     job_id: str,
-    service: JobApplicationService = Depends(get_job_application_service)
+    database = Depends(get_database)
 ):
     """Get public application form for a job."""
     try:
+        repository = JobApplicationRepository(database)
+        service = JobApplicationService(repository)
         form = await service.get_application_form_by_job(job_id)
         
         if not form:
@@ -248,11 +257,14 @@ async def get_public_application_form(
 async def submit_public_application(
     job_id: str,
     application_data: SubmitApplicationRequest,
-    service: JobApplicationService = Depends(get_job_application_service),
-    resume_bank_service: ResumeBankService = Depends(get_resume_bank_service)
+    database = Depends(get_database)
 ):
     """Submit a public job application."""
     try:
+        repository = JobApplicationRepository(database)
+        service = JobApplicationService(repository)
+        resume_bank_repository = ResumeBankRepository(database)
+        resume_bank_service = ResumeBankService(resume_bank_repository)
         # Get the application form for this job
         form = await service.get_application_form_by_job(job_id)
         
@@ -324,10 +336,12 @@ async def get_job_applications(
     job_id: str,
     limit: int = 100,
     current_user: UserDocument = Depends(get_current_user),
-    service: JobApplicationService = Depends(get_job_application_service)
+    database = Depends(get_database)
 ):
     """Get all applications for a job."""
     try:
+        repository = JobApplicationRepository(database)
+        service = JobApplicationService(repository)
         applications = await service.get_applications_by_job(job_id, limit)
         
         formatted_applications = []
@@ -365,10 +379,12 @@ async def get_job_applications(
 async def get_applications_with_scores(
     job_id: str,
     current_user: UserDocument = Depends(get_current_user),
-    service: JobApplicationService = Depends(get_job_application_service)
+    database = Depends(get_database)
 ):
     """Get applications with matching scores for comparison with resume bank candidates."""
     try:
+        repository = JobApplicationRepository(database)
+        service = JobApplicationService(repository)
         applications = await service.get_applications_with_scores(job_id)
         
         return {
@@ -391,10 +407,12 @@ async def update_application_status(
     application_id: str,
     status_data: UpdateApplicationStatusRequest,
     current_user: UserDocument = Depends(get_current_user),
-    service: JobApplicationService = Depends(get_job_application_service)
+    database = Depends(get_database)
 ):
     """Update application status."""
     try:
+        repository = JobApplicationRepository(database)
+        service = JobApplicationService(repository)
         application = await service.update_application_status(
             application_id, 
             status_data.status, 
@@ -432,10 +450,12 @@ async def approve_and_add_to_process(
     application_id: str,
     process_data: ApproveAndAddToProcessRequest,
     current_user: UserDocument = Depends(get_current_user),
-    service: JobApplicationService = Depends(get_job_application_service)
+    database = Depends(get_database)
 ):
     """Approve a job application and add the candidate to a hiring process."""
     try:
+        repository = JobApplicationRepository(database)
+        service = JobApplicationService(repository)
         result = await service.approve_and_add_to_process(
             application_id=application_id,
             hiring_process_id=process_data.hiring_process_id,
@@ -474,10 +494,12 @@ async def search_applications(
     job_id: str,
     query: str,
     current_user: UserDocument = Depends(get_current_user),
-    service: JobApplicationService = Depends(get_job_application_service)
+    database = Depends(get_database)
 ):
     """Search applications by applicant name or email."""
     try:
+        repository = JobApplicationRepository(database)
+        service = JobApplicationService(repository)
         applications = await service.search_applications(job_id, query)
         
         formatted_applications = []

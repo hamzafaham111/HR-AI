@@ -5,15 +5,13 @@ Resume Bank Service for business logic operations.
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 from app.repositories.resume_bank_repository import ResumeBankRepository
-from app.services.openai_service import OpenAIService
 
 
 class ResumeBankService:
     """Service for resume bank operations."""
     
-    def __init__(self, repository: ResumeBankRepository, openai_service: Optional[OpenAIService] = None):
+    def __init__(self, repository: ResumeBankRepository):
         self.repository = repository
-        self.openai_service = openai_service
     
     async def create_resume_entry(
         self,

@@ -13,8 +13,8 @@ from app.services.meeting_service import MeetingService
 from app.models.mongodb_models import MeetingStatus, SlotSelectionType, MeetingType
 from app.api.auth import get_current_user
 from app.models.mongodb_models import UserDocument
-from app.core.dependencies import get_meeting_service
 from app.core.database import get_database
+from app.repositories.meeting_repository import MeetingRepository
 
 router = APIRouter()
 
@@ -39,10 +39,12 @@ class CreateMeetingRequest(BaseModel):
 async def create_meeting(
     meeting_data: CreateMeetingRequest,
     current_user = Depends(get_current_user),
-    meeting_service: MeetingService = Depends(get_meeting_service)
+    database = Depends(get_database)
 ):
     """Create a new meeting with time slots."""
     try:
+        repository = MeetingRepository(database)
+        meeting_service = MeetingService(repository)
         # Convert string dates to datetime objects
         from datetime import datetime
         start_date_obj = datetime.strptime(meeting_data.start_date, "%Y-%m-%d").date()
@@ -104,7 +106,6 @@ async def get_my_meetings(
 ):
     """Get all meetings organized by the current user."""
     try:
-        # Create repository and service locally like the resume bank API
         repository = MeetingRepository(database)
         meeting_service = MeetingService(repository)
         
@@ -159,10 +160,12 @@ async def get_my_meetings(
 async def get_meeting_details(
     meeting_id: str,
     current_user = Depends(get_current_user),
-    meeting_service: MeetingService = Depends(get_meeting_service)
+    database = Depends(get_database)
 ):
     """Get detailed information about a specific meeting."""
     try:
+        repository = MeetingRepository(database)
+        meeting_service = MeetingService(repository)
         # Get meeting by ID
         meeting = await meeting_service.get_meeting_by_id(meeting_id)
         
@@ -267,10 +270,12 @@ async def update_meeting(
     allow_guest_booking: Optional[bool] = None,
     require_approval: Optional[bool] = None,
     current_user = Depends(get_current_user),
-    meeting_service: MeetingService = Depends(get_meeting_service)
+    database = Depends(get_database)
 ):
     """Update meeting details."""
     try:
+        repository = MeetingRepository(database)
+        meeting_service = MeetingService(repository)
         # Check if user is the organizer
         meeting = await meeting_service.get_meeting_by_id(meeting_id)
         
@@ -335,10 +340,12 @@ async def update_meeting(
 async def open_meeting(
     meeting_id: str,
     current_user = Depends(get_current_user),
-    meeting_service: MeetingService = Depends(get_meeting_service)
+    database = Depends(get_database)
 ):
     """Open a draft meeting to make it publicly bookable."""
     try:
+        repository = MeetingRepository(database)
+        meeting_service = MeetingService(repository)
         # Get meeting by ID
         meeting = await meeting_service.get_meeting_by_id(meeting_id)
         
@@ -393,10 +400,12 @@ async def open_meeting(
 async def approve_booking(
     booking_id: str,
     current_user: UserDocument = Depends(get_current_user),
-    meeting_service: MeetingService = Depends(get_meeting_service)
+    database = Depends(get_database)
 ):
     """Approve a pending booking."""
     try:
+        repository = MeetingRepository(database)
+        meeting_service = MeetingService(repository)
         booking = await meeting_service.meeting_repository.get_booking_by_id(booking_id)
         if not booking:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
@@ -428,10 +437,12 @@ async def reject_booking(
     booking_id: str,
     reason: Optional[str] = None,
     current_user: UserDocument = Depends(get_current_user),
-    meeting_service: MeetingService = Depends(get_meeting_service)
+    database = Depends(get_database)
 ):
     """Reject a pending booking."""
     try:
+        repository = MeetingRepository(database)
+        meeting_service = MeetingService(repository)
         booking = await meeting_service.meeting_repository.get_booking_by_id(booking_id)
         if not booking:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
@@ -462,10 +473,12 @@ async def reject_booking(
 async def approve_booking(
     booking_id: str,
     current_user = Depends(get_current_user),
-    meeting_service: MeetingService = Depends(get_meeting_service)
+    database = Depends(get_database)
 ):
     """Approve a pending booking."""
     try:
+        repository = MeetingRepository(database)
+        meeting_service = MeetingService(repository)
         booking = await meeting_service.approve_booking(booking_id)
         if not booking:
             raise HTTPException(
@@ -491,10 +504,12 @@ async def approve_booking(
 async def reject_booking(
     booking_id: str,
     current_user = Depends(get_current_user),
-    meeting_service: MeetingService = Depends(get_meeting_service)
+    database = Depends(get_database)
 ):
     """Reject a pending or approved booking."""
     try:
+        repository = MeetingRepository(database)
+        meeting_service = MeetingService(repository)
         booking = await meeting_service.reject_booking(booking_id)
         if not booking:
             raise HTTPException(
@@ -520,10 +535,12 @@ async def reject_booking(
 async def complete_booking(
     booking_id: str,
     current_user = Depends(get_current_user),
-    meeting_service: MeetingService = Depends(get_meeting_service)
+    database = Depends(get_database)
 ):
     """Mark an approved booking as completed."""
     try:
+        repository = MeetingRepository(database)
+        meeting_service = MeetingService(repository)
         booking = await meeting_service.complete_booking(booking_id)
         if not booking:
             raise HTTPException(
@@ -549,10 +566,12 @@ async def complete_booking(
 async def start_meeting(
     meeting_id: str,
     current_user: UserDocument = Depends(get_current_user),
-    meeting_service: MeetingService = Depends(get_meeting_service)
+    database = Depends(get_database)
 ):
     """Start a scheduled meeting."""
     try:
+        repository = MeetingRepository(database)
+        meeting_service = MeetingService(repository)
         meeting = await meeting_service.get_meeting_by_id(meeting_id)
         if not meeting:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Meeting not found")
@@ -581,10 +600,12 @@ async def start_meeting(
 async def complete_meeting(
     meeting_id: str,
     current_user: UserDocument = Depends(get_current_user),
-    meeting_service: MeetingService = Depends(get_meeting_service)
+    database = Depends(get_database)
 ):
     """Complete a meeting."""
     try:
+        repository = MeetingRepository(database)
+        meeting_service = MeetingService(repository)
         meeting = await meeting_service.get_meeting_by_id(meeting_id)
         if not meeting:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Meeting not found")
@@ -614,10 +635,12 @@ async def cancel_meeting(
     meeting_id: str,
     reason: Optional[str] = None,
     current_user: UserDocument = Depends(get_current_user),
-    meeting_service: MeetingService = Depends(get_meeting_service)
+    database = Depends(get_database)
 ):
     """Cancel a meeting."""
     try:
+        repository = MeetingRepository(database)
+        meeting_service = MeetingService(repository)
         meeting = await meeting_service.get_meeting_by_id(meeting_id)
         if not meeting:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Meeting not found")
@@ -647,10 +670,12 @@ async def cancel_meeting(
 async def get_meetings_by_status(
     status: str,
     current_user: UserDocument = Depends(get_current_user),
-    meeting_service: MeetingService = Depends(get_meeting_service)
+    database = Depends(get_database)
 ):
     """Get meetings by specific status."""
     try:
+        repository = MeetingRepository(database)
+        meeting_service = MeetingService(repository)
         # Convert string to enum
         try:
             status_enum = MeetingStatus(status.lower())
@@ -691,10 +716,12 @@ async def get_meetings_by_status(
 async def delete_meeting(
     meeting_id: str,
     current_user = Depends(get_current_user),
-    meeting_service: MeetingService = Depends(get_meeting_service)
+    database = Depends(get_database)
 ):
     """Delete a meeting."""
     try:
+        repository = MeetingRepository(database)
+        meeting_service = MeetingService(repository)
         # Check if user is the organizer
         meeting = await meeting_service.get_meeting_by_id(meeting_id)
         
@@ -736,10 +763,12 @@ async def delete_meeting(
 async def get_meeting_bookings(
     meeting_id: str,
     current_user = Depends(get_current_user),
-    meeting_service: MeetingService = Depends(get_meeting_service)
+    database = Depends(get_database)
 ):
     """Get all bookings for a meeting."""
     try:
+        repository = MeetingRepository(database)
+        meeting_service = MeetingService(repository)
         # Check if user is the organizer
         meeting = await meeting_service.get_meeting_by_id(meeting_id)
         
@@ -792,10 +821,12 @@ async def test_public_endpoint():
 @router.get("/public/{meeting_link}")
 async def get_public_meeting_info(
     meeting_link: str,
-    meeting_service: MeetingService = Depends(get_meeting_service)
+    database = Depends(get_database)
 ):
     """Get public meeting information for booking."""
     try:
+        repository = MeetingRepository(database)
+        meeting_service = MeetingService(repository)
         # First try to get meeting by public_link, then by ID if that fails
         meeting = await meeting_service.get_meeting_by_public_link(meeting_link)
         
@@ -872,10 +903,12 @@ class BookMeetingSlotRequest(BaseModel):
 async def book_meeting_slot(
     meeting_link: str,
     booking_data: BookMeetingSlotRequest,
-    meeting_service: MeetingService = Depends(get_meeting_service)
+    database = Depends(get_database)
 ):
     """Book a meeting slot (public endpoint)."""
     try:
+        repository = MeetingRepository(database)
+        meeting_service = MeetingService(repository)
         # First try to get meeting by public_link, then by ID if that fails
         meeting = await meeting_service.get_meeting_by_public_link(meeting_link)
         
@@ -947,10 +980,12 @@ async def book_meeting_slot(
 @router.post("/public/booking/{booking_token}/cancel")
 async def cancel_public_booking(
     booking_token: str,
-    meeting_service: MeetingService = Depends(get_meeting_service)
+    database = Depends(get_database)
 ):
     """Cancel a public booking."""
     try:
+        repository = MeetingRepository(database)
+        meeting_service = MeetingService(repository)
         success = await meeting_service.cancel_booking(booking_token)
         
         if not success:
@@ -975,10 +1010,12 @@ async def cancel_public_booking(
 @router.get("/dashboard/stats")
 async def get_meeting_dashboard_stats(
     current_user = Depends(get_current_user),
-    meeting_service: MeetingService = Depends(get_meeting_service)
+    database = Depends(get_database)
 ):
     """Get meeting dashboard statistics."""
     try:
+        repository = MeetingRepository(database)
+        meeting_service = MeetingService(repository)
         dashboard_data = meeting_service.get_organizer_dashboard_data(current_user.id)
         
         return {
@@ -997,10 +1034,12 @@ async def generate_meeting_slots(
     meeting_id: str,
     slot_config: Dict[str, Any],
     current_user: UserDocument = Depends(get_current_user),
-    meeting_service: MeetingService = Depends(get_meeting_service)
+    database = Depends(get_database)
 ):
     """Generate time slots for an existing meeting."""
     try:
+        repository = MeetingRepository(database)
+        meeting_service = MeetingService(repository)
         # Check if user owns the meeting
         meeting = await meeting_service.get_meeting_by_id(meeting_id)
         if not meeting:
@@ -1047,10 +1086,12 @@ async def generate_meeting_slots(
 async def get_meeting_slots(
     meeting_id: str,
     current_user: UserDocument = Depends(get_current_user),
-    meeting_service: MeetingService = Depends(get_meeting_service)
+    database = Depends(get_database)
 ):
     """Get all slots for a meeting (HR view)."""
     try:
+        repository = MeetingRepository(database)
+        meeting_service = MeetingService(repository)
         # Check if user owns the meeting
         meeting = await meeting_service.get_meeting_by_id(meeting_id)
         if not meeting:
@@ -1127,10 +1168,12 @@ async def get_meeting_slots(
 async def close_meeting(
     meeting_id: str,
     current_user = Depends(get_current_user),
-    meeting_service: MeetingService = Depends(get_meeting_service)
+    database = Depends(get_database)
 ):
     """Close an open meeting to stop accepting new bookings."""
     try:
+        repository = MeetingRepository(database)
+        meeting_service = MeetingService(repository)
         # Get meeting by ID
         meeting = await meeting_service.get_meeting_by_id(meeting_id)
         

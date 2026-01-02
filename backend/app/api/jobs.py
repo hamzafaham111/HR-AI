@@ -12,7 +12,6 @@ from typing import List, Optional
 from pydantic import BaseModel
 from bson import ObjectId
 from app.core.database import get_database
-from app.core.dependencies import get_mongodb_repository
 from app.models.job import JobPostingCreate, JobPostingResponse, JobPostingUpdate
 from app.api.auth import get_current_user
 from app.models.mongodb_models import UserDocument, COLLECTIONS

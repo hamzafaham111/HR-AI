@@ -9,9 +9,8 @@ from app.models.mongodb_models import JobApplicationFormDocument, JobApplication
 class JobApplicationService:
     """Service for job application forms and applications."""
     
-    def __init__(self, repository: JobApplicationRepository, openai_service=None):
+    def __init__(self, repository: JobApplicationRepository):
         self.repository = repository
-        self.openai_service = openai_service
     
     # Job Application Forms
     async def create_application_form(self, job_id: str, form_data: Dict[str, Any]) -> Optional[JobApplicationFormDocument]:

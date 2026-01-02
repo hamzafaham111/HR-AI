@@ -1,58 +1,31 @@
 """
-AI-powered job parsing service using OpenAI.
+Job parsing service for extracting structured data from job postings.
 
-This module provides intelligent parsing of job posting text to extract
+This module provides parsing of job posting text to extract
 structured data for job creation forms.
 """
 
 import json
 import asyncio
 from typing import Dict, List, Optional
-from openai import AsyncOpenAI
 from app.core.logging import logger
-
-from ..core.config import settings
 
 
 class JobParserService:
     """
-    Service for parsing job posting text using AI to extract structured data.
+    Service for parsing job posting text to extract structured data.
     
-    This service uses OpenAI's GPT models to intelligently parse job descriptions
+    This service uses pattern matching and heuristics to parse job descriptions
     and extract all relevant fields for job creation.
     """
     
     def __init__(self):
-        """Initialize the job parser service with OpenAI configuration."""
-        # Check if OpenAI is properly configured
-        self.openai_available = (
-            settings.openai_api_key and 
-            settings.openai_api_key != "your-openai-api-key-here" and
-            len(settings.openai_api_key) > 20  # Basic validation
-        )
-        
-        if self.openai_available:
-            try:
-                self.client = AsyncOpenAI(
-                    api_key=settings.openai_api_key,
-                    base_url=settings.openai_api_base
-                )
-                self.model = settings.openai_model
-                self.max_tokens = settings.max_tokens
-                self.temperature = settings.temperature
-            except Exception as e:
-                logger.warning(f"OpenAI client initialization failed: {e}")
-                self.openai_available = False
-        else:
-            logger.info("OpenAI not configured, using fallback parsing only")
-            self.client = None
-            self.model = None
-            self.max_tokens = None
-            self.temperature = None
+        """Initialize the job parser service."""
+        logger.info("Job parser service initialized (using fallback parsing)")
         
     async def parse_job_text(self, job_text: str) -> Dict:
         """
-        Parse job posting text using AI to extract structured data.
+        Parse job posting text to extract structured data.
         
         Args:
             job_text: The raw job posting text
@@ -60,150 +33,15 @@ class JobParserService:
         Returns:
             Dict: Structured job data with all form fields
         """
-        # Use OpenAI if available, otherwise use fallback directly
-        if not self.openai_available:
-            logger.info("Using fallback parsing (OpenAI not available)")
-            return self._get_fallback_parsing(job_text)
-        
-        try:
-            prompt = self._create_parsing_prompt(job_text)
-            response = await self._call_openai_api(prompt)
-            return self._parse_response(response)
-        except Exception as e:
-            logger.warning(f"Job parsing API error, falling back to manual parsing: {e}")
-            # Return improved fallback parsed data if API fails
-            return self._get_fallback_parsing(job_text)
-    
-    def _create_parsing_prompt(self, job_text: str) -> str:
-        """
-        Create a structured prompt for job text parsing.
-        
-        Args:
-            job_text: The job posting text to parse
-            
-        Returns:
-            str: Formatted prompt for OpenAI API
-        """
-        return f"""
-        Analyze the following job posting and extract all relevant information in a structured format.
-        
-        Job Posting Text:
-        {job_text[:4000]}  # Limit to first 4000 characters
-        
-        Please extract and structure the following information in JSON format:
-        {{
-            "title": "Job title (e.g., 'Senior Software Engineer')",
-            "company": "Company name",
-            "location": "Job location (city, state, or remote)",
-            "job_type": "full_time, part_time, contract, internship, or freelance",
-            "experience_level": "entry, junior, mid, senior, or executive",
-            "description": "Detailed job description (2-3 paragraphs)",
-            "salary_range": "Salary range if mentioned (e.g., '$80,000 - $120,000')",
-            "requirements": [
-                {{
-                    "skill": "Required skill or qualification",
-                    "level": "required, preferred, or nice_to_have"
-                }}
-            ],
-            "responsibilities": [
-                "Key responsibility or duty"
-            ],
-            "benefits": [
-                "Benefit or perk offered"
-            ]
-        }}
-        
-        Guidelines for extraction:
-        1. **Title**: Extract the main job title, not department or team names
-        2. **Company**: Look for company name in headers, signatures, or context
-        3. **Location**: Include city/state or specify "Remote" if mentioned
-        4. **Job Type**: Infer from keywords like "full-time", "part-time", "contract"
-        5. **Experience Level**: Determine from requirements and job description
-        6. **Description**: Create a comprehensive description based on the posting
-        7. **Salary**: Extract if mentioned, otherwise null
-        8. **Requirements**: List specific skills, technologies, and qualifications
-        9. **Responsibilities**: List main duties and expectations
-        10. **Benefits**: Extract perks, insurance, time-off, etc.
-        
-        For experience level mapping:
-        - entry: 0-1 years, recent graduates
-        - junior: 1-3 years experience
-        - mid: 3-5 years experience
-        - senior: 5+ years experience, leadership
-        - executive: 10+ years, management roles
-        
-        For job type mapping:
-        - full_time: permanent, salaried positions
-        - part_time: reduced hours, flexible schedules
-        - contract: temporary, project-based
-        - internship: student positions
-        - freelance: independent contractor
-        
-        Return only valid JSON without any additional text or explanations.
-        """
-    
-    async def _call_openai_api(self, prompt: str) -> str:
-        """Make API call to OpenAI for job parsing"""
-        try:
-            response = await self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": "You are an expert HR professional specializing in job posting analysis and data extraction. You excel at parsing job descriptions and extracting structured information accurately."},
-                    {"role": "user", "content": prompt}
-                ],
-                max_tokens=self.max_tokens,
-                temperature=self.temperature
-            )
-            return response.choices[0].message.content
-        except Exception as e:
-            logger.error(f"OpenAI API call failed for job parsing: {e}")
-            raise e
-    
-    def _parse_response(self, response: str) -> Dict:
-        """
-        Parse OpenAI API response into structured job data.
-        
-        Args:
-            response: Raw API response string
-            
-        Returns:
-            Dict: Parsed job data
-        """
-        try:
-            # Extract JSON from response
-            json_start = response.find('{')
-            json_end = response.rfind('}') + 1
-            json_str = response[json_start:json_end]
-            
-            data = json.loads(json_str)
-            
-            # Ensure all required fields are present
-            parsed_data = {
-                "title": data.get("title", ""),
-                "company": data.get("company", ""),
-                "location": data.get("location", ""),
-                "job_type": data.get("job_type", "full_time"),
-                "experience_level": data.get("experience_level", "mid"),
-                "description": data.get("description", ""),
-                "salary_range": data.get("salary_range", ""),
-                "requirements": data.get("requirements", []),
-                "responsibilities": data.get("responsibilities", []),
-                "benefits": data.get("benefits", [])
-            }
-            
-            logger.info(f"Successfully parsed job data: {parsed_data['title']} at {parsed_data['company']}")
-            return parsed_data
-            
-        except (json.JSONDecodeError, KeyError) as e:
-            logger.error(f"Failed to parse job parsing response: {e}")
-            return self._get_fallback_parsing("")
+        logger.info("Using fallback parsing for job text")
+        return self._get_fallback_parsing(job_text)
     
     def _get_fallback_parsing(self, job_text: str) -> Dict:
         """
         Generate fallback parsing when AI parsing fails.
         
         This improved fallback uses pattern matching and heuristics to extract
-        structured data from job posting text when OpenAI is unavailable.
+        structured data from job posting text using pattern matching and heuristics.
         
         Args:
             job_text: Original job text

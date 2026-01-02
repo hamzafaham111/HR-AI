@@ -6,7 +6,7 @@ This module handles all resume-related operations for the AI Resume Management S
 WHAT THIS MODULE DOES:
 ======================
 1. **File Upload**: Handle PDF resume uploads from users
-2. **AI Processing**: Extract candidate information using OpenAI
+2. **Data Extraction**: Extract candidate information from resumes
 3. **Search & Matching**: Find candidates that match job requirements
 4. **Statistics**: Provide resume bank analytics
 
@@ -42,9 +42,8 @@ from app.models.resume_bank import (
 from app.core.database import get_database              # Database connection
 from app.repositories.mongodb_repository import MongoDBRepository  # Database operations
 from app.models.mongodb_models import COLLECTIONS       # Collection names
-from app.services.openai_service import openai_service  # AI processing
 from app.utils.pdf_processor import PDFProcessor        # PDF text extraction
-from app.utils.ai_extractor import ai_extractor         # AI-powered extraction
+from app.utils.ai_extractor import ai_extractor         # Candidate information extraction
 from app.core.logging import logger                      # Logging utility
 from app.api.auth import get_current_user              # Authentication
 from app.models.mongodb_models import UserDocument      # User data model

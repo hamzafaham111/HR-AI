@@ -33,24 +33,21 @@ class Settings(BaseSettings):
     @classmethod
     def validate_environment(cls, v: str) -> str:
         """Validate environment value."""
+        v_lower = v.lower()
+        # Map common abbreviations to full names
+        env_mapping = {
+            'prod': 'production',
+            'dev': 'development',
+            'stg': 'staging'
+        }
+        # Apply mapping if needed
+        if v_lower in env_mapping:
+            v_lower = env_mapping[v_lower]
+        
         allowed = ['development', 'staging', 'production', 'test']
-        if v.lower() not in allowed:
-            raise ValueError(f"Environment must be one of: {', '.join(allowed)}")
-        return v.lower()
-    
-    # OpenAI API configuration
-    openai_api_key: str = Field(
-        default="your-openai-api-key-here",
-        description="OpenAI API key"
-    )
-    openai_api_base: str = Field(
-        default="https://api.openai.com/v1",
-        description="OpenAI API base URL"
-    )
-    openai_model: str = Field(
-        default="gpt-3.5-turbo",
-        description="OpenAI model to use"
-    )
+        if v_lower not in allowed:
+            raise ValueError(f"Environment must be one of: {', '.join(allowed)} (or abbreviations: prod, dev, stg)")
+        return v_lower
     
     # File upload settings
     max_file_size: int = Field(
